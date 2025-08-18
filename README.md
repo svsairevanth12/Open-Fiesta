@@ -8,6 +8,9 @@
   Your browser does not support the video tag.
 </video>
 
+<!-- Fallback link for renderers that don't support <video> -->
+[![Open-Fiesta](public/osfiesta.png)](public/OSFiesta.mp4)
+
 An open-source, multi-model AI chat playground built with Next.js App Router. Switch between providers and models, compare outputs side-by-side, and use optional web search and image attachments.
 
 ## Features
