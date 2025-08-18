@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Plus, Github } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Github, Star } from "lucide-react";
 import Settings from "@/components/Settings";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { MODEL_CATALOG } from "@/lib/models";
@@ -94,12 +94,12 @@ export default function Home() {
           const e = r && typeof r === 'object' ? (typeof r.error === 'string' ? r.error : undefined) : undefined;
           return t || e || "No response";
         })();
-        const asst: ChatMessage = { role: "assistant", content: String(text), modelId: m.id, ts: Date.now() };
+        const asst: ChatMessage = { role: "assistant", content: String(text).trim(), modelId: m.id, ts: Date.now() };
         // Append to current thread messages to accumulate answers from multiple models
         setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        const asst: ChatMessage = { role: "assistant", content: `[${m.label}] Error: ${msg}`, modelId: m.id, ts: Date.now() };
+        const asst: ChatMessage = { role: "assistant", content: `[${m.label}] Error: ${msg}`.trim(), modelId: m.id, ts: Date.now() };
         setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
       } finally {
         setLoadingIds(prev => prev.filter(x => x !== m.id));
@@ -293,19 +293,37 @@ export default function Home() {
 
             {/* Selected models row + Change button */}
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              {selectedModels.map((m) => (
+              {selectedModels.map((m) => {
+                const isFree = /(\(|\s)free\)/i.test(m.label);
+                return (
                 <button
                   key={m.id}
                   onClick={() => toggle(m.id)}
-                  className="px-2.5 py-1 text-xs rounded-full bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a] flex items-center gap-2"
+                  className={`px-3 py-1.5 text-xs rounded-full text-white border flex items-center gap-2 ${
+                    m.good ? 'border-amber-300/40 bg-gradient-to-r from-amber-500/25 via-[#e42a42]/60 to-rose-500/25 shadow-[0_0_0_1px_rgba(251,191,36,0.25)_inset,0_0_14px_rgba(251,191,36,0.22)]'
+                    : isFree ? 'bg-[#e42a42] border-emerald-300/40 hover:bg-[#cf243a] shadow-[0_0_0_1px_rgba(16,185,129,0.22)_inset,0_0_10px_rgba(16,185,129,0.15)]'
+                    : 'bg-[#e42a42] border-white/10 hover:bg-[#cf243a]'
+                  }`}
                   title="Click to toggle"
                 >
+                  {m.good && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
+                      <Star size={12} className="shrink-0" />
+                      <span className="hidden sm:inline">Pro</span>
+                    </span>
+                  )}
+                  {isFree && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-600/35 text-emerald-100 ring-1 ring-emerald-400/50 shadow-[0_0_0_1px_rgba(16,185,129,0.25)_inset]">
+                      <span className="h-2 w-2 rounded-full bg-emerald-200" />
+                      <span className="hidden sm:inline">Free</span>
+                    </span>
+                  )}
                   <span className="truncate max-w-[180px]">{m.label}</span>
                   <span className="relative inline-flex h-4 w-7 items-center rounded-full bg-white/30">
                     <span className="h-3 w-3 rounded-full bg-white translate-x-3.5" />
                   </span>
                 </button>
-              ))}
+              );})}
               {selectedModels.length === 0 && (
                 <span className="text-xs text-zinc-400">No models selected</span>
               )}
@@ -322,31 +340,54 @@ export default function Home() {
 
             {modelsModalOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center">
-                <div className="absolute inset-0 bg-black/70" onClick={() => setModelsModalOpen(false)} />
-                <div className="relative w-full max-w-2xl mx-auto rounded-lg border border-white/10 bg-zinc-900/95 p-4 shadow-lg">
+                <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setModelsModalOpen(false)} />
+                <div className="relative w-full max-w-2xl mx-auto rounded-2xl border border-white/10 bg-zinc-900/90 p-5 shadow-2xl">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">Select up to 5 models</h3>
+                    <h3 className="text-base font-semibold tracking-wide">Select up to 5 models</h3>
                     <button onClick={() => setModelsModalOpen(false)} className="text-xs px-2 py-1 rounded bg-white/10">Close</button>
                   </div>
-                  <div className="text-xs text-zinc-400 mb-3">Selected: {selectedIds.length}/5</div>
+                  <div className="text-xs text-zinc-300 mb-3">Selected: {selectedIds.length}/5</div>
                   <div className="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto pr-1">
                     {MODEL_CATALOG.map((m) => {
+                      const isFree = /(\(|\s)free\)/i.test(m.label);
                       const selected = selectedIds.includes(m.id);
                       const disabled = !selected && selectedIds.length >= 5;
                       return (
                         <button
                           key={m.id}
                           onClick={() => !disabled && toggle(m.id)}
-                          className={`px-2.5 py-1 text-xs rounded-full border transition-colors flex items-center justify-between gap-3 min-w-[240px] ${
+                          className={`px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center justify-between gap-3 min-w-[260px] ${
                             selected
-                              ? 'bg-[#e42a42] text-white border-white/10'
-                              : disabled
+                              ? m.good
+                                ? 'text-white border-amber-300/40 bg-gradient-to-r from-amber-500/25 via-[#e42a42]/60 to-rose-500/25 shadow-[0_0_0_1px_rgba(251,191,36,0.25)_inset,0_0_16px_rgba(251,191,36,0.25)]'
+                                : isFree
+                                  ? 'text-white border-emerald-300/40 bg-gradient-to-r from-emerald-500/20 via-[#e42a42]/40 to-emerald-500/20 shadow-[0_0_0_1px_rgba(16,185,129,0.25)_inset,0_0_16px_rgba(16,185,129,0.2)]'
+                                  : 'bg-[#e42a42] text-white border-white/10'
+                            : disabled
                               ? 'bg-white/5 text-zinc-500 border-white/10 cursor-not-allowed opacity-60'
-                              : 'bg-white/5 text-zinc-200 border-white/10 hover:bg-white/10'
+                              : m.good
+                                ? 'bg-white/5 text-zinc-100 border-amber-300/30 hover:bg-white/10 shadow-[0_0_10px_rgba(251,191,36,0.18)]'
+                                : isFree
+                                  ? 'bg-white/5 text-zinc-100 border-emerald-300/30 hover:bg-white/10 shadow-[0_0_10px_rgba(16,185,129,0.18)]'
+                                  : 'bg-white/5 text-zinc-200 border-white/10 hover:bg-white/10'
                           }`}
                           title={selected ? 'Click to unselect' : disabled ? 'Limit reached' : 'Click to select'}
                         >
-                          <span className="truncate pr-1">{m.label}</span>
+                          <span className="pr-1 inline-flex items-center gap-1.5 min-w-0">
+                            {m.good && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
+                                <Star size={12} className="shrink-0" />
+                                <span className="hidden sm:inline">Pro</span>
+                              </span>
+                            )}
+                            {isFree && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-300/30">
+                                <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                                <span className="hidden sm:inline">Free</span>
+                              </span>
+                            )}
+                            <span className="truncate max-w-[150px] sm:max-w-[200px]">{m.label}</span>
+                          </span>
                           {/* Toggle visual */}
                           <span className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${selected ? 'bg-white/30' : 'bg-white/10'}`}>
                             <span className={`h-3 w-3 rounded-full bg-white transition-transform ${selected ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
@@ -360,22 +401,38 @@ export default function Home() {
             )}
 
             {/* Messages area */}
-            <div className="rounded-lg border border-white/10 bg-white/5 p-2 overflow-x-auto flex-1 overflow-y-auto pb-28">
+            <div className="rounded-lg border border-white/10 bg-white/5 px-2 pt-5 overflow-x-auto flex-1 overflow-y-auto pb-28">
               {selectedModels.length === 0 ? (
                 <div className="p-4 text-zinc-400">Select up to 5 models to compare.</div>
               ) : (
                 <div className="min-w-full space-y-3">
                   {/* Header row: model labels */}
                   <div
-                    className="grid gap-3 items-end"
+                    className="grid gap-3 items-center overflow-visible mt-3 pt-1"
                     style={{ gridTemplateColumns: `repeat(${selectedModels.length}, minmax(260px, 1fr))` }}
                   >
-                    {selectedModels.map((m) => (
-                      <div key={m.id} className="px-1 py-1 border-b border-white/10 flex items-center justify-between">
-                        <div className="text-[13px] font-medium opacity-90 truncate pr-2">{m.label}</div>
+                    {selectedModels.map((m) => {
+                      const isFree = /(\(|\s)free\)/i.test(m.label);
+                      return (
+                      <div key={m.id} className={`px-1 py-5 min-h-[60px] border-b flex items-center justify-between overflow-visible ${m.good ? 'border-amber-300/40' : 'border-white/10'}`}>
+                        <div className={`text-[13px] leading-normal font-medium pr-2 inline-flex items-center gap-1.5 min-w-0 ${m.good || isFree ? 'opacity-100 text-white' : 'opacity-90'}`}>
+                          {m.good && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30 text-[11px] h-6 self-center">
+                              <Star size={11} />
+                              <span className="hidden sm:inline">Pro</span>
+                            </span>
+                          )}
+                          {isFree && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0 rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-300/30 text-[11px] h-6 self-center">
+                              <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                              <span className="hidden sm:inline">Free</span>
+                            </span>
+                          )}
+                          <span className="truncate">{m.label}</span>
+                        </div>
                         {loadingIds.includes(m.id) && <span className="text-[11px] text-[#e42a42]">Thinking…</span>}
                       </div>
-                    ))}
+                    );})}
                   </div>
 
                   {/* Rows: one per user turn, with a cell per model aligned */}
@@ -396,7 +453,7 @@ export default function Home() {
                             }).join('\n\n');
                             copyToClipboard(all);
                           }}
-                          className="text-[11px] px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/15"
+                          className="text-[11px] px-2.5 py-1 rounded-md bg-white/10 border border-white/15 hover:bg-white/15 shadow-sm"
                           title="Copy all model responses for this prompt"
                         >
                           Copy all
@@ -407,14 +464,15 @@ export default function Home() {
                         style={{ gridTemplateColumns: `repeat(${selectedModels.length}, minmax(260px, 1fr))` }}
                       >
                         {selectedModels.map((m) => {
+                          const isFree = /(\(|\s)free\)/i.test(m.label);
                           const ans = row.answers.find((a) => a.modelId === m.id);
                           return (
                             <div key={m.id} className="h-full">
-                              <div className="relative bg-white/5 rounded-md p-3 h-full min-h-[160px] flex ring-1 ring-white/5 overflow-hidden">
+                              <div className={`group relative rounded-md p-3 h-full min-h-[160px] flex overflow-hidden ring-1 ${m.good ? 'bg-gradient-to-b from-amber-400/10 to-white/5 ring-amber-300/30' : isFree ? 'bg-gradient-to-b from-emerald-400/10 to-white/5 ring-emerald-300/30' : 'bg-white/5 ring-white/5'}`}>
                                 {ans && (
                                   <button
                                     onClick={() => copyToClipboard(ans.content)}
-                                    className="absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/15 whitespace-nowrap"
+                                    className="absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/15 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
                                     title={`Copy ${m.label} response`}
                                   >
                                     Copy

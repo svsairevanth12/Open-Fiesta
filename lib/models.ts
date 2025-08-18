@@ -7,6 +7,7 @@ export const MODEL_CATALOG: AiModel[] = [
     label: 'Gemini 2.5 Pro',
     provider: 'gemini',
     model: 'gemini-2.5-pro',
+    good: true,
   },
   {
     id: 'gemini-2.5-flash',
@@ -27,6 +28,7 @@ export const MODEL_CATALOG: AiModel[] = [
     provider: 'openrouter',
     model: 'deepseek/deepseek-r1:free',
     free: true,
+    good: true,
   },
   {
     id: 'llama-3.3-70b-instruct',
@@ -34,6 +36,7 @@ export const MODEL_CATALOG: AiModel[] = [
     provider: 'openrouter',
     model: 'meta-llama/llama-3.3-70b-instruct:free',
     free: true,
+    good: true,
   },
   // Additional OpenRouter models requested
   {
@@ -49,6 +52,7 @@ export const MODEL_CATALOG: AiModel[] = [
     provider: 'openrouter',
     model: 'qwen/qwen-2.5-72b-instruct:free',
     free: true,
+    good: true,
   },
   {
     id: 'moonshot-kimi-k2',
@@ -112,5 +116,68 @@ export const MODEL_CATALOG: AiModel[] = [
     provider: 'openrouter',
     model: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free',
     free: true,
+  },
+  // Newly requested models
+  {
+    id: 'baidu-ernie-4.5-21b-a3b',
+    label: 'Baidu ERNIE 4.5 21B A3B',
+    provider: 'openrouter',
+    model: 'baidu/ernie-4.5-21b-a3b',
+  },
+  {
+    id: 'openai-gpt-oss-20b-free',
+    label: 'OpenAI GPT-OSS 20B (free)',
+    provider: 'openrouter',
+    model: 'openai/gpt-oss-20b:free',
+    free: true,
+  },
+  {
+    id: 'openai-gpt-5-chat',
+    label: 'OpenAI GPT-5 Chat',
+    provider: 'openrouter',
+    model: 'openai/gpt-5-chat',
+    good: true,
+  },
+  {
+    id: 'openai-gpt-5-mini',
+    label: 'OpenAI GPT-5 Mini',
+    provider: 'openrouter',
+    model: 'openai/gpt-5-mini',
+    good: true,
+  },
+  {
+    id: 'xai-grok-3-mini',
+    label: 'xAI Grok 3 Mini',
+    provider: 'openrouter',
+    model: 'x-ai/grok-3-mini',
+  },
+  {
+    id: 'xai-grok-4',
+    label: 'xAI Grok 4',
+    provider: 'openrouter',
+    model: 'x-ai/grok-4',
+    good: true,
+  },
+  // Anthropic models
+  {
+    id: 'claude-3.7-sonnet',
+    label: 'Claude 3.7 Sonnet',
+    provider: 'openrouter',
+    model: 'anthropic/claude-3.7-sonnet',
+    good: true,
+  },
+  {
+    id: 'claude-3.5-haiku',
+    label: 'Claude 3.5 Haiku',
+    provider: 'openrouter',
+    model: 'anthropic/claude-3.5-haiku',
+    good: true,
+  },
+  {
+    id: 'claude-sonnet-4',
+    label: 'Claude Sonnet 4',
+    provider: 'openrouter',
+    model: 'anthropic/claude-sonnet-4',
+    good: true,
   },
 ];

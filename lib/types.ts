@@ -11,6 +11,7 @@ export type AiModel = {
   provider: 'gemini' | 'openrouter';
   model: string; // provider-specific model id
   free?: boolean;
+  good?: boolean; // highlight as recommended
 };
 
 export type ApiKeys = {
