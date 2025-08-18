@@ -34,6 +34,8 @@ export default function Home() {
   const anyLoading = loadingIds.length > 0;
   const [copiedAllIdx, setCopiedAllIdx] = useState<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [firstNoteDismissed, setFirstNoteDismissed] = useLocalStorage<boolean>('ai-fiesta:first-visit-note-dismissed', false);
+  const showFirstVisitNote = !firstNoteDismissed && (!keys?.openrouter || !keys?.gemini);
 
   // Copy helper with fallback when navigator.clipboard is unavailable
   const copyToClipboard = async (text: string) => {
@@ -154,6 +156,51 @@ export default function Home() {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#e42a42]" />
                 <h2 className="text-sm font-semibold">OpenSource Fiesta</h2>
               </div>
+
+          {/* First-visit API keys modal */}
+          {showFirstVisitNote && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setFirstNoteDismissed(true)}
+              />
+              <div className="relative mx-3 w-full max-w-md sm:max-w-lg rounded-2xl border border-white/10 bg-zinc-900/90 p-5 shadow-2xl">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h3 className="text-base font-semibold tracking-wide">Some models need API keys</h3>
+                  <button
+                    onClick={() => setFirstNoteDismissed(true)}
+                    className="text-xs px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/15"
+                    aria-label="Close"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="text-sm text-zinc-300 space-y-2">
+                  <p>You can generate API keys for free.</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>One OpenRouter key works across many models.</li>
+                    <li>Gemini requires its own key.</li>
+                  </ul>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 justify-end mt-4">
+                  <button
+                    onClick={() => window.dispatchEvent(new Event('open-settings'))}
+                    className="text-sm px-3 py-2 rounded bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a]"
+                  >
+                    Get API key for free
+                  </button>
+                  <button
+                    onClick={() => setFirstNoteDismissed(true)}
+                    className="text-sm px-3 py-2 rounded bg-white/10 border border-white/10 hover:bg-white/15"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+            {/* First-visit API keys notice is now a centered modal shown below */}
             </div>
 
             {/* When collapsed, show only a big plus button centered */}
@@ -253,11 +300,10 @@ export default function Home() {
               </div>
             </div>
           )}
-
           {/* Main content */}
           <div className="flex-1 min-w-0 flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] overflow-hidden">
             {/* Top bar */}
-            <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <button onClick={() => setMobileSidebarOpen(true)} className="lg:hidden text-xs px-2 py-1 rounded bg-white/10 border border-white/15">Menu</button>
                 <h1 className="text-lg font-semibold">OpenSource Fiesta</h1>
@@ -555,7 +601,8 @@ export default function Home() {
                                       {(() => {
                                         try {
                                           const txt = String(ans.content || '');
-                                          const show = /rate limit|add your own\s+.*api key/i.test(txt);
+                                          // Only show CTA for shared-key guidance string
+                                          const show = /add your own\s+openrouter api key/i.test(txt);
                                           return show;
                                         } catch { return false; }
                                       })() && (

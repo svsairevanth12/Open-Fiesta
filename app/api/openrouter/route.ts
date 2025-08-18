@@ -59,6 +59,10 @@ export async function POST(req: NextRequest) {
           : 'This model hit a shared rate limit. Add your own OpenRouter API key in Settings for higher limits and reliability.';
         return Response.json({ text, error: errStr, code: 429, provider: 'openrouter', usedKeyType });
       }
+      if (resp.status === 404 && /model not found/i.test(errStr)) {
+        const text = 'This model is currently unavailable on OpenRouter (404 model not found). It may be renamed, private, or the free pool is paused. Try again later or pick another model.';
+        return Response.json({ text, code: 404, provider: 'openrouter', usedKeyType }, { status: 404 });
+      }
       // Special-case retry for Sarvam: try with only the last user message
       if (typeof model === 'string' && /sarvam/i.test(model)) {
         const lastUser = Array.isArray(messages)
@@ -73,18 +77,17 @@ export async function POST(req: NextRequest) {
           if (resp.ok) {
             // continue to normalization below using new data
           } else {
-            const errStr2 = (() => { try { return typeof data === 'string' ? data : JSON.stringify(data); } catch { return 'Unknown error'; } })();
-            const friendly2 = `Provider returned error for ${model} (after retry): ${errStr2} [status ${resp.status}]`;
-            return new Response(JSON.stringify({ error: errStr2, text: friendly2, code: resp.status }), { status: resp.status });
+            const friendly2 = `Provider returned error for ${model} (after retry) [status ${resp.status}]`;
+            return Response.json({ text: friendly2, code: resp.status, provider: 'openrouter', usedKeyType }, { status: resp.status });
           }
         } else {
-          const friendly = `Provider returned error for ${model}: ${errStr} [status ${resp.status}]`;
-          return new Response(JSON.stringify({ error: errStr, text: friendly, code: resp.status }), { status: resp.status });
+          const friendly = `Provider returned error for ${model} [status ${resp.status}]`;
+          return Response.json({ text: friendly, code: resp.status, provider: 'openrouter', usedKeyType }, { status: resp.status });
         }
       } else {
         // Return structured JSON but also a user-friendly text to render in UI
-        const friendly = `Provider returned error${model ? ` for ${model}` : ''}: ${errStr} [status ${resp.status}]`;
-        return new Response(JSON.stringify({ error: errStr, text: friendly, code: resp.status, usedKeyType }), { status: resp.status });
+        const friendly = `Provider returned error${model ? ` for ${model}` : ''} [status ${resp.status}]`;
+        return Response.json({ text: friendly, code: resp.status, provider: 'openrouter', usedKeyType }, { status: resp.status });
       }
     }
 

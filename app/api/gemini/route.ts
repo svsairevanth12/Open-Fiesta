@@ -4,6 +4,7 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, model, apiKey: apiKeyFromBody, imageDataUrl } = await req.json();
     const apiKey = apiKeyFromBody || process.env.GEMINI_API_KEY;
+    const usedKeyType = apiKeyFromBody ? 'user' : (process.env.GEMINI_API_KEY ? 'shared' : 'none');
     if (!apiKey) return new Response(JSON.stringify({ error: 'Missing Gemini API key' }), { status: 400 });
     const allowed = new Set(['gemini-2.5-flash', 'gemini-2.5-pro']);
     const requested = typeof model === 'string' ? model : 'gemini-2.5-flash';
@@ -73,8 +74,10 @@ export async function POST(req: NextRequest) {
       })();
       const errObj = errStr;
       if (resp.status === 429) {
-        const text = 'This model hit a shared rate limit. Add your own Gemini API key in Settings for higher limits and reliability.';
-        return Response.json({ text, error: errObj, code: 429, provider: 'gemini' });
+        const text = usedKeyType === 'user'
+          ? 'Your Gemini API key hit a rate limit. Please retry after a moment or upgrade your plan/limits.'
+          : 'This model hit a shared rate limit. Add your own Gemini API key in Settings for higher limits and reliability.';
+        return Response.json({ text, error: errObj, code: 429, provider: 'gemini', usedKeyType });
       }
       return new Response(JSON.stringify({ error: errObj, raw: data }), { status: resp.status });
     }
