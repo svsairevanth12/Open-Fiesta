@@ -165,15 +165,8 @@ export default function Home() {
                 onClick={() => setFirstNoteDismissed(true)}
               />
               <div className="relative mx-3 w-full max-w-md sm:max-w-lg rounded-2xl border border-white/10 bg-zinc-900/90 p-5 shadow-2xl">
-                <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-start gap-3 mb-2">
                   <h3 className="text-base font-semibold tracking-wide">Some models need API keys</h3>
-                  <button
-                    onClick={() => setFirstNoteDismissed(true)}
-                    className="text-xs px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/15"
-                    aria-label="Close"
-                  >
-                    Close
-                  </button>
                 </div>
                 <div className="text-sm text-zinc-300 space-y-2">
                   <p>You can generate API keys for free.</p>
