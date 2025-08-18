@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, User, Github } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Github } from "lucide-react";
 import Settings from "@/components/Settings";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { MODEL_CATALOG } from "@/lib/models";
@@ -28,7 +28,6 @@ export default function Home() {
   const [modelsModalOpen, setModelsModalOpen] = useState(false);
   const activeThread = useMemo(() => threads.find(t => t.id === activeId) || null, [threads, activeId]);
   const messages = activeThread?.messages ?? [];
-  const [input, setInput] = useState("");
   const [loadingIds, setLoadingIds] = useState<string[]>([]);
   const selectedModels = useMemo(() => MODEL_CATALOG.filter(m => selectedIds.includes(m.id)), [selectedIds]);
   const anyLoading = loadingIds.length > 0;
@@ -54,25 +53,31 @@ export default function Home() {
     const nextHistory = [...(thread.messages ?? []), userMsg];
     // set thread messages and optional title
     setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, title: thread.title === "New Chat" ? prompt.slice(0, 40) : t.title, messages: nextHistory } : t));
-    setInput("");
+    // input reset handled within AiInput component
 
     // fire all selected models in parallel
     setLoadingIds(selectedModels.map(m => m.id));
     await Promise.allSettled(selectedModels.map(async (m: AiModel) => {
       try {
-        let res: any;
+        let res: unknown;
         if (m.provider === "gemini") {
           // If user hasn't set a key, rely on server env fallback
           res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: nextHistory, imageDataUrl });
         } else {
           res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory });
         }
-        const text = res?.text || res?.error || "No response";
+        const text = (() => {
+          const r = res as { text?: unknown; error?: unknown } | null | undefined;
+          const t = r && typeof r === 'object' ? (typeof r.text === 'string' ? r.text : undefined) : undefined;
+          const e = r && typeof r === 'object' ? (typeof r.error === 'string' ? r.error : undefined) : undefined;
+          return t || e || "No response";
+        })();
         const asst: ChatMessage = { role: "assistant", content: String(text), modelId: m.id, ts: Date.now() };
         // Append to current thread messages to accumulate answers from multiple models
         setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
-      } catch (e: any) {
-        const asst: ChatMessage = { role: "assistant", content: `[${m.label}] Error: ${e?.message || e}`, modelId: m.id, ts: Date.now() };
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        const asst: ChatMessage = { role: "assistant", content: `[${m.label}] Error: ${msg}`, modelId: m.id, ts: Date.now() };
         setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
       } finally {
         setLoadingIds(prev => prev.filter(x => x !== m.id));
@@ -416,7 +421,7 @@ export default function Home() {
             {/* Fixed bottom input like ChatGPT */}
             <div className="fixed bottom-0 left-0 right-0 z-20 pt-2 pb-[env(safe-area-inset-bottom)] bg-gradient-to-t from-black/70 to-transparent">
               <div className="max-w-3xl mx-auto px-3">
-                <AiInput onSubmit={(text, imageDataUrl) => { setInput(text); send(text, imageDataUrl); }} loading={anyLoading} />
+                <AiInput onSubmit={(text, imageDataUrl) => { send(text, imageDataUrl); }} loading={anyLoading} />
               </div>
             </div>
           </div>

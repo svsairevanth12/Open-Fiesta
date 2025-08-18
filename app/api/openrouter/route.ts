@@ -7,14 +7,22 @@ export async function POST(req: NextRequest) {
     if (!apiKey) return new Response(JSON.stringify({ error: 'Missing OpenRouter API key' }), { status: 400 });
     if (!model) return new Response(JSON.stringify({ error: 'Missing model id' }), { status: 400 });
 
-    const sanitize = (msgs: any[]) =>
-      (Array.isArray(msgs) ? msgs : [])
-        .map((m: any) => ({ role: m?.role, content: typeof m?.content === 'string' ? m.content : String(m?.content ?? '') }))
-        .filter((m) => m.role === 'user' || m.role === 'assistant' || m.role === 'system');
+    type InMsg = { role?: unknown; content?: unknown };
+    type OutMsg = { role: 'user' | 'assistant' | 'system'; content: string };
+
+    const isRole = (r: unknown): r is OutMsg['role'] => r === 'user' || r === 'assistant' || r === 'system';
+    const sanitize = (msgs: unknown[]): OutMsg[] =>
+      (Array.isArray(msgs) ? (msgs as InMsg[]) : [])
+        .map((m) => {
+          const role = isRole(m?.role) ? m.role : 'user';
+          const content = typeof m?.content === 'string' ? m.content : String(m?.content ?? '');
+          return { role, content };
+        })
+        .filter((m) => isRole(m.role));
     // Keep last 8 messages to avoid overly long histories for picky providers
-    const trimmed = (arr: any[]) => (arr.length > 8 ? arr.slice(-8) : arr);
-    const makeBody = (msgs: any) => ({ model, messages: trimmed(sanitize(msgs)) });
-    const requestInit = (bodyObj: any) => ({
+    const trimmed = (arr: OutMsg[]) => (arr.length > 8 ? arr.slice(-8) : arr);
+    const makeBody = (msgs: unknown) => ({ model, messages: trimmed(sanitize((msgs as unknown[]) || [])) });
+    const requestInit = (bodyObj: unknown): RequestInit => ({
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -26,12 +34,23 @@ export async function POST(req: NextRequest) {
     });
 
     // First attempt
-    let resp = await fetch('https://openrouter.ai/api/v1/chat/completions', requestInit(makeBody(messages)) as any);
+    let resp = await fetch('https://openrouter.ai/api/v1/chat/completions', requestInit(makeBody(messages)));
 
-    let data = await resp.json();
+    let data: unknown = await resp.json();
     if (!resp.ok) {
-      const err = (data?.error?.message || data?.error || data);
-      const errStr = typeof err === 'string' ? err : JSON.stringify(err);
+      const errStr = (() => {
+        const d = data as { error?: { message?: unknown } } | Record<string, unknown> | string | null | undefined;
+        if (typeof d === 'string') return d;
+        if (d && typeof d === 'object') {
+          const maybeErr = (d as { error?: { message?: unknown } }).error;
+          if (maybeErr && typeof maybeErr === 'object' && 'message' in maybeErr) {
+            const m = (maybeErr as { message?: unknown }).message;
+            return typeof m === 'string' ? m : JSON.stringify(m);
+          }
+          try { return JSON.stringify(d); } catch { return 'Unknown error'; }
+        }
+        return 'Unknown error';
+      })();
       if (resp.status === 429) {
         // Convert to a friendly guidance text while preserving raw error
         const text = 'This model hit a shared rate limit. Add your own OpenRouter API key in Settings for higher limits and reliability.';
@@ -39,16 +58,19 @@ export async function POST(req: NextRequest) {
       }
       // Special-case retry for Sarvam: try with only the last user message
       if (typeof model === 'string' && /sarvam/i.test(model)) {
-        const lastUser = Array.isArray(messages) ? [...messages].reverse().find((m: any) => m?.role === 'user' && (typeof m?.content === 'string' || m?.content)) : null;
+        const lastUser = Array.isArray(messages)
+          ? [...messages].reverse().find((m) => (m as InMsg)?.role === 'user' && ((m as InMsg)?.content !== undefined))
+          : null;
         if (lastUser) {
-          const simpleMsgs = [{ role: 'user', content: typeof lastUser.content === 'string' ? lastUser.content : String(lastUser.content) }];
-          resp = await fetch('https://openrouter.ai/api/v1/chat/completions', requestInit(makeBody(simpleMsgs)) as any);
+          const cont = (lastUser as InMsg).content;
+          const contentVal: string = typeof cont === 'string' ? cont : String(cont);
+          const simpleMsgs: OutMsg[] = [{ role: 'user', content: contentVal }];
+          resp = await fetch('https://openrouter.ai/api/v1/chat/completions', requestInit(makeBody(simpleMsgs)));
           data = await resp.json();
           if (resp.ok) {
             // continue to normalization below using new data
           } else {
-            const err2 = (data?.error?.message || data?.error || data);
-            const errStr2 = typeof err2 === 'string' ? err2 : JSON.stringify(err2);
+            const errStr2 = (() => { try { return typeof data === 'string' ? data : JSON.stringify(data); } catch { return 'Unknown error'; } })();
             const friendly2 = `Provider returned error for ${model} (after retry): ${errStr2} [status ${resp.status}]`;
             return new Response(JSON.stringify({ error: errStr2, text: friendly2, code: resp.status }), { status: resp.status });
           }
@@ -64,31 +86,32 @@ export async function POST(req: NextRequest) {
     }
 
     // Normalize content to a plain string
-    const choice = data?.choices?.[0] || {};
-    const msg = choice?.message || {};
-    let content: any = msg?.content;
+    const choice = (data as { choices?: Array<{ message?: { content?: unknown } }> } | null)?.choices?.[0] || {};
+    const msg = (choice as { message?: { content?: unknown } } | null)?.message || {};
+    const content: unknown = (msg as { content?: unknown } | null)?.content;
     let text = '';
     if (typeof content === 'string') {
       text = content;
     } else if (Array.isArray(content)) {
       // Array of content blocks (e.g., {type:'text', text:'...'}, {type:'reasoning', ...})
       text = content
-        .map((c: any) => {
+        .map((c) => {
           if (!c) return '';
           if (typeof c === 'string') return c;
-          if (typeof c.text === 'string') return c.text;
-          if (typeof c.content === 'string') return c.content;
-          if (typeof c.value === 'string') return c.value;
+          const obj = c as { text?: unknown; content?: unknown; value?: unknown };
+          if (typeof obj.text === 'string') return obj.text;
+          if (typeof obj.content === 'string') return obj.content;
+          if (typeof obj.value === 'string') return obj.value;
           return '';
         })
         .filter(Boolean)
         .join('\n');
     } else if (content && typeof content === 'object') {
       // Some providers nest text inside content.text
-      if (typeof content.text === 'string') {
-        text = content.text;
+      if (typeof (content as { text?: unknown }).text === 'string') {
+        text = String((content as { text?: unknown }).text);
       } else {
-        text = JSON.stringify(content);
+        try { text = JSON.stringify(content); } catch { text = ''; }
       }
     }
 
@@ -100,18 +123,55 @@ export async function POST(req: NextRequest) {
         .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
         .trim();
 
+    // Convert common Markdown to plain text (headers, lists, emphasis, links, code fences)
+    const mdToPlain = (s: string) =>
+      s
+        // code fences and inline code
+        .replace(/```[\s\S]*?```/g, (m) => m.replace(/```/g, ''))
+        .replace(/`([^`]+)`/g, '$1')
+        // headings ###, ##, #
+        .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+        // list markers -, *, +, numbers
+        .replace(/^\s{0,3}[-*+]\s+/gm, '• ')
+        .replace(/^\s{0,3}\d+\.\s+/gm, (m) => m.replace(/\d+\./, (n) => `${n.replace('.', '')}. `))
+        // bold/italic
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/__([^_]+)__/g, '$1')
+        .replace(/_([^_]+)_/g, '$1')
+        // links [text](url)
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+        // blockquotes
+        .replace(/^>\s?/gm, '')
+        // horizontal rules
+        .replace(/^\s{0,3}([-*_])\s?\1\s?\1.*$/gm, '')
+        // excess whitespace
+        .replace(/\s+$/gm, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
     if (!text) {
       // Additional fallbacks seen across some providers
-      const alt = choice?.content || msg?.response_text || msg?.result || (data as any)?.output_text;
+      const alt = (choice as { content?: unknown }).content || (msg as { response_text?: unknown }).response_text || (msg as { result?: unknown }).result || (data as Record<string, unknown> | null | undefined)?.['output_text'];
       if (typeof alt === 'string') text = alt;
       else if (Array.isArray(alt)) {
-        text = alt.map((c: any) => (typeof c?.text === 'string' ? c.text : typeof c?.content === 'string' ? c.content : typeof c === 'string' ? c : '')).filter(Boolean).join('\n');
+        text = alt.map((c) => {
+          if (typeof c === 'string') return c;
+          const obj = c as { text?: unknown; content?: unknown };
+          if (typeof obj.text === 'string') return obj.text;
+          if (typeof obj.content === 'string') return obj.content;
+          return '';
+        }).filter(Boolean).join('\n');
       }
     }
 
     if (text) {
       const stripped = stripReasoning(text);
       text = stripped || text; // avoid stripping to empty
+      // For DeepSeek R1, return plain text (no Markdown) to improve readability
+      if (typeof model === 'string' && /deepseek\s*\/\s*deepseek-r1/i.test(model)) {
+        text = mdToPlain(text);
+      }
     }
 
     if (!text) {
@@ -119,7 +179,9 @@ export async function POST(req: NextRequest) {
     }
 
     return Response.json({ text, raw: data });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e?.message || 'Unknown error' }), { status: 500 });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
 }
+

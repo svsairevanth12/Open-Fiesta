@@ -9,9 +9,20 @@ export async function POST(req: NextRequest) {
     const geminiModel = 'gemini-2.5-pro';
 
     // Convert OpenAI-style messages to Gemini contents
-    const contents = (messages || []).map((m: any) => ({
-      role: m.role === 'assistant' ? 'model' : m.role,
-      parts: [{ text: m.content ?? '' }],
+    type InMsg = { role?: unknown; content?: unknown };
+    type GeminiPart = { text?: string; inline_data?: { mime_type: string; data: string } };
+    type GeminiContent = { role: 'user' | 'model' | 'system'; parts: GeminiPart[] };
+
+    const toRole = (r: unknown): 'user' | 'model' | 'system' => {
+      const role = typeof r === 'string' ? r : '';
+      if (role === 'assistant') return 'model';
+      if (role === 'user' || role === 'system') return role;
+      return 'user';
+    };
+
+    const contents: GeminiContent[] = (Array.isArray(messages) ? (messages as InMsg[]) : []).map((m) => ({
+      role: toRole(m.role),
+      parts: [{ text: typeof m?.content === 'string' ? m.content : String(m?.content ?? '') }],
     }));
 
     // Attach image to last user message if provided
@@ -43,9 +54,12 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    const data = await resp.json();
+    const data: unknown = await resp.json();
     if (!resp.ok) {
-      const msg = data?.error?.message || data?.error || data;
+      const errObj = (data as { error?: { message?: unknown } } | Record<string, unknown> | string | null | undefined);
+      const msg = typeof errObj === 'object' && errObj && 'error' in errObj && (errObj as any).error && typeof (errObj as any).error === 'object'
+        ? (errObj as any).error.message
+        : (typeof errObj === 'string' ? errObj : errObj);
       const errStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
       if (resp.status === 429) {
         const text = 'This model hit a shared rate limit. Add your own Gemini API key in Settings for higher limits and reliability.';
@@ -55,30 +69,36 @@ export async function POST(req: NextRequest) {
     }
 
     // Normalize response to plain text
-    const cand = data?.candidates?.[0];
-    const parts = cand?.content?.parts ?? [];
+    const cand = (data as { candidates?: unknown[] } | null)?.candidates?.[0] as
+      | { content?: { parts?: unknown[] }; finishReason?: unknown; safetyRatings?: unknown[] }
+      | undefined;
+    const parts = (cand?.content as { parts?: unknown[] } | undefined)?.parts ?? [];
     let text = '';
     if (Array.isArray(parts)) {
       const collected = parts
-        .map((p: any) => (typeof p?.text === 'string' ? p.text : ''))
+        .map((p) => (typeof (p as { text?: unknown })?.text === 'string' ? String((p as { text?: unknown }).text) : ''))
         .filter(Boolean);
       text = collected.join('\n');
     }
     if (!text && Array.isArray(parts) && parts.length) {
       // If no simple text, try to stringify meaningful structure
       text = parts
-        .map((p: any) => {
-          if (typeof p?.text === 'string') return p.text;
-          if (p?.inline_data) return '[inline data]';
-          const s = JSON.stringify(p);
+        .map((p) => {
+          const pp = p as { text?: unknown; inline_data?: unknown };
+          if (typeof pp?.text === 'string') return String(pp.text);
+          if (pp?.inline_data) return '[inline data]';
+          const s = (() => { try { return JSON.stringify(p); } catch { return ''; } })();
           return typeof s === 'string' ? s : '';
         })
         .filter(Boolean)
         .join('\n');
     }
     if (!text) {
-      const finish = cand?.finishReason || data?.finishReason;
-      const blockReason = data?.promptFeedback?.blockReason || cand?.safetyRatings?.[0]?.category;
+      const finish = (cand as { finishReason?: unknown } | undefined)?.finishReason || (data as { finishReason?: unknown } | undefined)?.finishReason;
+      const blockReason = (data as { promptFeedback?: { blockReason?: unknown } } | undefined)?.promptFeedback?.blockReason ||
+        (Array.isArray((cand as { safetyRatings?: Array<{ category?: unknown }> } | undefined)?.safetyRatings)
+          ? (cand as { safetyRatings?: Array<{ category?: unknown }> }).safetyRatings?.[0]?.category
+          : undefined);
       const blocked = finish && String(finish).toLowerCase().includes('safety');
       if (blocked || blockReason) {
         text = `Gemini Pro blocked the content due to safety settings${blockReason ? ` (reason: ${blockReason})` : ''}. Try rephrasing your prompt.`;
@@ -93,7 +113,9 @@ export async function POST(req: NextRequest) {
       text = compact || hint;
     }
     return Response.json({ text, raw: data });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e?.message || 'Unknown error' }), { status: 500 });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
 }
+

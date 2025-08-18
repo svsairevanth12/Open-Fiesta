@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { AnimatePresence, motion } from "framer-motion"
-import { Globe, Paperclip, Plus, Send, Loader2, X } from "lucide-react"
+import { Globe, Paperclip, Send, Loader2, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
@@ -85,7 +85,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
   const [imageFile, setImageFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handelClose = (e: any) => {
+  const handelClose = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
     if (fileInputRef.current) {
@@ -94,7 +94,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
     setImagePreview(null) // Use null instead of empty string
   }
 
-  const handelChange = (e: any) => {
+  const handelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null
     if (file) {
       setImageFile(file)
