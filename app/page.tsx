@@ -33,6 +33,27 @@ export default function Home() {
   const selectedModels = useMemo(() => MODEL_CATALOG.filter(m => selectedIds.includes(m.id)), [selectedIds]);
   const anyLoading = loadingIds.length > 0;
 
+  // Copy helper with fallback when navigator.clipboard is unavailable
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {
+        // ignore
+      }
+    }
+  };
+
   const toggle = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : (prev.length >= 5 ? prev : [...prev, id]));
   };
@@ -334,9 +355,6 @@ export default function Home() {
                       );
                     })}
                   </div>
-                  <div className="flex justify-end mt-4">
-                    <button onClick={() => setModelsModalOpen(false)} className="px-3 py-1.5 rounded bg-white/10 border border-white/10 text-sm">Close</button>
-                  </div>
                 </div>
               </div>
             )}
@@ -364,8 +382,25 @@ export default function Home() {
                   {pairs.map((row, i) => (
                     <div key={i} className="space-y-2">
                       {/* Optional: show the user prompt spanning all columns */}
-                      <div className="text-sm text-zinc-300">
-                        <span className="opacity-60">You:</span> {row.user.content}
+                      <div className="text-sm text-zinc-300 flex items-center justify-between gap-2">
+                        <div>
+                          <span className="opacity-60">You:</span> {row.user.content}
+                        </div>
+                        <button
+                          onClick={() => {
+                            const all = selectedModels.map((m) => {
+                              const ans = row.answers.find((a) => a.modelId === m.id);
+                              const header = m.label;
+                              const body = ans?.content ?? '';
+                              return `## ${header}\n${body}`;
+                            }).join('\n\n');
+                            copyToClipboard(all);
+                          }}
+                          className="text-[11px] px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/15"
+                          title="Copy all model responses for this prompt"
+                        >
+                          Copy all
+                        </button>
                       </div>
                       <div
                         className="grid gap-3 items-stretch"
@@ -375,8 +410,17 @@ export default function Home() {
                           const ans = row.answers.find((a) => a.modelId === m.id);
                           return (
                             <div key={m.id} className="h-full">
-                              <div className="bg-white/5 rounded-md p-3 h-full min-h-[160px] flex ring-1 ring-white/5">
-                                <div className="text-sm leading-relaxed w-full">
+                              <div className="relative bg-white/5 rounded-md p-3 h-full min-h-[160px] flex ring-1 ring-white/5 overflow-hidden">
+                                {ans && (
+                                  <button
+                                    onClick={() => copyToClipboard(ans.content)}
+                                    className="absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/15 whitespace-nowrap"
+                                    title={`Copy ${m.label} response`}
+                                  >
+                                    Copy
+                                  </button>
+                                )}
+                                <div className="text-sm leading-relaxed w-full pr-8">
                                   {ans ? (
                                     <>
                                       <MarkdownLite text={ans.content} />
