@@ -1,5 +1,7 @@
 # Open-Fiesta
 
+![Open-Fiesta](./public/osfiesta.png)
+
 An open-source, multi-model AI chat playground built with Next.js App Router. Switch between providers and models, compare outputs side-by-side, and use optional web search and image attachments.
 
 ## Features
@@ -64,5 +66,4 @@ This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## Acknowledgements
 
-- Icons by Lucide
 - Model access via OpenRouter and Google
