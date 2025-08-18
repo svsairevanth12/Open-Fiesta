@@ -606,8 +606,8 @@ export default function Home() {
                                       {(() => {
                                         try {
                                           const txt = String(ans.content || '');
-                                          // Only show CTA for shared-key guidance string
-                                          const show = /add your own\s+openrouter api key/i.test(txt);
+                                          // Show CTA for shared-key guidance (OpenRouter or Gemini)
+                                          const show = /add your own\s+(?:openrouter|gemini)\s+api key/i.test(txt);
                                           return show;
                                         } catch { return false; }
                                       })() && (
