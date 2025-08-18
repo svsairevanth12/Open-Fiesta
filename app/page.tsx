@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, User, Github } from "lucide-react";
 import Settings from "@/components/Settings";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { MODEL_CATALOG } from "@/lib/models";
@@ -17,7 +17,7 @@ export default function Home() {
       "deepseek-r1",
       "llama-3.3-70b-instruct",
       "moonshot-kimi-k2",
-      "sarvam-m",
+      "qwen-2.5-72b-instruct",
     ]
   );
   const [keys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
@@ -121,7 +121,7 @@ export default function Home() {
             </button>
 
             <div className={`flex items-center justify-between mb-2 ${sidebarOpen ? '' : 'opacity-0 pointer-events-none'}`}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#e42a42]" />
                 <h2 className="text-sm font-semibold">OpenSource Fiesta</h2>
               </div>
@@ -233,7 +233,35 @@ export default function Home() {
                 <button onClick={() => setMobileSidebarOpen(true)} className="lg:hidden text-xs px-2 py-1 rounded bg-white/10 border border-white/15">Menu</button>
                 <h1 className="text-lg font-semibold">OpenSource Fiesta</h1>
               </div>
-              <div className="lg:hidden"></div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://x.com/byteHumi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-xs text-zinc-300 hover:text-white"
+                  title="Open Niladri on X"
+                >
+                  <img
+                    src="/image.png"
+                    alt="Niladri avatar"
+                    className="h-5 w-5 rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span className="opacity-90 hidden sm:inline text-sm">Made by <span className="font-semibold underline decoration-dotted">Niladri</span></span>
+                </a>
+                <a
+                  href="https://github.com/NiladriHazra/Open-Fiesta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a] ml-1"
+                  title="Star on GitHub"
+                >
+                  <Github size={14} />
+                  <span className="hidden sm:inline">Star on GitHub</span>
+                  <span className="sm:hidden">Star</span>
+                </a>
+              </div>
             </div>
 
             {/* Selected models row + Change button */}
@@ -242,10 +270,13 @@ export default function Home() {
                 <button
                   key={m.id}
                   onClick={() => toggle(m.id)}
-                  className="px-2.5 py-1 text-xs rounded-full bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a]"
-                  title="Click to remove"
+                  className="px-2.5 py-1 text-xs rounded-full bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a] flex items-center gap-2"
+                  title="Click to toggle"
                 >
-                  {m.label}
+                  <span className="truncate max-w-[180px]">{m.label}</span>
+                  <span className="relative inline-flex h-4 w-7 items-center rounded-full bg-white/30">
+                    <span className="h-3 w-3 rounded-full bg-white translate-x-3.5" />
+                  </span>
                 </button>
               ))}
               {selectedModels.length === 0 && (
@@ -341,7 +372,25 @@ export default function Home() {
                               <div className="bg-white/5 rounded-md p-3 h-full min-h-[160px] flex ring-1 ring-white/5">
                                 <div className="text-sm leading-relaxed w-full">
                                   {ans ? (
-                                    <MarkdownLite text={ans.content} />
+                                    <>
+                                      <MarkdownLite text={ans.content} />
+                                      {(() => {
+                                        try {
+                                          const txt = String(ans.content || '');
+                                          const show = /rate limit|add your own\s+.*api key/i.test(txt);
+                                          return show;
+                                        } catch { return false; }
+                                      })() && (
+                                        <div className="mt-2">
+                                          <button
+                                            onClick={() => window.dispatchEvent(new Event('open-settings'))}
+                                            className="text-xs px-2.5 py-1 rounded bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a]"
+                                          >
+                                            Add keys
+                                          </button>
+                                        </div>
+                                      )}
+                                    </>
                                   ) : loadingIds.includes(m.id) ? (
                                     <div className="w-full self-stretch animate-pulse space-y-2">
                                       <div className="h-2.5 w-1/3 rounded bg-[#e42a42]/30" />

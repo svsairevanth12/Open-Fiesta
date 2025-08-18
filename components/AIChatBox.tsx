@@ -153,7 +153,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                     id="ai-input-04"
                     value={value}
                     placeholder=""
-                    className="w-full rounded-xl px-4 py-3 bg-transparent border-none dark:text-white resize-none focus-visible:ring-0 leading-[1.2]"
+                    className="w-full rounded-xl px-4 py-3 bg-transparent border-none text-white resize-none focus-visible:ring-0 leading-[1.2]"
                     ref={textareaRef}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
@@ -179,7 +179,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   id="ai-input-04"
                   value={value}
                   placeholder=""
-                  className="w-full rounded-2xl rounded-b-none px-4 py-3 bg-black/5 dark:bg-white/5 border-none dark:text-white resize-none focus-visible:ring-0 leading-[1.2]"
+                  className="w-full rounded-2xl rounded-b-none px-4 py-3 bg-black/5 dark:bg-white/5 border-none text-white resize-none focus-visible:ring-0 leading-[1.2]"
                   ref={textareaRef}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -208,7 +208,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   "cursor-pointer relative rounded-full p-2 bg-black/5 dark:bg-white/5",
                   imagePreview
                     ? "bg-[#ff3f17]/15 border border-[#ff3f17] text-[#ff3f17]"
-                    : "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
+                    : "text-white/60 hover:text-white"
                 )}
               >
                 <input
@@ -218,10 +218,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   className="hidden"
                 />
                 <Paperclip
-                  className={cn(
-                    "w-4 h-4 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors",
-                    imagePreview && "text-[#ff3f17]"
-                  )}
+                  className={cn("w-4 h-4 transition-colors", imagePreview ? "text-[#ff3f17]" : "text-white/60 hover:text-white")}
                 />
               </label>
               <button
@@ -233,7 +230,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 border h-8",
                   showSearch
                     ? "bg-[#ff3f17]/15 border-[#ff3f17] text-[#ff3f17]"
-                    : "bg-black/5 dark:bg-white/5 border-transparent text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
+                    : "bg-black/5 dark:bg-white/5 border-transparent text-white/60 hover:text-white"
                 )}
               >
                 <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
@@ -291,9 +288,9 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   "rounded-full p-2 transition-colors",
                   loading
                     ? "bg-[#e42a42]/20 text-[#e42a42] cursor-not-allowed"
-                    : value
+                  : value
                     ? "bg-[#ff3f17]/15 text-[#ff3f17]"
-                    : "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
+                    : "bg-black/5 dark:bg-white/5 text-white/80 hover:text-white"
                 )}
                 disabled={loading}
                 aria-busy={loading}
