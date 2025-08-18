@@ -4,6 +4,7 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, model, apiKey: apiKeyFromBody, referer, title } = await req.json();
     const apiKey = apiKeyFromBody || process.env.OPENROUTER_API_KEY;
+    const usedKeyType = apiKeyFromBody ? 'user' : (process.env.OPENROUTER_API_KEY ? 'shared' : 'none');
     if (!apiKey) return new Response(JSON.stringify({ error: 'Missing OpenRouter API key' }), { status: 400 });
     if (!model) return new Response(JSON.stringify({ error: 'Missing model id' }), { status: 400 });
 
@@ -53,8 +54,10 @@ export async function POST(req: NextRequest) {
       })();
       if (resp.status === 429) {
         // Convert to a friendly guidance text while preserving raw error
-        const text = 'This model hit a shared rate limit. Add your own OpenRouter API key in Settings for higher limits and reliability.';
-        return Response.json({ text, error: errStr, code: 429, provider: 'openrouter' });
+        const text = usedKeyType === 'user'
+          ? 'Your OpenRouter API key hit a rate limit. Please retry after a moment or upgrade your plan/limits.'
+          : 'This model hit a shared rate limit. Add your own OpenRouter API key in Settings for higher limits and reliability.';
+        return Response.json({ text, error: errStr, code: 429, provider: 'openrouter', usedKeyType });
       }
       // Special-case retry for Sarvam: try with only the last user message
       if (typeof model === 'string' && /sarvam/i.test(model)) {
@@ -81,7 +84,7 @@ export async function POST(req: NextRequest) {
       } else {
         // Return structured JSON but also a user-friendly text to render in UI
         const friendly = `Provider returned error${model ? ` for ${model}` : ''}: ${errStr} [status ${resp.status}]`;
-        return new Response(JSON.stringify({ error: errStr, text: friendly, code: resp.status }), { status: resp.status });
+        return new Response(JSON.stringify({ error: errStr, text: friendly, code: resp.status, usedKeyType }), { status: resp.status });
       }
     }
 

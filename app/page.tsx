@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Plus, Github, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Github, Star, Check } from "lucide-react";
 import Settings from "@/components/Settings";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { MODEL_CATALOG } from "@/lib/models";
@@ -32,6 +32,8 @@ export default function Home() {
   const [loadingIds, setLoadingIds] = useState<string[]>([]);
   const selectedModels = useMemo(() => MODEL_CATALOG.filter(m => selectedIds.includes(m.id)), [selectedIds]);
   const anyLoading = loadingIds.length > 0;
+  const [copiedAllIdx, setCopiedAllIdx] = useState<number | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Copy helper with fallback when navigator.clipboard is unavailable
   const copyToClipboard = async (text: string) => {
@@ -295,14 +297,13 @@ export default function Home() {
             <div className="mb-3 flex flex-wrap items-center gap-2">
               {selectedModels.map((m) => {
                 const isFree = /(\(|\s)free\)/i.test(m.label);
+                const isUncensored = /uncensored/i.test(m.label) || /venice/i.test(m.model);
                 return (
                 <button
                   key={m.id}
                   onClick={() => toggle(m.id)}
-                  className={`px-3 py-1.5 text-xs rounded-full text-white border flex items-center gap-2 ${
-                    m.good ? 'border-amber-300/40 bg-gradient-to-r from-amber-500/25 via-[#e42a42]/60 to-rose-500/25 shadow-[0_0_0_1px_rgba(251,191,36,0.25)_inset,0_0_14px_rgba(251,191,36,0.22)]'
-                    : isFree ? 'bg-[#e42a42] border-emerald-300/40 hover:bg-[#cf243a] shadow-[0_0_0_1px_rgba(16,185,129,0.22)_inset,0_0_10px_rgba(16,185,129,0.15)]'
-                    : 'bg-[#e42a42] border-white/10 hover:bg-[#cf243a]'
+                  className={`h-9 px-3 text-xs rounded-full text-white border flex items-center gap-2 bg-white/5 hover:bg-white/10 transition-colors ${
+                    m.good ? 'border-amber-300/40' : isFree ? 'border-emerald-300/40' : 'border-white/10'
                   }`}
                   title="Click to toggle"
                 >
@@ -313,14 +314,20 @@ export default function Home() {
                     </span>
                   )}
                   {isFree && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-600/35 text-emerald-100 ring-1 ring-emerald-400/50 shadow-[0_0_0_1px_rgba(16,185,129,0.25)_inset]">
-                      <span className="h-2 w-2 rounded-full bg-emerald-200" />
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-300/30">
+                      <span className="h-2 w-2 rounded-full bg-emerald-300" />
                       <span className="hidden sm:inline">Free</span>
                     </span>
                   )}
+                  {isUncensored && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-200 ring-1 ring-rose-300/30">
+                      <span className="h-2 w-2 rounded-full bg-rose-200" />
+                      <span className="hidden sm:inline">Uncensored</span>
+                    </span>
+                  )}
                   <span className="truncate max-w-[180px]">{m.label}</span>
-                  <span className="relative inline-flex h-4 w-7 items-center rounded-full bg-white/30">
-                    <span className="h-3 w-3 rounded-full bg-white translate-x-3.5" />
+                  <span className="relative inline-flex h-4 w-7 items-center rounded-full bg-orange-500/40">
+                    <span className="h-3 w-3 rounded-full bg-orange-200 translate-x-3.5" />
                   </span>
                 </button>
               );})}
@@ -347,54 +354,90 @@ export default function Home() {
                     <button onClick={() => setModelsModalOpen(false)} className="text-xs px-2 py-1 rounded bg-white/10">Close</button>
                   </div>
                   <div className="text-xs text-zinc-300 mb-3">Selected: {selectedIds.length}/5</div>
-                  <div className="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto pr-1">
-                    {MODEL_CATALOG.map((m) => {
-                      const isFree = /(\(|\s)free\)/i.test(m.label);
-                      const selected = selectedIds.includes(m.id);
-                      const disabled = !selected && selectedIds.length >= 5;
-                      return (
-                        <button
-                          key={m.id}
-                          onClick={() => !disabled && toggle(m.id)}
-                          className={`px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center justify-between gap-3 min-w-[260px] ${
-                            selected
-                              ? m.good
-                                ? 'text-white border-amber-300/40 bg-gradient-to-r from-amber-500/25 via-[#e42a42]/60 to-rose-500/25 shadow-[0_0_0_1px_rgba(251,191,36,0.25)_inset,0_0_16px_rgba(251,191,36,0.25)]'
-                                : isFree
-                                  ? 'text-white border-emerald-300/40 bg-gradient-to-r from-emerald-500/20 via-[#e42a42]/40 to-emerald-500/20 shadow-[0_0_0_1px_rgba(16,185,129,0.25)_inset,0_0_16px_rgba(16,185,129,0.2)]'
-                                  : 'bg-[#e42a42] text-white border-white/10'
-                            : disabled
-                              ? 'bg-white/5 text-zinc-500 border-white/10 cursor-not-allowed opacity-60'
-                              : m.good
-                                ? 'bg-white/5 text-zinc-100 border-amber-300/30 hover:bg-white/10 shadow-[0_0_10px_rgba(251,191,36,0.18)]'
-                                : isFree
-                                  ? 'bg-white/5 text-zinc-100 border-emerald-300/30 hover:bg-white/10 shadow-[0_0_10px_rgba(16,185,129,0.18)]'
-                                  : 'bg-white/5 text-zinc-200 border-white/10 hover:bg-white/10'
-                          }`}
-                          title={selected ? 'Click to unselect' : disabled ? 'Limit reached' : 'Click to select'}
-                        >
-                          <span className="pr-1 inline-flex items-center gap-1.5 min-w-0">
-                            {m.good && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
-                                <Star size={12} className="shrink-0" />
-                                <span className="hidden sm:inline">Pro</span>
-                              </span>
-                            )}
-                            {isFree && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-300/30">
-                                <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                                <span className="hidden sm:inline">Free</span>
-                              </span>
-                            )}
-                            <span className="truncate max-w-[150px] sm:max-w-[200px]">{m.label}</span>
-                          </span>
-                          {/* Toggle visual */}
-                          <span className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${selected ? 'bg-white/30' : 'bg-white/10'}`}>
-                            <span className={`h-3 w-3 rounded-full bg-white transition-transform ${selected ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
-                          </span>
-                        </button>
-                      );
-                    })}
+                  <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                    {(() => {
+                      const buckets: Record<string, typeof MODEL_CATALOG> = {
+                        Favorites: [],
+                        Uncensored: [],
+                        Free: [],
+                        Good: [],
+                        Others: [],
+                      };
+                      const seen = new Set<string>();
+                      const isFree = (m: AiModel) => /(\(|\s)free\)/i.test(m.label) || m.free;
+                      const isUnc = (m: AiModel) => /uncensored/i.test(m.label) || /venice/i.test(m.model);
+                      const staticFavIds = new Set<string>(['llama-3.3-70b-instruct', 'gemini-2.5-pro']);
+                      const isFav = (m: AiModel) => selectedIds.includes(m.id) || staticFavIds.has(m.id);
+                      const pick = (m: AiModel) => {
+                        if (isFav(m)) return 'Favorites';
+                        if (isUnc(m)) return 'Uncensored';
+                        if (isFree(m)) return 'Free';
+                        if (m.good) return 'Good';
+                        return 'Others';
+                      };
+                      MODEL_CATALOG.forEach((m) => {
+                        const key = pick(m);
+                        if (!seen.has(m.id)) {
+                          buckets[key].push(m);
+                          seen.add(m.id);
+                        }
+                      });
+
+                      const order: Array<keyof typeof buckets> = ['Favorites', 'Uncensored', 'Free', 'Good', 'Others'];
+                      return order.filter((k) => buckets[k].length > 0).map((k) => (
+                        <div key={k} className="space-y-2">
+                          <div className="text-xs uppercase tracking-wide text-zinc-300/80">{k}</div>
+                          <div className="flex flex-wrap gap-2">
+                            {buckets[k].map((m) => {
+                              const free = isFree(m);
+                              const unc = isUnc(m);
+                              const selected = selectedIds.includes(m.id);
+                              const disabled = !selected && selectedIds.length >= 5;
+                              return (
+                                <button
+                                  key={m.id}
+                                  onClick={() => !disabled && toggle(m.id)}
+                                  className={`h-9 px-3 text-xs rounded-full border transition-colors flex items-center justify-between gap-3 min-w-[260px] ${
+                                    selected
+                                      ? `${m.good ? 'border-amber-300/50' : free ? 'border-emerald-300/50' : 'border-white/20'} bg-white/10`
+                                      : disabled
+                                        ? 'bg-white/5 text-zinc-500 border-white/10 cursor-not-allowed opacity-60'
+                                        : `${m.good ? 'border-amber-300/30' : free ? 'border-emerald-300/30' : 'border-white/10'} bg-white/5 hover:bg-white/10`
+                                  }`}
+                                  title={selected ? 'Click to unselect' : disabled ? 'Limit reached' : 'Click to select'}
+                                >
+                                  <span className="pr-1 inline-flex items-center gap-1.5 min-w-0">
+                                    {m.good && (
+                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
+                                        <Star size={12} className="shrink-0" />
+                                        <span className="hidden sm:inline">Pro</span>
+                                      </span>
+                                    )}
+                                    {free && (
+                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-300/30">
+                                        <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                                        <span className="hidden sm:inline">Free</span>
+                                      </span>
+                                    )}
+                                    {unc && (
+                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-200 ring-1 ring-rose-300/30">
+                                        <span className="h-2 w-2 rounded-full bg-rose-200" />
+                                        <span className="hidden sm:inline">Uncensored</span>
+                                      </span>
+                                    )}
+                                    <span className="truncate max-w-[150px] sm:max-w-[200px]">{m.label}</span>
+                                  </span>
+                                  {/* Toggle visual */}
+                                  <span className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${selected ? 'bg-orange-500/40' : 'bg-white/10'}`}>
+                                    <span className={`h-3 w-3 rounded-full transition-transform ${selected ? 'bg-orange-200 translate-x-3.5' : 'bg-white translate-x-0.5'}`} />
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
               </div>
@@ -452,11 +495,23 @@ export default function Home() {
                               return `## ${header}\n${body}`;
                             }).join('\n\n');
                             copyToClipboard(all);
+                            setCopiedAllIdx(i);
+                            window.setTimeout(() => setCopiedAllIdx(null), 1200);
                           }}
-                          className="text-[11px] px-2.5 py-1 rounded-md bg-white/10 border border-white/15 hover:bg-white/15 shadow-sm"
+                          className={`text-[11px] px-2.5 py-1 rounded-md border shadow-sm transition-all ${
+                            copiedAllIdx === i
+                              ? 'bg-emerald-500/20 border-emerald-300/40 text-emerald-100 scale-[1.02]'
+                              : 'bg-white/10 border-white/15 hover:bg-white/15'
+                          }`}
                           title="Copy all model responses for this prompt"
                         >
-                          Copy all
+                          {copiedAllIdx === i ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Check size={12} /> Copied
+                            </span>
+                          ) : (
+                            'Copy all'
+                          )}
                         </button>
                       </div>
                       <div
@@ -471,11 +526,26 @@ export default function Home() {
                               <div className={`group relative rounded-md p-3 h-full min-h-[160px] flex overflow-hidden ring-1 ${m.good ? 'bg-gradient-to-b from-amber-400/10 to-white/5 ring-amber-300/30' : isFree ? 'bg-gradient-to-b from-emerald-400/10 to-white/5 ring-emerald-300/30' : 'bg-white/5 ring-white/5'}`}>
                                 {ans && (
                                   <button
-                                    onClick={() => copyToClipboard(ans.content)}
-                                    className="absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/15 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => {
+                                      copyToClipboard(ans.content);
+                                      const key = `${i}:${m.id}`;
+                                      setCopiedKey(key);
+                                      window.setTimeout(() => setCopiedKey(prev => (prev === key ? null : prev)), 1200);
+                                    }}
+                                    className={`absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded border whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all ${
+                                      copiedKey === `${i}:${m.id}`
+                                        ? 'bg-emerald-500/20 border-emerald-300/40 text-emerald-100 scale-[1.02]'
+                                        : 'bg-white/10 border-white/10 hover:bg-white/15'
+                                    }`}
                                     title={`Copy ${m.label} response`}
                                   >
-                                    Copy
+                                    {copiedKey === `${i}:${m.id}` ? (
+                                      <span className="inline-flex items-center gap-1">
+                                        <Check size={12} /> Copied
+                                      </span>
+                                    ) : (
+                                      'Copy'
+                                    )}
                                   </button>
                                 )}
                                 <div className="text-sm leading-relaxed w-full pr-8">
