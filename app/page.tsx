@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Plus, Github } from "lucide-react";
 import Settings from "@/components/Settings";
 import { useLocalStorage } from "@/lib/useLocalStorage";
@@ -27,7 +28,7 @@ export default function Home() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [modelsModalOpen, setModelsModalOpen] = useState(false);
   const activeThread = useMemo(() => threads.find(t => t.id === activeId) || null, [threads, activeId]);
-  const messages = activeThread?.messages ?? [];
+  const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
   const [loadingIds, setLoadingIds] = useState<string[]>([]);
   const selectedModels = useMemo(() => MODEL_CATALOG.filter(m => selectedIds.includes(m.id)), [selectedIds]);
   const anyLoading = loadingIds.length > 0;
@@ -246,12 +247,12 @@ export default function Home() {
                   className="inline-flex items-center gap-2 text-xs text-zinc-300 hover:text-white"
                   title="Open Niladri on X"
                 >
-                  <img
+                  <Image
                     src="/image.png"
                     alt="Niladri avatar"
+                    width={20}
+                    height={20}
                     className="h-5 w-5 rounded-full object-cover"
-                    loading="lazy"
-                    decoding="async"
                   />
                   <span className="opacity-90 hidden sm:inline text-sm">Made by <span className="font-semibold underline decoration-dotted">Niladri</span></span>
                 </a>

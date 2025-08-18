@@ -56,11 +56,19 @@ export async function POST(req: NextRequest) {
 
     const data: unknown = await resp.json();
     if (!resp.ok) {
-      const errObj = (data as { error?: { message?: unknown } } | Record<string, unknown> | string | null | undefined);
-      const msg = typeof errObj === 'object' && errObj && 'error' in errObj && (errObj as any).error && typeof (errObj as any).error === 'object'
-        ? (errObj as any).error.message
-        : (typeof errObj === 'string' ? errObj : errObj);
-      const errStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
+      const errStr = (() => {
+        const d = data as { error?: { message?: unknown } } | Record<string, unknown> | string | null | undefined;
+        if (typeof d === 'string') return d;
+        if (d && typeof d === 'object') {
+          if ('error' in d && d.error && typeof (d as { error?: unknown }).error === 'object') {
+            const maybe = (d as { error?: { message?: unknown } }).error;
+            const m = maybe && typeof maybe === 'object' && 'message' in maybe ? (maybe as { message?: unknown }).message : undefined;
+            return typeof m === 'string' ? m : JSON.stringify(m);
+          }
+          try { return JSON.stringify(d); } catch { return 'Unknown error'; }
+        }
+        return 'Unknown error';
+      })();
       if (resp.status === 429) {
         const text = 'This model hit a shared rate limit. Add your own Gemini API key in Settings for higher limits and reliability.';
         return Response.json({ text, error: errStr, code: 429, provider: 'gemini' });
