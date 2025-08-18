@@ -1,6 +1,12 @@
 # Open-Fiesta
 
-![Open-Fiesta](./public/osfiesta.png)
+<video controls poster="./public/osfiesta.png" width="800">
+  <source src="./public/OSFiesta.mp4" type="video/mp4" />
+  <a href="./public/OSFiesta.mp4">
+    <img src="./public/osfiesta.png" alt="Open-Fiesta preview" />
+  </a>
+  Your browser does not support the video tag.
+</video>
 
 An open-source, multi-model AI chat playground built with Next.js App Router. Switch between providers and models, compare outputs side-by-side, and use optional web search and image attachments.
 
