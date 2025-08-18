@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
       if (resp.status === 429) {
         const text = usedKeyType === 'user'
           ? 'Your Gemini API key hit a rate limit. Please retry after a moment or upgrade your plan/limits.'
-          : 'This model hit a shared rate limit. Add your own Gemini API key in Settings for higher limits and reliability.';
+          : 'This model hit a shared rate limit. Add your own Gemini API key for FREE in Settings for higher limits and reliability.';
         return Response.json({ text, error: errObj, code: 429, provider: 'gemini', usedKeyType });
       }
       return new Response(JSON.stringify({ error: errObj, raw: data }), { status: resp.status });

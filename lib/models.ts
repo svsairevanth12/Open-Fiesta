@@ -77,10 +77,10 @@ export const MODEL_CATALOG: AiModel[] = [
     free: true,
   },
   {
-    id: 'sarvam-m',
-    label: 'Sarvam-M (free)',
+    id: 'glm-4.5-air',
+    label: 'GLM 4.5 Air (free)',
     provider: 'openrouter',
-    model: 'sarvamai/sarvam-m:free',
+    model: 'z-ai/glm-4.5-air:free',
     free: true,
   },
   {
@@ -126,10 +126,10 @@ export const MODEL_CATALOG: AiModel[] = [
     free: true,
   },
   {
-    id: 'dolphin-mistral-24b-venice',
-    label: 'Dolphin Mistral 24B Venice (free) — uncensored',
+    id: 'deepseek-r1t-chimera',
+    label: 'DeepSeek R1T Chimera (free)',
     provider: 'openrouter',
-    model: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free',
+    model: 'tngtech/deepseek-r1t-chimera:free',
     free: true,
   },
   {

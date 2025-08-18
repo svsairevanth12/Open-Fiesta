@@ -15,10 +15,10 @@ export default function Home() {
     "ai-fiesta:selected-models",
     [
       "gemini-2.5-flash",
-      "deepseek-r1",
       "llama-3.3-70b-instruct",
-      "moonshot-kimi-k2",
       "qwen-2.5-72b-instruct",
+      "openai-gpt-oss-20b-free",
+      "glm-4.5-air",
     ]
   );
   const [keys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
@@ -59,7 +59,13 @@ export default function Home() {
   };
 
   const toggle = (id: string) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : (prev.length >= 5 ? prev : [...prev, id]));
+    setSelectedIds(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
+      const valid = new Set(MODEL_CATALOG.map(m => m.id));
+      const currentValidCount = prev.filter(x => valid.has(x)).length;
+      if (currentValidCount >= 5) return prev;
+      return [...prev, id];
+    });
   };
 
   function ensureThread() {
@@ -392,7 +398,7 @@ export default function Home() {
                     <h3 className="text-base font-semibold tracking-wide">Select up to 5 models</h3>
                     <button onClick={() => setModelsModalOpen(false)} className="text-xs px-2 py-1 rounded bg-white/10">Close</button>
                   </div>
-                  <div className="text-xs text-zinc-300 mb-3">Selected: {selectedIds.length}/5</div>
+                  <div className="text-xs text-zinc-300 mb-3">Selected: {selectedModels.length}/5</div>
                   <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                     {(() => {
                       const buckets: Record<string, typeof MODEL_CATALOG> = {
@@ -405,7 +411,13 @@ export default function Home() {
                       const seen = new Set<string>();
                       const isFree = (m: AiModel) => /(\(|\s)free\)/i.test(m.label) || m.free;
                       const isUnc = (m: AiModel) => /uncensored/i.test(m.label) || /venice/i.test(m.model);
-                      const staticFavIds = new Set<string>(['llama-3.3-70b-instruct', 'gemini-2.5-pro']);
+                      const staticFavIds = new Set<string>([
+                        'llama-3.3-70b-instruct',
+                        'gemini-2.5-pro',
+                        'openai-gpt-oss-20b-free',
+                        'glm-4.5-air',
+                        'moonshot-kimi-k2',
+                      ]);
                       const isFav = (m: AiModel) => selectedIds.includes(m.id) || staticFavIds.has(m.id);
                       const pick = (m: AiModel) => {
                         if (isFav(m)) return 'Favorites';
@@ -431,7 +443,7 @@ export default function Home() {
                               const free = isFree(m);
                               const unc = isUnc(m);
                               const selected = selectedIds.includes(m.id);
-                              const disabled = !selected && selectedIds.length >= 5;
+                              const disabled = !selected && selectedModels.length >= 5;
                               return (
                                 <button
                                   key={m.id}
@@ -631,7 +643,7 @@ export default function Home() {
               )}
             </div>
 
-            {/* Fixed bottom input like ChatGPT */}
+            {/* Fixed bottom input line */}
             <div className="fixed bottom-0 left-0 right-0 z-20 pt-2 pb-[env(safe-area-inset-bottom)] bg-gradient-to-t from-black/70 to-transparent">
               <div className="max-w-3xl mx-auto px-3">
                 <AiInput onSubmit={(text, imageDataUrl) => { send(text, imageDataUrl); }} loading={anyLoading} />

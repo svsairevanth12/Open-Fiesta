@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         return 'Unknown error';
       })();
       if (resp.status === 429) {
-        const text = 'This model hit a shared rate limit. Add your own Gemini API key in Settings for higher limits and reliability.';
+        const text = 'This model hit a shared rate limit. Add your own Gemini API key for FREE in Settings for higher limits and reliability.';
         return Response.json({ text, error: errStr, code: 429, provider: 'gemini' });
       }
       return new Response(JSON.stringify({ error: errStr, raw: data }), { status: resp.status });

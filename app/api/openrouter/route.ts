@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         // Convert to a friendly guidance text while preserving raw error
         const text = usedKeyType === 'user'
           ? 'Your OpenRouter API key hit a rate limit. Please retry after a moment or upgrade your plan/limits.'
-          : 'This model hit a shared rate limit. Add your own OpenRouter API key in Settings for higher limits and reliability.';
+          : 'This model hit a shared rate limit. Add your own OpenRouter API key for FREE in Settings for higher limits and reliability.';
         return Response.json({ text, error: errStr, code: 429, provider: 'openrouter', usedKeyType });
       }
       if (resp.status === 404 && /model not found/i.test(errStr)) {

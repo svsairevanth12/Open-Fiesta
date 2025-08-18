@@ -71,7 +71,18 @@ function renderInline(input: string): React.ReactNode[] {
         const italics = splitAndWrap(piece, /(?:\*([^*]+)\*|_([^_]+)_)/g, (m2, ii) => (
           <em key={`i-${idx}-${i}-${ii}`} className="italic text-zinc-100/90">{m2}</em>
         ));
-        withItalics.push(...italics);
+        // After italics, highlight standalone word FREE in emerald
+        italics.forEach((part, j) => {
+          if (typeof part !== 'string') { withItalics.push(part); return; }
+          const chunks = part.split(/(\bFREE\b)/gi);
+          chunks.forEach((ch, k) => {
+            if (/^\bFREE\b$/i.test(ch)) {
+              withItalics.push(<span key={`free-${idx}-${i}-${j}-${k}`} className="text-emerald-300 font-semibold">FREE</span>);
+            } else if (ch) {
+              withItalics.push(<React.Fragment key={`t-${idx}-${i}-${j}-${k}`}>{ch}</React.Fragment>);
+            }
+          });
+        });
       });
       out.push(<React.Fragment key={`t-${idx}`}>{withItalics}</React.Fragment>);
     }
