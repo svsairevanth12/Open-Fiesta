@@ -13,6 +13,10 @@ export default function Settings() {
     const next = { gemini: gemini.trim() || undefined, openrouter: openrouter.trim() || undefined };
     setKeys(next);
     setOpen(false);
+    // Force a reload so clients pick up the new keys immediately
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
 
   // Allow programmatic open from anywhere (e.g., rate-limit CTA)
