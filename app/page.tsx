@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Plus, Github, Star, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Github, Star, Check, EyeOff, Eye } from "lucide-react";
 import Settings from "@/components/Settings";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { MODEL_CATALOG } from "@/lib/models";
@@ -30,7 +30,17 @@ export default function Home() {
   const activeThread = useMemo(() => threads.find(t => t.id === activeId) || null, [threads, activeId]);
   const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
   const [loadingIds, setLoadingIds] = useState<string[]>([]);
+  // Allow collapsing a model column without unselecting it
+  const [collapsedIds, setCollapsedIds] = useState<string[]>([]);
   const selectedModels = useMemo(() => MODEL_CATALOG.filter(m => selectedIds.includes(m.id)), [selectedIds]);
+  // Build grid template: collapsed => fixed narrow, expanded => normal
+  const headerTemplate = useMemo(() => {
+    if (selectedModels.length === 0) return "";
+    const parts = selectedModels.map(m =>
+      collapsedIds.includes(m.id) ? "72px" : "minmax(280px, 1fr)"
+    );
+    return parts.join(" ");
+  }, [selectedModels, collapsedIds]);
   const anyLoading = loadingIds.length > 0;
   const [copiedAllIdx, setCopiedAllIdx] = useState<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -379,6 +389,7 @@ export default function Home() {
               {selectedModels.length === 0 && (
                 <span className="text-xs text-zinc-400">No models selected</span>
               )}
+              {/* Tip: click the eye icon on a header to collapse; click the narrow column to expand */}
               <div className="ml-auto flex items-center gap-2">
                 <button
                   onClick={() => setModelsModalOpen(true)}
@@ -503,12 +514,14 @@ export default function Home() {
                   {/* Header row: model labels */}
                   <div
                     className="grid gap-3 items-center overflow-visible mt-3 pt-1"
-                    style={{ gridTemplateColumns: `repeat(${selectedModels.length}, minmax(260px, 1fr))` }}
+                    style={{ gridTemplateColumns: headerTemplate || `repeat(${selectedModels.length}, minmax(260px, 1fr))` }}
                   >
                     {selectedModels.map((m) => {
                       const isFree = /(\(|\s)free\)/i.test(m.label);
+                      const isCollapsed = collapsedIds.includes(m.id);
                       return (
-                      <div key={m.id} className={`px-1 py-5 min-h-[60px] border-b flex items-center justify-between overflow-visible ${m.good ? 'border-amber-300/40' : 'border-white/10'}`}>
+                      <div key={m.id} className={`px-1 py-4 min-h-[56px] border-b flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} overflow-visible ${m.good ? 'border-amber-300/40' : 'border-white/10'}`}>
+                        {!isCollapsed && (
                         <div className={`text-[13px] leading-normal font-medium pr-2 inline-flex items-center gap-1.5 min-w-0 ${m.good || isFree ? 'opacity-100 text-white' : 'opacity-90'}`}>
                           {m.good && (
                             <span className="inline-flex items-center gap-1 px-1.5 py-0 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30 text-[11px] h-6 self-center">
@@ -522,9 +535,31 @@ export default function Home() {
                               <span className="hidden sm:inline">Free</span>
                             </span>
                           )}
-                          <span className="truncate">{m.label}</span>
+                          <span className="truncate" title={m.label}>{m.label}</span>
                         </div>
-                        {loadingIds.includes(m.id) && <span className="text-[11px] text-[#e42a42]">Thinking…</span>}
+                        )}
+                        <div className="flex items-center gap-2">
+                          {loadingIds.includes(m.id) && !isCollapsed && (
+                            <span className="text-[11px] text-[#e42a42]">Thinking…</span>
+                          )}
+                          {isCollapsed ? (
+                            <button
+                              onClick={() => setCollapsedIds(prev => prev.filter(id => id !== m.id))}
+                              className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-white/10"
+                              title={`Expand ${m.label}`}
+                            >
+                              <Eye size={13} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setCollapsedIds(prev => prev.includes(m.id) ? prev : [...prev, m.id])}
+                              className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 hover:bg-white/10"
+                              title={`Collapse ${m.label}`}
+                            >
+                              <EyeOff size={12} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );})}
                   </div>
@@ -539,7 +574,7 @@ export default function Home() {
                         </div>
                         <button
                           onClick={() => {
-                            const all = selectedModels.map((m) => {
+                            const all = selectedModels.filter(m => !collapsedIds.includes(m.id)).map((m) => {
                               const ans = row.answers.find((a) => a.modelId === m.id);
                               const header = m.label;
                               const body = ans?.content ?? '';
@@ -567,14 +602,21 @@ export default function Home() {
                       </div>
                       <div
                         className="grid gap-3 items-stretch"
-                        style={{ gridTemplateColumns: `repeat(${selectedModels.length}, minmax(260px, 1fr))` }}
+                        style={{ gridTemplateColumns: headerTemplate || `repeat(${selectedModels.length}, minmax(260px, 1fr))` }}
                       >
                         {selectedModels.map((m) => {
                           const isFree = /(\(|\s)free\)/i.test(m.label);
                           const ans = row.answers.find((a) => a.modelId === m.id);
+                          const isCollapsed = collapsedIds.includes(m.id);
                           return (
                             <div key={m.id} className="h-full">
-                              <div className={`group relative rounded-md p-3 h-full min-h-[160px] flex overflow-hidden ring-1 ${m.good ? 'bg-gradient-to-b from-amber-400/10 to-white/5 ring-amber-300/30' : isFree ? 'bg-gradient-to-b from-emerald-400/10 to-white/5 ring-emerald-300/30' : 'bg-white/5 ring-white/5'}`}>
+                              <div
+                                className={`group relative rounded-md ${isCollapsed ? 'p-2' : 'p-3'} h-full min-h-[160px] flex overflow-hidden ring-1 ${m.good ? 'bg-gradient-to-b from-amber-400/10 to-white/5 ring-amber-300/30' : isFree ? 'bg-gradient-to-b from-emerald-400/10 to-white/5 ring-emerald-300/30' : 'bg-white/5 ring-white/5'} ${isCollapsed ? 'cursor-pointer' : ''}`}
+                                onClick={() => {
+                                  if (isCollapsed) setCollapsedIds(prev => prev.filter(id => id !== m.id));
+                                }}
+                                title={isCollapsed ? 'Click to expand' : undefined}
+                              >
                                 {ans && (
                                   <button
                                     onClick={() => {
@@ -583,7 +625,7 @@ export default function Home() {
                                       setCopiedKey(key);
                                       window.setTimeout(() => setCopiedKey(prev => (prev === key ? null : prev)), 1200);
                                     }}
-                                    className={`absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded border whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all ${
+                                    className={`absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded border whitespace-nowrap ${isCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-0 group-hover:opacity-100'} transition-all ${
                                       copiedKey === `${i}:${m.id}`
                                         ? 'bg-emerald-500/20 border-emerald-300/40 text-emerald-100 scale-[1.02]'
                                         : 'bg-white/10 border-white/10 hover:bg-white/15'
@@ -599,7 +641,7 @@ export default function Home() {
                                     )}
                                   </button>
                                 )}
-                                <div className="text-sm leading-relaxed w-full pr-8">
+                                <div className={`text-sm leading-relaxed w-full pr-8 ${isCollapsed ? 'overflow-hidden max-h-20 opacity-70' : ''}`}>
                                   {ans ? (
                                     <>
                                       <MarkdownLite text={ans.content} />
@@ -629,9 +671,16 @@ export default function Home() {
                                       <div className="h-2 rounded bg-white/10 w-2/3" />
                                     </div>
                                   ) : (
-                                    <span className="opacity-40">No reply yet</span>
+                                    <span className="text-zinc-400 text-sm">No response</span>
                                   )}
                                 </div>
+                                {isCollapsed && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[11px] px-2 py-1 rounded-full border border-white/10 bg-black/50 inline-flex items-center gap-1">
+                                      <Eye size={12} /> Expand
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
