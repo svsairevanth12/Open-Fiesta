@@ -67,7 +67,7 @@ const AnimatedPlaceholder = ({ showSearch }: { showSearch: boolean }) => (
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -5 }}
       transition={{ duration: 0.1 }}
-      className="pointer-events-none w-[150px] text-sm absolute text-black/70 dark:text-white/70"
+      className="pointer-events-none w-[150px] text-sm absolute text-black/30 dark:text-white/30 sm:text-black/70 sm:dark:text-white/70 drop-shadow-sm"
     >
       {showSearch ? "Search the web..." : "Ask Anything..."}
     </motion.p>
@@ -84,14 +84,16 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [barVisible, setBarVisible] = useState(true)
+  const lastScrollY = useRef(0)
 
   const handelClose = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
     if (fileInputRef.current) {
-      fileInputRef.current.value = "" // Reset file input
+      fileInputRef.current.value = "" 
     }
-    setImagePreview(null) // Use null instead of empty string
+    setImagePreview(null) 
   }
 
   const handelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,10 +127,34 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
       }
     }
   }, [imagePreview])
+
+  // Hide bar on scroll down, show on scroll up
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || 0
+      const delta = y - lastScrollY.current
+      const threshold = 6 
+      if (y < 8) {
+        setBarVisible(true)
+      } else if (delta > threshold) {
+        setBarVisible(false)
+      } else if (delta < -threshold) {
+        setBarVisible(true)
+      }
+      lastScrollY.current = y
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
   return (
-    <div className="w-full py-4">
-      <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto">
-        <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5 flex flex-col">
+    <motion.div
+      className="w-full py-4"
+      initial={{ y: 0, opacity: 1 }}
+      animate={{ y: barVisible ? 0 : 72, opacity: barVisible ? 1 : 0.9 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
+      <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto backdrop-blur-sm">
+        <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5 flex flex-col backdrop-blur-sm">
           <div className="overflow-y-auto" style={{ maxHeight: `${MAX_HEIGHT}px` }}>
             {imagePreview ? (
               <div className="grid grid-cols-[96px_1fr] gap-3 p-3 pr-4">
@@ -148,7 +174,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <div className="relative rounded-xl bg-black/5 dark:bg-white/5 border border-white/10">
+                <div className="relative rounded-xl bg-black/45 dark:bg-white/10 border border-white/10 backdrop-blur-sm">
                   <Textarea
                     id="ai-input-04"
                     value={value}
@@ -174,12 +200,12 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                 </div>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative backdrop-blur-sm">
                 <Textarea
                   id="ai-input-04"
                   value={value}
                   placeholder=""
-                  className="w-full rounded-2xl rounded-b-none px-4 py-3 bg-black/5 dark:bg-white/5 border-none text-white resize-none focus-visible:ring-0 leading-[1.2]"
+                  className="w-full rounded-2xl rounded-b-none px-4 py-3 bg-black/45 dark:bg-white/10 border-none text-white resize-none focus-visible:ring-0 leading-[1.2]"
                   ref={textareaRef}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -201,11 +227,11 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
             )}
           </div>
 
-          <div className="h-12 bg-black/5 dark:bg-white/5 rounded-b-xl">
+          <div className="h-12 bg-black/30 dark:bg-white/10 rounded-b-xl backdrop-blur-sm">
             <div className="absolute left-3 bottom-3 flex items-center gap-2">
               <label
                 className={cn(
-                  "cursor-pointer relative rounded-full p-2 bg-black/5 dark:bg-white/5",
+                  "cursor-pointer relative rounded-full p-2 bg-black/30 dark:bg-white/10",
                   imagePreview
                     ? "bg-[#ff3f17]/15 border border-[#ff3f17] text-[#ff3f17]"
                     : "text-white/60 hover:text-white"
@@ -230,7 +256,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 border h-8",
                   showSearch
                     ? "bg-[#ff3f17]/15 border-[#ff3f17] text-[#ff3f17]"
-                    : "bg-black/5 dark:bg-white/5 border-transparent text-white/60 hover:text-white"
+                    : "bg-black/30 dark:bg-white/10 border-transparent text-white/80 hover:text-white"
                 )}
               >
                 <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
@@ -290,7 +316,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                     ? "bg-[#e42a42]/20 text-[#e42a42] cursor-not-allowed"
                   : value
                     ? "bg-[#ff3f17]/15 text-[#ff3f17]"
-                    : "bg-black/5 dark:bg-white/5 text-white/80 hover:text-white"
+                    : "bg-black/30 dark:bg-white/10 text-white/85 hover:text-white"
                 )}
                 disabled={loading}
                 aria-busy={loading}
@@ -305,6 +331,6 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

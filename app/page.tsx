@@ -349,7 +349,8 @@ export default function Home() {
             </div>
 
             {/* Selected models row + Change button */}
-            <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="hidden sm:flex flex-wrap items-center gap-2">
               {selectedModels.map((m) => {
                 const isFree = /(\(|\s)free\)/i.test(m.label);
                 const isUncensored = /uncensored/i.test(m.label) || /venice/i.test(m.model);
@@ -390,6 +391,7 @@ export default function Home() {
                 <span className="text-xs text-zinc-400">No models selected</span>
               )}
               {/* Tip: click the eye icon on a header to collapse; click the narrow column to expand */}
+              </div>
               <div className="ml-auto flex items-center gap-2">
                 <button
                   onClick={() => setModelsModalOpen(true)}
