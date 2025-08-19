@@ -96,7 +96,7 @@ function BlockRenderer({ text }: { text: string }) {
 
     // Regular paragraph line(s) until next blank/table/list
     const start = i;
-    let buf: string[] = [];
+    const buf: string[] = [];
     while (i < lines.length) {
       const l = lines[i];
       if (!l.trim() || isTableHeader(lines, i) || isListLine(l)) break;
