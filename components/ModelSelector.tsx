@@ -1,7 +1,7 @@
 "use client";
 import { useMemo } from 'react';
-import { MODEL_CATALOG } from '@/lib/models';
 import { AiModel } from '@/lib/types';
+import { mergeModels, useCustomModels } from '@/lib/customModels';
 
 export default function ModelSelector({
   selectedIds,
@@ -12,14 +12,16 @@ export default function ModelSelector({
   onToggle: (id: string) => void;
   max?: number;
 }) {
+  const [customModels] = useCustomModels();
+  const allModels: AiModel[] = useMemo(() => mergeModels(customModels), [customModels]);
   const disabledIds = useMemo(() => {
     if (selectedIds.length < max) return new Set<string>();
-    return new Set<string>(MODEL_CATALOG.filter(m => !selectedIds.includes(m.id)).map(m => m.id));
-  }, [selectedIds, max]);
+    return new Set<string>(allModels.filter(m => !selectedIds.includes(m.id)).map(m => m.id));
+  }, [selectedIds, max, allModels]);
 
   return (
     <div className="flex flex-wrap gap-2">
-      {MODEL_CATALOG.map((m: AiModel) => {
+      {allModels.map((m: AiModel) => {
         const selected = selectedIds.includes(m.id);
         const disabled = disabledIds.has(m.id);
         return (
@@ -31,6 +33,7 @@ export default function ModelSelector({
             title={disabled ? `Max ${max} models at once` : ''}
           >
             {selected ? '✓ ' : ''}{m.label}
+            {'custom' in m ? <span className="ml-1 text-[10px] px-1 py-0.5 rounded bg-white/10 border border-white/15">custom</span> : null}
           </button>
         );
       })}

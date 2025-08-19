@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { X, ExternalLink, Cog } from 'lucide-react';
 import { useLocalStorage } from '@/lib/useLocalStorage';
 import { ApiKeys } from '@/lib/types';
 
@@ -19,6 +20,7 @@ export default function Settings() {
     }
   };
 
+
   // Allow programmatic open from anywhere (e.g., rate-limit CTA)
   useEffect(() => {
     const handler = () => setOpen(true);
@@ -28,42 +30,67 @@ export default function Settings() {
 
   return (
     <div>
-      <button onClick={() => setOpen(true)} className="text-xs px-2.5 py-1 rounded border border-white/15 bg-white/5 hover:bg-white/10">Settings</button>
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow" title="Settings">
+        <Cog size={14} />
+        <span>Settings</span>
+      </button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="w-full max-w-lg rounded-lg border border-white/10 bg-zinc-900 text-white p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-semibold">API Keys</h2>
-              <button onClick={() => setOpen(false)} className="text-sm opacity-75 hover:opacity-100">Close</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <div className="relative w-full mx-3 sm:mx-6 max-w-2xl lg:max-w-3xl rounded-2xl border border-white/10 bg-zinc-900/90 text-white p-5 md:p-6 lg:p-7 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg md:text-xl font-semibold">API Keys</h2>
+              <button aria-label="Close" onClick={() => setOpen(false)} className="h-8 w-8 inline-flex items-center justify-center rounded-md bg-white/10 hover:bg-white/20">
+                <X size={16} />
+              </button>
             </div>
-            <p className="text-xs text-zinc-400 mb-4">Keys are stored locally in your browser via localStorage and sent only with your requests. Do not hardcode keys in code.</p>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm">Gemini API Key</label>
-              <a
-                href="https://aistudio.google.com/app/u/5/apikey?pli=1"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs px-2.5 py-1 rounded bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a]"
-              >
-                Get API key
-              </a>
+            <p className="text-xs md:text-sm text-zinc-300 mb-5">Keys are stored locally in your browser via localStorage and sent only with your requests. Do not hardcode keys in code.</p>
+
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm md:text-base font-medium">Gemini API Key</label>
+                  <a
+                    href="https://aistudio.google.com/app/u/5/apikey?pli=1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/15 border border-white/15"
+                  >
+                    <ExternalLink size={12} /> Get API key
+                  </a>
+                </div>
+                <input
+                  value={gemini}
+                  onChange={(e) => setGemini(e.target.value)}
+                  placeholder="AIza..."
+                  className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm md:text-base font-medium">OpenRouter API Key</label>
+                  <a
+                    href="https://openrouter.ai/sign-in?redirect_url=https%3A%2F%2Fopenrouter.ai%2Fsettings%2Fkeys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/15 border border-white/15"
+                  >
+                    <ExternalLink size={12} /> Get API key
+                  </a>
+                </div>
+                <input
+                  value={openrouter}
+                  onChange={(e) => setOpenrouter(e.target.value)}
+                  placeholder="sk-or-..."
+                  className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20"
+                />
+              </div>
             </div>
-            <input value={gemini} onChange={(e) => setGemini(e.target.value)} placeholder="AIza..." className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 mb-3" />
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm">OpenRouter API Key</label>
-              <a
-                href="https://openrouter.ai/sign-in?redirect_url=https%3A%2F%2Fopenrouter.ai%2Fsettings%2Fkeys"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs px-2.5 py-1 rounded bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a]"
-              >
-                Get API key
-              </a>
-            </div>
-            <input value={openrouter} onChange={(e) => setOpenrouter(e.target.value)} placeholder="sk-or-..." className="w-full bg-black/40 border border-white/10 rounded px-3 py-2" />
-            <div className="flex gap-2 justify-end mt-4">
-              <button onClick={() => setOpen(false)} className="px-3 py-1.5 rounded bg-white/10 border border-white/10">Close</button>
-              <button onClick={save} className="px-3 py-1.5 rounded bg-[#e42a42] hover:bg-[#cf243a]">Save</button>
+
+            <div className="flex flex-col sm:flex-row gap-2 justify-end mt-6">
+              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-sm">Cancel</button>
+              <button onClick={save} className="px-4 py-2 rounded-md bg-[#e42a42] hover:bg-[#cf243a] text-sm font-medium">Save</button>
             </div>
           </div>
         </div>
