@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { AnimatePresence, motion } from "framer-motion"
-import { Globe, Paperclip, Send, Loader2, X } from "lucide-react"
+import { Globe, Paperclip, Send, Loader2, X, FileText } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
@@ -82,10 +82,11 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
   })
   const [showSearch, setShowSearch] = useState(true)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [attachedFile, setAttachedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [barVisible, setBarVisible] = useState(true)
   const lastScrollY = useRef(0)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const handelClose = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
@@ -93,29 +94,50 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
     if (fileInputRef.current) {
       fileInputRef.current.value = "" 
     }
-    setImagePreview(null) 
+    setImagePreview(null)
+    setAttachedFile(null)
   }
 
   const handelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null
-    if (file) {
-      setImageFile(file)
+    if (!file) return
+
+    // Allowed types: images + text/plain + pdf + msword + docx
+    const allowed = [
+      /^image\//,
+      /^text\/plain$/,
+      /^application\/pdf$/,
+      /^application\/msword$/,
+      /^application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document$/,
+    ]
+    const isAllowed = allowed.some((re) => re.test(file.type))
+    if (!isAllowed) {
+      setErrorMsg("Unsupported file. Allowed: Images, TXT, PDF, DOC, DOCX.")
+      setTimeout(() => setErrorMsg(null), 4000) 
+      if (fileInputRef.current) fileInputRef.current.value = "" // reset so same file can be selected later
+      return
+    }
+
+    setAttachedFile(file)
+    if (file.type.startsWith("image/")) {
       setImagePreview(URL.createObjectURL(file))
+    } else {
+      setImagePreview(null)
     }
   }
 
   const handleSubmit = async () => {
     let dataUrl: string | undefined
-    if (imageFile) {
+    if (attachedFile) {
       dataUrl = await new Promise<string>((resolve) => {
         const fr = new FileReader()
         fr.onload = () => resolve(String(fr.result))
-        fr.readAsDataURL(imageFile)
+        fr.readAsDataURL(attachedFile)
       })
     }
     onSubmit(value.trim(), dataUrl, showSearch)
     setValue("")
-    setImageFile(null)
+    setAttachedFile(null)
     setImagePreview(null)
     adjustHeight(true)
   }
@@ -227,12 +249,35 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
             )}
           </div>
 
+          {errorMsg && (
+            <div className="px-4 py-2 text-[13px] text-rose-200 bg-rose-500/10 border-t border-white/10">
+              {errorMsg}
+            </div>
+          )}
+
+          {attachedFile && !imagePreview && (
+            <div className="px-4 py-2 border-t border-white/10 bg-white/5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText className="w-4 h-4 text-white/80" />
+                <span className="truncate text-sm text-white/90" title={attachedFile.name}>{attachedFile.name}</span>
+                <span className="text-xs text-white/60 flex-shrink-0">{Math.max(1, Math.round(attachedFile.size / 1024))} KB</span>
+              </div>
+              <button
+                onClick={handelClose}
+                className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-black/50 text-white/90 hover:bg-black/60 border border-white/10"
+                aria-label="Remove file"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           <div className="h-12 bg-black/30 dark:bg-white/10 rounded-b-xl backdrop-blur-sm">
             <div className="absolute left-3 bottom-3 flex items-center gap-2">
               <label
                 className={cn(
                   "cursor-pointer relative rounded-full p-2 bg-black/30 dark:bg-white/10",
-                  imagePreview
+                  attachedFile
                     ? "bg-[#ff3f17]/15 border border-[#ff3f17] text-[#ff3f17]"
                     : "text-white/60 hover:text-white"
                 )}
@@ -241,10 +286,11 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   type="file"
                   ref={fileInputRef}
                   onChange={handelChange}
+                  accept="image/*,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   className="hidden"
                 />
                 <Paperclip
-                  className={cn("w-4 h-4 transition-colors", imagePreview ? "text-[#ff3f17]" : "text-white/60 hover:text-white")}
+                  className={cn("w-4 h-4 transition-colors", attachedFile ? "text-[#ff3f17]" : "text-white/60 hover:text-white")}
                 />
               </label>
               <button
