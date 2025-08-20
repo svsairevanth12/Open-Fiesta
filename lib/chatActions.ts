@@ -1,5 +1,6 @@
 import { callGemini, callOpenRouter, streamOpenRouter } from './client';
 import type { AiModel, ApiKeys, ChatMessage, ChatThread } from './types';
+import { toast } from "react-toastify";
 
 export type ChatDeps = {
   selectedModels: AiModel[];
@@ -42,7 +43,16 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
   async function send(text: string, imageDataUrl?: string) {
     const prompt = text.trim();
     if (!prompt) return;
-    if (selectedModels.length === 0) return alert('Select at least one model.');
+
+  if (selectedModels.length === 0) { 
+  toast.warn("Select at least one model.", {
+    style: {
+    background: "#ff4d4f",
+    color: "#fff",
+          },
+         }); 
+     }
+    
     const userMsg: ChatMessage = { role: 'user', content: prompt, ts: Date.now() };
     const thread = ensureThread();
     const nextHistory = [...(thread.messages ?? []), userMsg];
