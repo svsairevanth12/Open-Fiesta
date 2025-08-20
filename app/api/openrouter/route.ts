@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       // If MIME is missing/unknown, detect by magic bytes
       let detectedMt = mt;
       if ((!detectedMt || /application\/octet-stream/i.test(detectedMt)) && buf && buf.length >= 4) {
-        const b0 = buf[0], b1 = buf[1], b2 = buf[2], b3 = buf[3], b4 = buf[4];
+        const b0 = buf[0], b1 = buf[1];
         const ascii5 = buf.slice(0, 5).toString('ascii');
         if (ascii5.startsWith('%PDF-')) {
           detectedMt = 'application/pdf';
@@ -71,17 +71,17 @@ export async function POST(req: NextRequest) {
       if (/^application\/pdf$/i.test(detectedMt) && base64 && (buf?.length ?? 0) > 0) {
         try {
           if (!pdfParse) {
-            const mod = await import('pdf-parse') as unknown as {
-              default?: (data: Buffer | Uint8Array | ArrayBuffer | Readable) => Promise<{ text: string }>;
-            } | ((data: Buffer | Uint8Array | ArrayBuffer | Readable) => Promise<{ text: string }>);
-            const fn = (typeof mod === 'function') ? mod as any : (mod as { default?: any }).default;
-            pdfParse = fn as any;
+            type PdfParseFn = (data: Buffer | Uint8Array | ArrayBuffer | Readable) => Promise<{ text: string }>;
+            type PdfParseModule = { default?: PdfParseFn } | PdfParseFn;
+            const mod = (await import('pdf-parse')) as PdfParseModule;
+            const fn: PdfParseFn = typeof mod === 'function' ? (mod as PdfParseFn) : (mod.default as PdfParseFn);
+            pdfParse = fn;
           }
           const out = await pdfParse!(buf!);
           const text = (out?.text || '').trim().slice(0, 80000);
           const appended = `${m.content}\n\n[Attached PDF extracted text:]\n${text || '(no extractable text)'}\n`;
           return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
-        } catch (err) {
+        } catch (_err) {
           const appended = `${m.content}\n\n[Attached PDF could not be auto-extracted. Please copy/paste key text if needed.]`;
           return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
         }
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
           const text = (out?.value || '').trim().slice(0, 80000);
           const appended = `${m.content}\n\n[Attached DOCX extracted text:]\n${text || '(no extractable text)'}\n`;
           return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
-        } catch (err) {
+        } catch (_err) {
           const appended = `${m.content}\n\n[Attached DOCX could not be auto-extracted. Please copy/paste key text if needed.]`;
           return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
         }
