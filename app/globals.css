@@ -587,8 +587,19 @@ body.light * {
 .chatinput-frosty .chat-input-shell {
   background: rgba(0,0,0,0.35);
   border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+/* Dark mode: deepen both variants for stronger contrast */
+.dark.chatinput-default .chat-input-shell {
+  background: linear-gradient(145deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+  border-color: rgba(255,255,255,0.09);
+  box-shadow: 0 3px 18px -6px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04) inset;
+}
+.dark.chatinput-frosty .chat-input-shell {
+  background: rgba(0,0,0,0.52);
+  border-color: rgba(255,255,255,0.06);
 }
 .dark .search-toggle { color: #fafafa; }
 .search-toggle[data-active="true"] {
