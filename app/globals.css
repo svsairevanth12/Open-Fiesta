@@ -566,8 +566,8 @@ body.light * {
   background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
   border: 1px solid rgba(255,255,255,0.18);
   color: var(--accent-interactive-primary);
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 /* Chat Input Style Variants */
@@ -577,8 +577,8 @@ body.light * {
   background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
   border: 1px solid rgba(255,255,255,0.12);
   box-shadow: 0 4px 20px -6px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05) inset;
-  backdrop-filter: blur(10px) saturate(130%);
   -webkit-backdrop-filter: blur(10px) saturate(130%);
+  backdrop-filter: blur(10px) saturate(130%);
 }
 
 .chatinput-default .chat-input-shell:hover { border-color: rgba(255,255,255,0.18); }
@@ -677,7 +677,11 @@ body.light * {
 }
 
 /* Scrollbar gutter utility */
-.scroll-stable-gutter { scrollbar-gutter: stable both-edges; }
+.scroll-stable-gutter { 
+  /* Fallback for browsers that don't support scrollbar-gutter */
+  padding-right: 15px;
+  scrollbar-gutter: stable both-edges; 
+}
 
 /* AI input max height utility (use via inline CSS var once on wrapper) */
 .ai-grow-area { max-height: var(--ai-input-max, 320px); overflow-y: auto; }
@@ -695,3 +699,8 @@ body.light * {
 .model-toggle-thumb { inline-size: .75rem; block-size: .75rem; border-radius: 9999px; background: var(--badge-free-text); transform: translateX(.125rem); transition: transform .25s ease, background .25s ease; }
 .model-toggle-pill[data-type="pro"] .model-toggle-thumb { background: var(--badge-pro-text); }
 .model-toggle-pill[data-active="true"] .model-toggle-thumb { transform: translateX(0.9rem); }
+
+/* AI Chat Box toolbar background */
+.ai-toolbar-bg {
+  background-color: rgba(14, 13, 13, 0.52);
+}

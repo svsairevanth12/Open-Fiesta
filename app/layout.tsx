@@ -55,9 +55,7 @@ export default function RootLayout({
       className={`dark ${geistSans.variable} ${geistMono.variable} ${inter.variable} ${jetbrainsMono.variable} ${poppins.variable}`}
     >
       <body className="antialiased theme-transition-colors">
-        <ThemeProvider enableTransitions={true} enableLogging={false}>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider enableLogging={false}>{children}</ThemeProvider>
         <SpeedInsights />
         <Analytics />
       </body>

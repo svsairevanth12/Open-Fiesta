@@ -161,6 +161,7 @@ export default function AiInput() {
                   ref={fileInputRef}
                   onChange={handelChange}
                   className="hidden"
+                  aria-label="Attach file"
                 />
                 <Paperclip
                   className={cn(
@@ -194,7 +195,7 @@ export default function AiInput() {
                   showSearch && "data-[active=true]:shadow"
                 )}
                 data-active={showSearch}
-                aria-pressed={showSearch ? true : false}
+                aria-pressed={showSearch ? "true" : "false"}
                 aria-label={
                   showSearch ? "Disable web search" : "Enable web search"
                 }

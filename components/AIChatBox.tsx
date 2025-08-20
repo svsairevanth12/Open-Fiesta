@@ -294,10 +294,7 @@ export function AiInput({
           </div>
 
           {/* Fixed toolbar anchored to bottom; textarea grows upward above it */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-10 rounded-b-2xl backdrop-blur-sm flex items-center justify-between px-3"
-            style={{ backgroundColor: "rgba(14, 13, 13, 0.52)" }}
-          >
+          <div className="absolute inset-x-0 bottom-0 h-10 rounded-b-2xl backdrop-blur-sm flex items-center justify-between px-3 ai-toolbar-bg">
             <div className="flex items-center gap-2">
               <label
                 title="Attach file"
@@ -314,6 +311,7 @@ export function AiInput({
                   onChange={handelChange}
                   accept="image/*,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   className="hidden"
+                  aria-label="Attach file"
                 />
                 <Paperclip
                   className={cn(

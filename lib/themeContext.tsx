@@ -23,7 +23,6 @@ import {
   saveTheme,
   loadTheme,
   loadGoogleFont,
-  withThemeTransition,
   logThemeInfo,
 } from "./themeUtils";
 
@@ -56,7 +55,6 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 interface ThemeProviderProps {
   children: ReactNode;
   initialTheme?: Partial<ThemeConfig>;
-  enableTransitions?: boolean;
   enableLogging?: boolean;
 }
 
@@ -64,7 +62,6 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
   initialTheme = {},
-  enableTransitions = true,
   enableLogging = false,
 }) => {
   const [theme, setTheme] = useState<ThemeConfig>(DEFAULT_THEME);
