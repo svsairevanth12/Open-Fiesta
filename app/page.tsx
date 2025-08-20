@@ -5,7 +5,7 @@ import SelectedModelsBar from "@/components/SelectedModelsBar";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { mergeModels, useCustomModels } from "@/lib/customModels";
 import { AiModel, ChatMessage, ApiKeys, ChatThread } from "@/lib/types";
-import { callGemini, callOpenRouter } from "@/lib/client";
+import { callGemini, streamOpenRouter } from "@/lib/client";
 import ModelsModal from "@/components/ModelsModal";
 import FirstVisitNote from "@/components/FirstVisitNote";
 import FixedInputBar from "@/components/FixedInputBar";
@@ -110,24 +110,81 @@ export default function Home() {
           // If user hasn't set a key, rely on server env fallback
           res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: nextHistory, imageDataUrl });
         } else {
-          res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory });
+          // Streaming OpenRouter for smooth typing
+          const placeholderTs = Date.now();
+          // Insert a placeholder assistant message to update progressively
+          const placeholder: ChatMessage = { role: "assistant", content: "", modelId: m.id, ts: placeholderTs };
+          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
+
+          let buffer = "";
+          let flushTimer: number | null = null;
+          const flush = () => {
+            if (!buffer) return;
+            const chunk = buffer;
+            buffer = "";
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => {
+                if (msg.ts === placeholderTs && msg.modelId === m.id && msg.role === 'assistant') {
+                  return { ...msg, content: (msg.content || "") + chunk };
+                }
+                return msg;
+              });
+              return { ...t, messages: msgs };
+            }));
+          };
+
+          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory }, {
+            onToken: (delta) => {
+              buffer += delta;
+              // micro-batch every ~24ms for smoothness
+              if (flushTimer == null) {
+                flushTimer = window.setTimeout(() => { flushTimer = null; flush(); }, 24);
+              }
+            },
+            onMeta: (meta) => {
+              // attach provider meta once
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => {
+                  if (msg.ts === placeholderTs && msg.modelId === m.id && msg.role === 'assistant') {
+                    return { ...msg, provider: meta.provider, usedKeyType: meta.usedKeyType } as ChatMessage;
+                  }
+                  return msg;
+                });
+                return { ...t, messages: msgs };
+              }));
+            },
+            onError: (err) => {
+              // finalize with error text and meta
+              if (flushTimer != null) { window.clearTimeout(flushTimer); flushTimer = null; }
+              const text = err.error || 'Error';
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => {
+                  if (msg.ts === placeholderTs && msg.modelId === m.id && msg.role === 'assistant') {
+                    return { ...msg, content: text, code: err.code, provider: err.provider, usedKeyType: err.usedKeyType } as ChatMessage;
+                  }
+                  return msg;
+                });
+                return { ...t, messages: msgs };
+              }));
+            },
+            onDone: () => {
+              if (flushTimer != null) { window.clearTimeout(flushTimer); flushTimer = null; }
+              flush();
+            }
+          });
+          return; // skip the non-stream flow below
         }
+        // Non-stream (Gemini) path
         const text = (() => {
           const r = res as { text?: unknown; error?: unknown } | null | undefined;
           const t = r && typeof r === 'object' ? (typeof r.text === 'string' ? r.text : undefined) : undefined;
           const e = r && typeof r === 'object' ? (typeof r.error === 'string' ? r.error : undefined) : undefined;
           return t || e || "No response";
         })();
-        const meta = (() => {
-          const r = res as { code?: unknown; provider?: unknown; usedKeyType?: unknown } | null | undefined;
-          const code = r && typeof r === 'object' && typeof (r as any).code === 'number' ? (r as any).code as number : undefined;
-          const provider = r && typeof r === 'object' && typeof (r as any).provider === 'string' ? (r as any).provider as string : undefined;
-          const ukt = r && typeof r === 'object' ? (r as any).usedKeyType : undefined;
-          const usedKeyType = ukt === 'user' || ukt === 'shared' || ukt === 'none' ? ukt : undefined;
-          return { code, provider, usedKeyType };
-        })();
-        const asst: ChatMessage = { role: "assistant", content: String(text).trim(), modelId: m.id, ts: Date.now(), ...meta };
-        // Append to current thread messages to accumulate answers from multiple models
+        const asst: ChatMessage = { role: "assistant", content: String(text).trim(), modelId: m.id, ts: Date.now() };
         setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);

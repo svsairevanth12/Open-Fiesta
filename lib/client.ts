@@ -18,3 +18,49 @@ export async function callOpenRouter(args: { apiKey?: string; model: string; mes
   });
   return res.json();
 }
+
+export type ORStreamHandlers = {
+  onToken: (chunk: string) => void;
+  onMeta?: (meta: { provider?: string; usedKeyType?: 'user' | 'shared' | 'none' }) => void;
+  onError?: (err: { error?: string; code?: number; provider?: string; usedKeyType?: 'user' | 'shared' | 'none' }) => void;
+  onDone?: () => void;
+};
+
+export async function streamOpenRouter(args: { apiKey?: string; model: string; messages: ChatMessage[] }, handlers: ORStreamHandlers) {
+  const res = await fetch('/api/openrouter/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...args, referer: typeof window !== 'undefined' ? window.location.origin : undefined, title: 'AI Fiesta' }),
+  });
+  if (!res.body) {
+    handlers.onError?.({ error: 'No stream body', code: res.status, provider: 'openrouter' });
+    handlers.onDone?.();
+    return;
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const pump = async (): Promise<void> => {
+    const { value, done } = await reader.read();
+    if (done) { handlers.onDone?.(); return; }
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split('\n\n');
+    buffer = parts.pop() || '';
+    for (const part of parts) {
+      const line = part.trim();
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (payload === '[DONE]') { handlers.onDone?.(); return; }
+      try {
+        const json = JSON.parse(payload);
+        if (typeof json?.delta === 'string' && json.delta) handlers.onToken(json.delta);
+        if (json?.provider || json?.usedKeyType) handlers.onMeta?.(json);
+        if (json?.error) handlers.onError?.({ error: json.error, code: json.code, provider: json.provider, usedKeyType: json.usedKeyType });
+      } catch {
+        // ignore
+      }
+    }
+    return pump();
+  };
+  await pump();
+}
