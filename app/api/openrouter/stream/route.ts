@@ -88,7 +88,14 @@ export async function POST(req: NextRequest) {
       const code = upstream.status || 500;
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(new TextEncoder().encode(sseEncode({ error: errText || 'Upstream error', code, provider: 'openrouter', usedKeyType })));
+          const isGLMPaid = code === 402 && (typeof model === 'string' && /z-ai\s*\/\s*glm-4\.5-air(?!:free)/i.test(model));
+          const friendly402 = isGLMPaid
+            ? 'The model GLM 4.5 Air is a paid model on OpenRouter. Please add your own OpenRouter API key with credit, or select the FREE pool variant "GLM 4.5 Air (FREE)".'
+            : 'Provider returned 402 (payment required / insufficient credit). Add your own OpenRouter API key with credit, or pick a free model variant if available.';
+          const payload = code === 402
+            ? { error: friendly402, code, provider: 'openrouter', usedKeyType }
+            : { error: errText || 'Upstream error', code, provider: 'openrouter', usedKeyType };
+          controller.enqueue(new TextEncoder().encode(sseEncode(payload)));
           controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
           controller.close();
         },
@@ -102,6 +109,23 @@ export async function POST(req: NextRequest) {
     const decoder = new TextDecoder();
 
     let buffer = '';
+
+    // Simple sanitizer for specific models during streaming
+    const sanitizeDelta = (txt: string): string => {
+      if (typeof model === 'string' && /tencent\s*\/\s*hunyuan-a13b-instruct/i.test(model)) {
+        return txt
+          .replace(/<answer[^>]*>/gi, '')
+          .replace(/<\/answer>/gi, '')
+          .replace(/<(?:b|strong)>/gi, '**')
+          .replace(/<\/(?:b|strong)>/gi, '**')
+          .replace(/<(?:i|em)>/gi, '*')
+          .replace(/<\/(?:i|em)>/gi, '*')
+          .replace(/<br\s*\/?\s*>/gi, '\n')
+          .replace(/<p[^>]*>/gi, '')
+          .replace(/<\/p>/gi, '\n\n');
+      }
+      return txt;
+    };
 
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -148,10 +172,19 @@ export async function POST(req: NextRequest) {
                   }).filter(Boolean).join('');
                 }
                 if (text) {
-                  controller.enqueue(encoder.encode(sseEncode({ delta: text })));
+                  const cleaned = sanitizeDelta(text);
+                  controller.enqueue(encoder.encode(sseEncode({ delta: cleaned })));
                 }
                 if (json?.error) {
-                  controller.enqueue(encoder.encode(sseEncode({ error: json.error?.message || 'error', code: json.error?.code, provider: 'openrouter', usedKeyType })));
+                  const code = json.error?.code;
+                  const isGLMPaid = code === 402 && (typeof model === 'string' && /z-ai\s*\/\s*glm-4\.5-air(?!:free)/i.test(model));
+                  const friendly402 = isGLMPaid
+                    ? 'The model GLM 4.5 Air is a paid model on OpenRouter. Please add your own OpenRouter API key with credit, or select the FREE pool variant "GLM 4.5 Air (FREE)".'
+                    : 'Provider returned 402 (payment required / insufficient credit). Add your own OpenRouter API key with credit, or pick a free model variant if available.';
+                  const payload = code === 402
+                    ? { error: friendly402, code, provider: 'openrouter', usedKeyType }
+                    : { error: json.error?.message || 'error', code, provider: 'openrouter', usedKeyType };
+                  controller.enqueue(encoder.encode(sseEncode(payload)));
                 }
               } catch {
                 // ignore parse errors

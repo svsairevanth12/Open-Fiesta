@@ -52,10 +52,34 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
     await Promise.allSettled(selectedModels.map(async (m) => {
       try {
         if (m.provider === 'gemini') {
+          // create placeholder for typing animation
+          const placeholderTs = Date.now();
+          const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
+          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
+
           const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: nextHistory, imageDataUrl });
-          const text = extractText(res);
-          const asst: ChatMessage = { role: 'assistant', content: String(text).trim(), modelId: m.id, ts: Date.now() };
-          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: 'No response' } : msg);
+              return { ...t, messages: msgs };
+            }));
+          } else {
+            // typewriter effect
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...t, messages: msgs };
+              }));
+              if (i >= full.length) window.clearInterval(timer);
+            }, 24);
+          }
         } else {
           const placeholderTs = Date.now();
           const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
@@ -180,12 +204,28 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
       try {
         if (m.provider === 'gemini') {
           const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: baseHistory });
-          const text = extractText(res);
-          setThreads(prev => prev.map(tt => {
-            if (tt.id !== t.id) return tt;
-            const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: String(text).trim() } : msg);
-            return { ...tt, messages: msgs };
-          }));
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: 'No response' } : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) window.clearInterval(timer);
+            }, 24);
+          }
         } else {
           let buffer = '';
           let flushTimer: number | null = null;

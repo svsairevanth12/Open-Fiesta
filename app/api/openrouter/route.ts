@@ -158,6 +158,15 @@ export async function POST(req: NextRequest) {
         clearTimeout(timeoutId);
         return Response.json({ text, code: 404, provider: 'openrouter', usedKeyType }, { status: 404 });
       }
+      if (resp.status === 402) {
+        // Payment required / no credit. Provide clearer guidance.
+        const isGLMPaid = typeof model === 'string' && /z-ai\s*\/\s*glm-4\.5-air(?!:free)/i.test(model);
+        const text = isGLMPaid
+          ? 'The model GLM 4.5 Air is a paid model on OpenRouter. Please add your own OpenRouter API key with credit, or select the FREE pool variant "GLM 4.5 Air (FREE)".'
+          : 'Provider returned 402 (payment required / insufficient credit). Add your own OpenRouter API key with credit, or pick a free model variant if available.';
+        clearTimeout(timeoutId);
+        return Response.json({ text, code: 402, provider: 'openrouter', usedKeyType }, { status: 402 });
+      }
       // Special-case retry for Sarvam: try with only the last user message
       if (typeof model === 'string' && /sarvam/i.test(model)) {
         const lastUser = Array.isArray(messages)
@@ -283,6 +292,24 @@ export async function POST(req: NextRequest) {
       // For DeepSeek R1, return plain text (no Markdown) to improve readability
       if (typeof model === 'string' && /deepseek\s*\/\s*deepseek-r1/i.test(model)) {
         text = mdToPlain(text);
+      }
+      // For Tencent Hunyuan A13B Instruct, providers often wrap in <answer>...</answer> or simple HTML-like tags.
+      if (typeof model === 'string' && /tencent\s*\/\s*hunyuan-a13b-instruct/i.test(model)) {
+        const between = /<answer[^>]*>([\s\S]*?)<\/answer>/i.exec(text);
+        let t = between ? between[1] : text;
+        t = t
+          .replace(/<(?:b|strong)>/gi, '**')
+          .replace(/<\/(?:b|strong)>/gi, '**')
+          .replace(/<(?:i|em)>/gi, '*')
+          .replace(/<\/(?:i|em)>/gi, '*')
+          .replace(/<br\s*\/?\s*>/gi, '\n')
+          .replace(/<p[^>]*>/gi, '')
+          .replace(/<\/p>/gi, '\n\n')
+          // drop any remaining simple tags
+          .replace(/<[^>]+>/g, '')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+        text = t || text;
       }
     }
 

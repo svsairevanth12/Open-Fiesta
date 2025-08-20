@@ -73,7 +73,7 @@ export const MODEL_CATALOG: AiModel[] = [
     id: 'reka-flash-3',
     label: 'Reka Flash 3 (free)',
     provider: 'openrouter',
-    model: 'rekaai/reka-flash-3:free',
+    model: 'reka/reka-flash-3:free',
     free: true,
   },
   {
@@ -82,6 +82,12 @@ export const MODEL_CATALOG: AiModel[] = [
     provider: 'openrouter',
     model: 'z-ai/glm-4.5-air:free',
     free: true,
+  },
+  {
+    id: 'glm-4.5-air-paid',
+    label: 'GLM 4.5 Air (paid)',
+    provider: 'openrouter',
+    model: 'z-ai/glm-4.5-air',
   },
   {
     id: 'hunyuan-a13b-instruct',
@@ -160,5 +166,5 @@ export const MODEL_CATALOG: AiModel[] = [
     model: 'x-ai/grok-3-mini',
   },
   
-  // Anthropic entries removed per request
+ 
 ];

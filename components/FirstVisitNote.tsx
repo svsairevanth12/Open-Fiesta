@@ -27,7 +27,8 @@ export default function FirstVisitNote({ open, onClose }: Props) {
         <div className="flex flex-col sm:flex-row gap-2 justify-end mt-4">
           <button
             onClick={() => {
-              window.dispatchEvent(new Event('open-settings'))
+              window.dispatchEvent(new Event('open-settings'));
+              onClose();
             }}
             className="text-sm px-3 py-2 rounded bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a]"
           >
