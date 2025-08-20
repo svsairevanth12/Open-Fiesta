@@ -23,7 +23,10 @@ export default function ModelsModal({ open, onClose, selectedIds, selectedModels
     Others: [],
   };
   const seen = new Set<string>();
-  const isFree = (m: AiModel) => /(\(|\s)free\)/i.test(m.label) || (m as any).free;
+  const isFree = (m: AiModel) => {
+    const maybe = m as Partial<{ free: boolean }>;
+    return /(\(|\s)free\)/i.test(m.label) || !!maybe.free;
+  };
   const isUnc = (m: AiModel) => /uncensored/i.test(m.label) || /venice/i.test(m.model);
   const staticFavIds = new Set<string>([
     "llama-3.3-70b-instruct",

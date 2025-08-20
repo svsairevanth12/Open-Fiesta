@@ -118,7 +118,15 @@ export default function Home() {
           const e = r && typeof r === 'object' ? (typeof r.error === 'string' ? r.error : undefined) : undefined;
           return t || e || "No response";
         })();
-        const asst: ChatMessage = { role: "assistant", content: String(text).trim(), modelId: m.id, ts: Date.now() };
+        const meta = (() => {
+          const r = res as { code?: unknown; provider?: unknown; usedKeyType?: unknown } | null | undefined;
+          const code = r && typeof r === 'object' && typeof (r as any).code === 'number' ? (r as any).code as number : undefined;
+          const provider = r && typeof r === 'object' && typeof (r as any).provider === 'string' ? (r as any).provider as string : undefined;
+          const ukt = r && typeof r === 'object' ? (r as any).usedKeyType : undefined;
+          const usedKeyType = ukt === 'user' || ukt === 'shared' || ukt === 'none' ? ukt : undefined;
+          return { code, provider, usedKeyType };
+        })();
+        const asst: ChatMessage = { role: "assistant", content: String(text).trim(), modelId: m.id, ts: Date.now(), ...meta };
         // Append to current thread messages to accumulate answers from multiple models
         setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
       } catch (e: unknown) {
@@ -145,6 +153,26 @@ export default function Home() {
     }
     return rows;
   }, [messages]);
+
+  const onEditUser = (turnIndex: number, newText: string) => {
+    if (!activeThread) return;
+    setThreads(prev => prev.map(t => {
+      if (t.id !== activeThread.id) return t;
+      let userIdx = -1;
+      const updated = (t.messages ?? []).map(m => {
+        if (m.role === 'user') userIdx += 1;
+        if (m.role === 'user' && userIdx === turnIndex) {
+          return { ...m, content: newText };
+        }
+        return m;
+      });
+      // If title was the default deriving from first user message, refresh it
+      const title = t.title === 'New Chat' || t.title === (messages[0]?.content?.slice?.(0,40) ?? t.title)
+        ? (updated.find(mm => mm.role === 'user')?.content ?? 'New Chat').slice(0,40)
+        : t.title;
+      return { ...t, messages: updated, title };
+    }));
+  };
 
   return (
     <div className="min-h-screen w-full bg-black relative text-white">
@@ -218,6 +246,7 @@ export default function Home() {
               setCopiedAllIdx={setCopiedAllIdx}
               copiedKey={copiedKey}
               setCopiedKey={setCopiedKey}
+              onEditUser={onEditUser}
             />
 
             <FixedInputBar onSubmit={send} loading={anyLoading} />

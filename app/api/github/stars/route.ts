@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     const data = await res.json();
     const stars = typeof data?.stargazers_count === 'number' ? data.stargazers_count : null;
     return NextResponse.json({ ok: true, stars }, { status: 200 });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ ok: false }, { status: 200 });
   }
 }

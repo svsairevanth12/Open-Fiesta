@@ -79,7 +79,7 @@ export default function CustomModels() {
         setValidMsg('Model not found. Check the exact slug on OpenRouter.');
         setValidState('fail');
       }
-    } catch (e) {
+    } catch {
       setValidMsg('Could not validate right now.');
       setValidState('error');
     } finally {
@@ -118,7 +118,7 @@ export default function CustomModels() {
               </div>
             </div>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-              <div className="text-[12px] md:text-sm text-zinc-400">Tip: Only use ":free" if the model page lists a free variant.</div>
+              <div className="text-[12px] md:text-sm text-zinc-400">Tip: Only use &quot;:free&quot; if the model page lists a free variant.</div>
               <div className="flex items-center gap-2">
                 <button onClick={validate} disabled={validating} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md bg-white/10 border border-white/10 hover:bg-white/20 disabled:opacity-60 text-sm md:text-base">
                   {validating ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}

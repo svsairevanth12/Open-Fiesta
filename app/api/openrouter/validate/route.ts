@@ -27,7 +27,8 @@ export async function POST(req: Request) {
     const found = list.find((m) => m.id === slug);
 
     return NextResponse.json({ ok: true, exists: !!found });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || 'Unknown error' }, { status: 200 });
+  } catch (e: unknown) {
+    const message = typeof e === 'object' && e && 'message' in e ? String((e as { message?: unknown }).message) : 'Unknown error';
+    return NextResponse.json({ ok: false, error: message }, { status: 200 });
   }
 }

@@ -3,6 +3,10 @@ export type ChatMessage = {
   content: string;
   modelId?: string; // which model produced this assistant message
   ts?: number;
+  // Optional metadata for provider responses
+  code?: number; // HTTP-like status from backend (e.g., 503)
+  provider?: string; // e.g., 'openrouter', 'gemini'
+  usedKeyType?: 'user' | 'shared' | 'none';
 };
 
 export type AiModel = {
