@@ -3,6 +3,8 @@ import { Layers, Star } from "lucide-react";
 import Settings from "@/components/Settings";
 import CustomModels from "@/components/CustomModels";
 import type { AiModel } from "@/lib/types";
+import ProBadge from "./ui/ProBadge";
+import FreeBadge from "./ui/FreeBadge";
 
 type Props = {
   selectedModels: AiModel[];
@@ -10,33 +12,45 @@ type Props = {
   onOpenModelsModal: () => void;
 };
 
-export default function SelectedModelsBar({ selectedModels, onToggle, onOpenModelsModal }: Props) {
+export default function SelectedModelsBar({
+  selectedModels,
+  onToggle,
+  onOpenModelsModal,
+}: Props) {
   return (
     <div className="mb-3 flex items-start gap-3 min-w-0">
       {/* Chips: no wrap, horizontal scroll */}
-      <div className="hidden sm:flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pr-1 pb-2 min-w-0" style={{ scrollbarGutter: 'stable both-edges' }}>
+      <div
+        className="hidden sm:flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pr-1 pb-2 min-w-0"
+        style={{ scrollbarGutter: "stable both-edges" }}
+      >
         {selectedModels.map((m) => {
           const isFree = /(\(|\s)free\)/i.test(m.label);
-          const isUncensored = /uncensored/i.test(m.label) || /venice/i.test(m.model);
+          const isUncensored =
+            /uncensored/i.test(m.label) || /venice/i.test(m.model);
           return (
             <button
               key={m.id}
               onClick={() => onToggle(m.id)}
               className={`h-9 px-3 text-xs rounded-full text-white border inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 transition-colors shrink-0 ${
-                m.good ? 'border-amber-300/40' : isFree ? 'border-emerald-300/40' : 'border-white/10'
+                m.good
+                  ? "border-amber-300/40"
+                  : isFree
+                  ? "border-emerald-300/40"
+                  : "border-white/10"
               }`}
               title="Click to toggle"
             >
               {m.good && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
                   <Star size={12} className="shrink-0" />
-                  <span className="hidden sm:inline">Pro</span>
+                  <ProBadge size="sm" />
                 </span>
               )}
               {isFree && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-300/30">
                   <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                  <span className="hidden sm:inline">Free</span>
+                  <FreeBadge size="sm" />
                 </span>
               )}
               {isUncensored && (

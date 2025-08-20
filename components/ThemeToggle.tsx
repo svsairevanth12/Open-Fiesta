@@ -336,7 +336,7 @@ export default function ThemeToggle() {
                     <h3 className="text-sm font-medium text-white/80 mb-3">
                       Choose your background style
                     </h3>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-3">
                       {backgroundValues.map((bg) => (
                         <BackgroundOption
                           key={bg.id}
@@ -345,6 +345,15 @@ export default function ThemeToggle() {
                           onSelect={handleBackgroundChange}
                         />
                       ))}
+                    </div>
+                    <div className="mt-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                      <p className="text-xs text-white/60">
+                        <strong>Gradient:</strong> Rich, complex radial
+                        gradients that match your accent color
+                        <br />
+                        <strong>Minimal:</strong> Clean solid background with
+                        subtle accent patterns
+                      </p>
                     </div>
                   </div>
                 )}

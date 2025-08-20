@@ -7,7 +7,18 @@
 export type ThemeMode = "light" | "dark";
 export type AccentColor = "crimson" | "emerald" | "blue" | "purple";
 export type FontFamily = "geist" | "inter" | "mono" | "poppins";
-export type BackgroundStyle = "gradient" | "minimal" | "mesh" | "particles";
+export type BackgroundStyle = "gradient" | "minimal";
+
+// New: Badge Pairing Types
+export type BadgePair =
+  | "red-gold"
+  | "purple-blue"
+  | "green-emerald"
+  | "orange-yellow";
+export type BadgeType = "pro" | "free";
+
+// New: Accent System Types
+export type AccentTarget = "interactive" | "highlight" | "status" | "glow";
 
 // Complete Theme Configuration Interface
 export interface ThemeConfig {
@@ -165,7 +176,7 @@ export const FONT_FAMILIES: Record<FontFamily, FontDefinition> = {
   },
 };
 
-// Background Style Configurations
+// Background Style Configurations - Consolidated to 2 per accent
 export const BACKGROUND_STYLES: Record<BackgroundStyle, BackgroundDefinition> =
   {
     gradient: {
@@ -177,20 +188,8 @@ export const BACKGROUND_STYLES: Record<BackgroundStyle, BackgroundDefinition> =
     minimal: {
       id: "minimal",
       name: "Minimal",
-      description: "Simple solid colors",
+      description: "Clean solid with subtle patterns",
       className: "bg-minimal-theme",
-    },
-    mesh: {
-      id: "mesh",
-      name: "Mesh",
-      description: "Subtle geometric patterns",
-      className: "bg-mesh-theme",
-    },
-    particles: {
-      id: "particles",
-      name: "Particles",
-      description: "Animated dot patterns",
-      className: "bg-particles-theme",
     },
   };
 
@@ -256,6 +255,26 @@ export const CSS_VARIABLES = {
   ACCENT_BG_PRIMARY: "--accent-bg-primary",
   ACCENT_BG_SECONDARY: "--accent-bg-secondary",
 
+  // New: Interactive Accent Colors
+  ACCENT_INTERACTIVE_PRIMARY: "--accent-interactive-primary",
+  ACCENT_INTERACTIVE_HOVER: "--accent-interactive-hover",
+  ACCENT_INTERACTIVE_ACTIVE: "--accent-interactive-active",
+
+  // New: Highlight Accent Colors
+  ACCENT_HIGHLIGHT_PRIMARY: "--accent-highlight-primary",
+  ACCENT_HIGHLIGHT_SECONDARY: "--accent-highlight-secondary",
+
+  // New: Status Accent Colors
+  ACCENT_SUCCESS: "--accent-success",
+  ACCENT_WARNING: "--accent-warning",
+  ACCENT_ERROR: "--accent-error",
+  ACCENT_INFO: "--accent-info",
+
+  // New: Glow Effects
+  ACCENT_GLOW_SOFT: "--accent-glow-soft",
+  ACCENT_GLOW_MEDIUM: "--accent-glow-medium",
+  ACCENT_GLOW_STRONG: "--accent-glow-strong",
+
   // Fonts
   FONT_PRIMARY: "--font-primary",
   FONT_SECONDARY: "--font-secondary",
@@ -263,3 +282,83 @@ export const CSS_VARIABLES = {
   // Background
   BACKGROUND_PATTERN: "--background-pattern",
 } as const;
+
+// New: Badge System Definitions
+export interface BadgeDefinition {
+  id: BadgePair;
+  name: string;
+  description: string;
+  pro: {
+    background: string;
+    text: string;
+    border: string;
+  };
+  free: {
+    background: string;
+    text: string;
+    border: string;
+  };
+}
+
+export const BADGE_PAIRS: Record<BadgePair, BadgeDefinition> = {
+  "red-gold": {
+    id: "red-gold",
+    name: "Red & Gold",
+    description: "Current Pro/Free styling",
+    pro: {
+      background: "linear-gradient(45deg, #e42a42, #cf243a)",
+      text: "#ffffff",
+      border: "rgba(228, 42, 66, 0.3)",
+    },
+    free: {
+      background: "linear-gradient(45deg, #fbbf24, #f59e0b)",
+      text: "#000000",
+      border: "rgba(251, 191, 36, 0.3)",
+    },
+  },
+  "purple-blue": {
+    id: "purple-blue",
+    name: "Purple & Blue",
+    description: "Modern gradient pairing",
+    pro: {
+      background: "linear-gradient(45deg, #8b5cf6, #7c3aed)",
+      text: "#ffffff",
+      border: "rgba(139, 92, 246, 0.3)",
+    },
+    free: {
+      background: "linear-gradient(45deg, #3b82f6, #2563eb)",
+      text: "#ffffff",
+      border: "rgba(59, 130, 246, 0.3)",
+    },
+  },
+  "green-emerald": {
+    id: "green-emerald",
+    name: "Green & Emerald",
+    description: "Natural success pairing",
+    pro: {
+      background: "linear-gradient(45deg, #10b981, #059669)",
+      text: "#ffffff",
+      border: "rgba(16, 185, 129, 0.3)",
+    },
+    free: {
+      background: "linear-gradient(45deg, #34d399, #10b981)",
+      text: "#000000",
+      border: "rgba(52, 211, 153, 0.3)",
+    },
+  },
+  "orange-yellow": {
+    id: "orange-yellow",
+    name: "Orange & Yellow",
+    description: "Warm energy pairing",
+    pro: {
+      background: "linear-gradient(45deg, #f97316, #ea580c)",
+      text: "#ffffff",
+      border: "rgba(249, 115, 22, 0.3)",
+    },
+    free: {
+      background: "linear-gradient(45deg, #eab308, #ca8a04)",
+      text: "#000000",
+      border: "rgba(234, 179, 8, 0.3)",
+    },
+  },
+};
