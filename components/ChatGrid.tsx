@@ -87,27 +87,13 @@ export default function ChatGrid({
                       }`}
                     >
                       {m.good && (
-                        <span
-                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1 text-[11px] h-6 self-center"
-                          style={{
-                            background: "var(--badge-pro-background)",
-                            color: "var(--badge-pro-text)",
-                            borderColor: "var(--badge-pro-border)",
-                          }}
-                        >
+                        <span className="badge-base badge-pro inline-flex items-center gap-1 h-6 self-center">
                           <Star size={11} />
                           <span className="hidden sm:inline">Pro</span>
                         </span>
                       )}
                       {isFree && (
-                        <span
-                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1 text-[11px] h-6 self-center"
-                          style={{
-                            background: "var(--badge-free-background)",
-                            color: "var(--badge-free-text)",
-                            borderColor: "var(--badge-free-border)",
-                          }}
-                        >
+                        <span className="badge-base badge-free inline-flex items-center gap-1 h-6 self-center">
                           <span className="h-2 w-2 rounded-full bg-current opacity-80" />
                           <span className="hidden sm:inline">Free</span>
                         </span>
@@ -166,6 +152,8 @@ export default function ChatGrid({
                           value={draft}
                           onChange={(e) => setDraft(e.target.value)}
                           autoFocus
+                          aria-label="Edit your prompt"
+                          placeholder="Edit your prompt"
                         />
                         <button
                           onClick={() => {
