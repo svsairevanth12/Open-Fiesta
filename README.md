@@ -15,39 +15,77 @@ An open-source, multi-model AI chat playground built with Next.js App Router. Sw
 
 ## Features
 
-- __Multiple providers__: Gemini, OpenRouter (DeepSeek R1, Llama 3.3, Qwen, Mistral, Moonshot, Reka, Sarvam, etc.)
-- __Selectable model catalog__: choose up to 5 models to run
-- __Web search toggle__ per message
-- __Image attachment__ support (Gemini)
-- __Clean UI__: keyboard submit, streaming-friendly API normalization
+- **Multiple providers**: Gemini, OpenRouter (DeepSeek R1, Llama 3.3, Qwen, Mistral, Moonshot, Reka, Sarvam, etc.)
+- **Selectable model catalog**: choose up to 5 models to run
+- **Web search toggle** per message
+- **Image attachment** support (Gemini)
+- **Clean UI**: keyboard submit, streaming-friendly API normalization
 
 ## Tech Stack
 
 - Next.js 14 (App Router, TypeScript)
 - Tailwind CSS
 - API routes for provider calls
+- Docker containerization support
 
 ## Quick Start
 
-1) Install deps
+### Option 1: Traditional Development
+
+1. Install deps
+
 ```bash
 npm i
 ```
 
-2) Configure environment
-Create `.env.local` with the keys you plan to use:
+2. Configure environment
+   Create `.env.local` with the keys you plan to use:
+
 ```bash
 # OpenRouter (recommended for most free models)
-OPENROUTER_API_KEY=... 
+OPENROUTER_API_KEY=...
 
 # Gemini (for Gemini models and image input)
 GOOGLE_GENERATIVE_AI_API_KEY=...
 ```
 
-3) Run dev server
+3. Run dev server
+
 ```bash
 npm run dev
 # open http://localhost:3000
+```
+
+### Option 2: Docker Development
+
+1. Build and run with Docker Compose (recommended for development):
+
+```bash
+npm run docker:dev
+# or
+docker-compose up ai_fiesta_dev
+```
+
+2. For production build with Docker:
+
+```bash
+npm run docker:build
+npm run docker:run
+# or
+docker-compose up ai_fiesta
+```
+
+### Option 3: Manual Docker Commands
+
+```bash
+# Build the image
+docker build -t ai_fiesta .
+
+# Run the container
+docker run -p 3000:3000 -e OPENROUTER_API_KEY=your_key_here ai_fiesta
+
+# Run with environment file
+docker run -p 3000:3000 --env-file .env.local ai_fiesta
 ```
 
 ## Environment Variables
@@ -55,7 +93,30 @@ npm run dev
 - `OPENROUTER_API_KEY`: API key from https://openrouter.ai (required for OpenRouter models)
 - `GOOGLE_GENERATIVE_AI_API_KEY`: API key from Google AI Studio (required for Gemini models)
 
-You can also provide an API key at runtime in the UI’s Settings panel.
+You can also provide an API key at runtime in the UI's Settings panel.
+
+## Docker Support
+
+This project includes comprehensive Docker support for both development and production:
+
+### Development
+
+- Hot reload enabled for instant code changes
+- Volume mounting for live code updates
+- Includes all development dependencies
+
+### Production
+
+- Multi-stage build for optimized image size (~100MB)
+- Proper security practices with non-root user
+- Environment variable configuration support
+
+### Available Docker Commands
+
+- `npm run docker:build` - Build production Docker image
+- `npm run docker:run` - Run production container
+- `npm run docker:dev` - Start development environment with Docker Compose
+- `npm run docker:prod` - Start production environment with Docker Compose
 
 ## Project Structure
 
@@ -64,6 +125,10 @@ You can also provide an API key at runtime in the UI’s Settings panel.
   - `api/gemini/route.ts`, `api/gemini-pro/route.ts`
 - `components/` – UI components (chat box, model selector, etc.)
 - `lib/` – model catalog and client helpers
+- `Dockerfile` – Production container definition
+- `Dockerfile.dev` – Development container definition
+- `docker-compose.yml` – Multi-container setup
+- `.dockerignore` – Files to exclude from Docker builds
 
 ## Notes on DeepSeek R1
 
@@ -74,14 +139,16 @@ Open-Fiesta post-processes DeepSeek R1 outputs to remove reasoning tags and conv
 We welcome contributions of all kinds: bug fixes, features, docs, and examples.
 
 - **Set up**
+
   - Fork this repo and clone your fork.
-  - Run `npm i` and create `.env.local` (see “Environment Variables”).
   - Start the dev server with `npm run dev`.
 
 - **Branching**
+
   - Create a feature branch from `main`: `feat/<short-name>` or `fix/<short-name>`.
 
 - **Coding standards**
+
   - TypeScript, Next.js App Router.
   - Run linters and build locally:
     - `npm run lint`
@@ -89,23 +156,31 @@ We welcome contributions of all kinds: bug fixes, features, docs, and examples.
   - Keep changes focused and small. Prefer clear names and minimal dependencies.
 
 - **UI/UX**
+
   - Reuse components in `components/` where possible.
   - Keep props typed and avoid unnecessary state.
 
 - **APIs & models**
+
   - OpenRouter logic lives in `app/api/openrouter/`.
   - Gemini logic lives in `app/api/gemini/` and `app/api/gemini-pro/`.
   - If adding models/providers, update `lib/models.ts` or `lib/customModels.ts` and ensure the UI reflects new options.
 
+- **Docker changes**
+
+  - When modifying dependencies, ensure both `Dockerfile` and `Dockerfile.dev` are updated if needed
+  - Test both development and production Docker builds
+
 - **Commit & PR**
+
   - Write descriptive commits (imperative mood): `fix: …`, `feat: …`, `docs: …`.
   - Open a PR to `main` with:
     - What/why, screenshots if UI changes, and testing notes.
     - Checklist confirming `npm run lint` and `npm run build` pass.
+    - Test both traditional and Docker setups if applicable.
   - Link related issues if any.
 
 - **Issue reporting**
-  - Use clear reproduction steps, expected vs. actual behavior, and environment info (OS/node/Next.js).
 
 Thank you for helping improve Open‑Fiesta!
 
