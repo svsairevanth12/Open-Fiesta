@@ -13,6 +13,7 @@ import {
   CSS_VARIABLES,
   generateThemeClasses,
 } from "./themes";
+import { generateBadgeVariables } from "./badgeSystem";
 
 // LocalStorage key for theme persistence
 export const THEME_STORAGE_KEY = "ai-fiesta:theme";
@@ -76,6 +77,12 @@ export const updateCSSVariables = (config: ThemeConfig): void => {
     CSS_VARIABLES.BACKGROUND_PATTERN,
     accent.gradient[gradientKey]
   );
+
+  // Update badge variables
+  const badgeVariables = generateBadgeVariables(config.badgePair);
+  Object.entries(badgeVariables).forEach(([key, value]) => {
+    root.setProperty(key, value);
+  });
 };
 
 // Complete Theme Application

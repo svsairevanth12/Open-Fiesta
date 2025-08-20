@@ -86,6 +86,16 @@
   --background-pattern: linear-gradient(135deg, #fecaca 0%, #f87171 25%, #ef4444 50%, #dc2626 75%, #b91c1c 100%);
   --font-primary: var(--font-geist-sans);
   --font-secondary: var(--font-geist-mono);
+
+  /* Badge System Variables */
+  --badge-pro-background: linear-gradient(135deg, #e42a42 0%, #cf243a 100%);
+  --badge-pro-text: #ffffff;
+  --badge-pro-border: rgba(228, 42, 66, 0.4);
+  --badge-pro-glow: rgba(228, 42, 66, 0.3);
+  --badge-free-background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  --badge-free-text: #000000;
+  --badge-free-border: rgba(251, 191, 36, 0.4);
+  --badge-free-glow: rgba(251, 191, 36, 0.3);
 }
 
 .dark {

@@ -1,31 +1,9 @@
 "use client";
 
-import React from "react";
-import Badge from "./Badge";
-import { BadgePair } from "@/lib/themes";
+import { FreeBadge as FreeBadgeComponent } from "./Badge";
 
-interface FreeBadgeProps {
-  pair?: BadgePair;
-  size?: "sm" | "md" | "lg";
-  variant?: "solid" | "outline" | "ghost";
-  className?: string;
-}
+// Export the FreeBadge from Badge.tsx for external use
+export { FreeBadge } from "./Badge";
 
-export default function FreeBadge({
-  pair = "red-gold",
-  size = "md",
-  variant = "solid",
-  className = "",
-}: FreeBadgeProps) {
-  return (
-    <Badge
-      type="free"
-      pair={pair}
-      size={size}
-      variant={variant}
-      className={className}
-    >
-      Free
-    </Badge>
-  );
-}
+// Default export for convenience
+export default FreeBadgeComponent;

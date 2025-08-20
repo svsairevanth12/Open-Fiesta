@@ -1,8 +1,6 @@
 "use client";
-import { X, Star } from "lucide-react";
+import { X, Layers, Eye, EyeOff, Star } from "lucide-react";
 import type { AiModel } from "@/lib/types";
-import ProBadge from "./ui/ProBadge";
-import FreeBadge from "./ui/FreeBadge";
 import { MODEL_CATALOG } from "@/lib/models";
 
 export type ModelsModalProps = {
@@ -117,13 +115,13 @@ export default function ModelsModal({
                 {showBadges && m.good && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
                     <Star size={12} className="shrink-0" />
-                    <ProBadge size="sm" />
+                    <span className="hidden sm:inline">Pro</span>
                   </span>
                 )}
                 {showBadges && free && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-300/30">
                     <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                    <FreeBadge size="sm" />
+                    <span className="hidden sm:inline">Free</span>
                   </span>
                 )}
                 {showBadges && unc && (

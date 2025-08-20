@@ -129,13 +129,13 @@ export default function AiInput() {
                 ref={textareaRef}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSubmit()
+                    e.preventDefault();
+                    handleSubmit();
                   }
                 }}
                 onChange={(e) => {
-                  setValue(e.target.value)
-                  adjustHeight()
+                  setValue(e.target.value);
+                  adjustHeight();
                 }}
               />
               {!value && (
@@ -189,7 +189,7 @@ export default function AiInput() {
               <button
                 type="button"
                 onClick={() => {
-                  setShowSearch(!showSearch)
+                  setShowSearch(!showSearch);
                 }}
                 className={cn(
                   "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 border h-8",
@@ -252,7 +252,7 @@ export default function AiInput() {
                 className={cn(
                   "rounded-full p-2 transition-colors",
                   value
-                    ? "bg-[#ff3f17]/15 text-[#ff3f17]"
+                    ? "bg-[var(--accent-interactive-primary)] text-white hover:bg-[var(--accent-interactive-hover)] accent-glow-soft"
                     : "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
                 )}
               >
@@ -263,5 +263,5 @@ export default function AiInput() {
         </div>
       </div>
     </div>
-  )
+  );
 }

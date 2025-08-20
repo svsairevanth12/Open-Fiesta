@@ -14,6 +14,7 @@ import {
   AccentColor,
   FontFamily,
   BackgroundStyle,
+  BadgePair,
   DEFAULT_THEME,
   validateThemeConfig,
 } from "./themes";
@@ -36,6 +37,7 @@ interface ThemeContextType {
   setAccent: (accent: AccentColor) => void;
   setFont: (font: FontFamily) => void;
   setBackground: (background: BackgroundStyle) => void;
+  setBadgePair: (badgePair: BadgePair) => void;
 
   // Convenience methods
   toggleMode: () => void;
@@ -87,6 +89,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   const setBackground = useCallback((background: BackgroundStyle) => {
     setTheme((currentTheme) => ({ ...currentTheme, background }));
+  }, []);
+
+  const setBadgePair = useCallback((badgePair: BadgePair) => {
+    setTheme((currentTheme) => ({ ...currentTheme, badgePair }));
   }, []);
 
   // Convenience methods
@@ -192,6 +198,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     setAccent,
     setFont,
     setBackground,
+    setBadgePair,
     toggleMode,
     resetTheme,
     updateTheme,
@@ -274,6 +281,7 @@ export const ThemeDebugger: React.FC = () => {
       <div>Accent: {theme.accent}</div>
       <div>Font: {theme.font}</div>
       <div>Background: {theme.background}</div>
+      <div>Badge Pair: {theme.badgePair}</div>
     </div>
   );
 };

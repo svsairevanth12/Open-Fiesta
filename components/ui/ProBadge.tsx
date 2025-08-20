@@ -1,31 +1,9 @@
 "use client";
 
-import React from "react";
-import Badge from "./Badge";
-import { BadgePair } from "@/lib/themes";
+import { ProBadge as ProBadgeComponent } from "./Badge";
 
-interface ProBadgeProps {
-  pair?: BadgePair;
-  size?: "sm" | "md" | "lg";
-  variant?: "solid" | "outline" | "ghost";
-  className?: string;
-}
+// Export the ProBadge from Badge.tsx for external use
+export { ProBadge } from "./Badge";
 
-export default function ProBadge({
-  pair = "red-gold",
-  size = "md",
-  variant = "solid",
-  className = "",
-}: ProBadgeProps) {
-  return (
-    <Badge
-      type="pro"
-      pair={pair}
-      size={size}
-      variant={variant}
-      className={className}
-    >
-      Pro
-    </Badge>
-  );
-}
+// Default export for convenience
+export default ProBadgeComponent;

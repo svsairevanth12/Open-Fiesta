@@ -26,6 +26,7 @@ export interface ThemeConfig {
   accent: AccentColor;
   font: FontFamily;
   background: BackgroundStyle;
+  badgePair: BadgePair;
 }
 
 // Accent Color Definitions
@@ -199,6 +200,7 @@ export const DEFAULT_THEME: ThemeConfig = {
   accent: "crimson",
   font: "geist",
   background: "gradient",
+  badgePair: "red-gold",
 };
 
 // Theme Validation Helpers
@@ -215,6 +217,9 @@ export const isValidBackgroundStyle = (
   background: string
 ): background is BackgroundStyle =>
   Object.keys(BACKGROUND_STYLES).includes(background);
+
+export const isValidBadgePair = (badgePair: string): badgePair is BadgePair =>
+  Object.keys(BADGE_PAIRS).includes(badgePair);
 
 // Theme Configuration Validator
 export const validateThemeConfig = (
@@ -233,6 +238,9 @@ export const validateThemeConfig = (
     background: isValidBackgroundStyle(config.background || "")
       ? config.background!
       : DEFAULT_THEME.background,
+    badgePair: isValidBadgePair(config.badgePair || "")
+      ? config.badgePair!
+      : DEFAULT_THEME.badgePair,
   };
 };
 

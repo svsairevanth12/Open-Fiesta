@@ -3,8 +3,6 @@ import { Layers, Star } from "lucide-react";
 import Settings from "@/components/Settings";
 import CustomModels from "@/components/CustomModels";
 import type { AiModel } from "@/lib/types";
-import ProBadge from "./ui/ProBadge";
-import FreeBadge from "./ui/FreeBadge";
 
 type Props = {
   selectedModels: AiModel[];
@@ -44,13 +42,13 @@ export default function SelectedModelsBar({
               {m.good && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
                   <Star size={12} className="shrink-0" />
-                  <ProBadge size="sm" />
+                  <span className="hidden sm:inline">Pro</span>
                 </span>
               )}
               {isFree && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-300/30">
                   <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                  <FreeBadge size="sm" />
+                  <span className="hidden sm:inline">Free</span>
                 </span>
               )}
               {isUncensored && (
