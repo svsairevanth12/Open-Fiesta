@@ -51,7 +51,7 @@ Scope: Open-Fiesta theming (accents, backgrounds, chat input styles, badges, fon
 P0 (Must Ship):
 
 1. Align documentation: Update or replace `theme_system_plan.md` & `consolidated_theme_plan.md` to reflect actual implemented scope; clearly mark de-scoped items.
-2. Decide & act on mesh/particles + GlowWrapper: either implement minimal viable or explicitly de-scope & remove references.
+2. Decide & act on mesh/particles + GlowWrapper: explicitly de-scope & remove references.
 3. Clean removal list: Remove unused class keys (mesh/particles) if de-scoped.
 
 P1 (High Value Polish):
@@ -62,15 +62,11 @@ P1 (High Value Polish):
 
 P2 (Nice to Have / Stretch):
 
-1. Implement GlowWrapper (if kept) applying accent-glow via CSS variables.
-2. Add minimal animated mesh background (CSS gradients + subtle animation) behind an optional class (respect reduced motion).
-3. Add unit test (or snapshot) for `generateThemeClasses` to lock class contract.
-4. Provide script / doc snippet for adding new accent sets safely (contrast check + variable insertion).
+1. Add unit test (or snapshot) for `generateThemeClasses` to lock class contract.
+2. Provide script / doc snippet for adding new accent sets safely (contrast check + variable insertion).
 
 ## 6. Implementation Notes
 
-- Mesh/Particles (if implemented): Prefer pure CSS (conic + radial gradient layers, transform animation with `prefers-reduced-motion` guard). Avoid heavy canvas.
-- GlowWrapper: Simple component adding `data-glow` attribute and shadow using `--accent-primary`; ensure layered within stacking context, avoid performance-heavy filters.
 - Contrast Utility: Use relative luminance formula; target WCAG AA for normal text (≥ 4.5:1) and log if violation (dev only).
 - Spec Doc: Enumerate CSS vars: `--accent-primary`, `--accent-secondary`, `--accent-bg-primary`, badge-related glow vars, and any chat input surface tokens (list current and stable future commitments).
 
@@ -86,7 +82,7 @@ P2 (Nice to Have / Stretch):
 ## 8. Proposed File Changes
 
 - Update: `theme_system_plan.md`, `consolidated_theme_plan.md`
-- Possibly Add: `theme_spec.md`, `mesh_background.css` (if implemented), `GlowWrapper.tsx`
+- Possibly Add: `theme_spec.md`
 - Update: `lib/themeUtils.ts` (removal list cleanup, contrast helper)
 - Update: `components/AIChatBox.tsx` (cleanup)
 
@@ -101,9 +97,6 @@ P2 (Nice to Have / Stretch):
 
 ## 10. Open Questions
 
-1. Should animated backgrounds be part of core or optional plugin-like modules?
-2. Is GlowWrapper needed given existing badge glow variables (overlap risk)?
-3. Are there upcoming accent colors requiring more robust contrast logic (pastel set)?
 
 ## 11. Decision Log Placeholder
 
