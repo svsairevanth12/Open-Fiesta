@@ -45,6 +45,17 @@ export default function ChatGrid({
   setCopiedKey,
   onEditUser,
 }: ChatGridProps) {
+  // Sanitize certain provider-specific XML-ish wrappers (e.g., <answer>, <think>)
+  const sanitizeContent = (s: string): string => {
+    try {
+      let t = String(s ?? "");
+      t = t.replace(/<\/?answer[^>]*>/gi, "");
+      t = t.replace(/<\/?think[^>]*>/gi, "");
+      return t.trim();
+    } catch {
+      return s;
+    }
+  };
   const headerCols = useMemo(
     () =>
       headerTemplate || `repeat(${selectedModels.length}, minmax(260px, 1fr))`,
@@ -209,7 +220,7 @@ export default function ChatGrid({
                             (a) => a.modelId === m.id
                           );
                           const header = m.label;
-                          const body = ans?.content ?? "";
+                          const body = sanitizeContent(ans?.content ?? "");
                           return `## ${header}\n${body}`;
                         })
                         .join("\n\n");
@@ -259,7 +270,7 @@ export default function ChatGrid({
                         {ans && String(ans.content || "").length > 0 && (
                           <button
                             onClick={() => {
-                              copyToClipboard(ans.content);
+                              copyToClipboard(sanitizeContent(ans.content));
                               const key = `${i}:${m.id}`;
                               setCopiedKey(key);
                               window.setTimeout(
@@ -300,7 +311,7 @@ export default function ChatGrid({
                           {ans && String(ans.content || "").length > 0 ? (
                             <>
                               <div className="max-w-[72ch]">
-                                <MarkdownLite text={ans.content} />
+                                <MarkdownLite text={sanitizeContent(ans.content)} />
                               </div>
                               {ans.code === 503 &&
                                 ans.provider === "openrouter" && (

@@ -67,8 +67,8 @@ export default function HeaderBar({
         </a>
       </div>
 
-      {/* Center: title stays centered in available space */}
-      <div className="flex-1 text-center">
+      {/* Center: title stays centered in available space (hidden on mobile) */}
+      <div className="flex-1 text-center hidden sm:block">
         <h1 className="text-xl md:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white/90 to-white/70 bg-clip-text text-transparent drop-shadow-[0_1px_0_rgba(255,255,255,0.12)] select-none pointer-events-none">
           {title}
         </h1>
