@@ -12,6 +12,7 @@ import {
   type FontFamily,
   type BackgroundStyle,
   type BadgePair,
+  type ChatInputStyle,
 } from "@/lib/themes";
 import { BADGE_PAIRS } from "@/lib/badgeSystem";
 
@@ -222,8 +223,15 @@ BadgeOption.displayName = "BadgeOption";
 type ThemeToggleProps = { compact?: boolean };
 
 export default function ThemeToggle({ compact }: ThemeToggleProps) {
-  const { theme, setAccent, setFont, setBackground, setBadgePair, toggleMode, updateTheme } =
-    useTheme();
+  const {
+    theme,
+    setAccent,
+    setFont,
+    setBackground,
+    setBadgePair,
+    toggleMode,
+    updateTheme,
+  } = useTheme();
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "accent" | "font" | "background" | "badges" | "input"
@@ -290,14 +298,17 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
     () => BACKGROUND_STYLES[theme.background],
     [theme.background]
   );
+  const currentChatInputStyle = theme.chatInputStyle || "default";
 
-                [
-                  { id: "accent" as const, label: "Colors", icon: Palette },
-                  { id: "badges" as const, label: "Badges", icon: Star },
-                  { id: "font" as const, label: "Fonts", icon: Type },
-                  { id: "background" as const, label: "Backgrounds", icon: Grid3X3 },
-                  { id: "input" as const, label: "Chat Input", icon: MessageSquare },
-                ].map(({ id, label, icon: Icon }) => (
+  return (
+    <div className="relative">
+      <button
+        aria-label="Open Theme Settings"
+        onClick={handleOpen}
+        className={`inline-flex items-center ${
+          compact ? "justify-center h-9 w-9 gap-0" : "gap-2 px-3 py-2"
+        } rounded-md bg-white/10 hover:bg-white/15 border border-white/10 transition-colors text-xs`}
+      >
         <Palette size={14} />
         {!compact && <span>Theme</span>}
       </button>
@@ -358,6 +369,11 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                     id: "background" as const,
                     label: "Backgrounds",
                     icon: Grid3X3,
+                  },
+                  {
+                    id: "input" as const,
+                    label: "Chat Input",
+                    icon: MessageSquare,
                   },
                 ].map(({ id, label, icon: Icon }) => (
                   <button
@@ -470,32 +486,66 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
 
                 {activeTab === "input" && (
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-white/80 mb-3">Chat input style</h3>
+                    <h3 className="text-sm font-medium text-white/80 mb-3">
+                      Chat input style
+                    </h3>
                     <div className="grid sm:grid-cols-2 gap-3">
                       {[
-                        { id: "default", name: "Subtle", desc: "Soft translucent panel" },
-                        { id: "frosty", name: "Frosty Dark", desc: "Higher blur & depth" },
-                      ].map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => updateTheme({ chatInputStyle: opt.id as any })}
-                          className={`p-3 rounded-lg border text-left transition-colors ${theme.chatInputStyle === opt.id ? "border-white/30 bg-white/10" : "border-white/10 bg-white/5 hover:bg-white/8"}`}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <div className="text-sm font-medium">{opt.name}</div>
-                              <div className="text-xs text-white/60">{opt.desc}</div>
+                        {
+                          id: "default",
+                          name: "Subtle",
+                          desc: "Soft translucent panel",
+                        },
+                        {
+                          id: "frosty",
+                          name: "Frosty Dark",
+                          desc: "Higher blur & depth",
+                        },
+                      ].map((opt) => {
+                        const selected = currentChatInputStyle === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() =>
+                              updateTheme({
+                                chatInputStyle: opt.id as ChatInputStyle,
+                              })
+                            }
+                            className={`p-3 rounded-lg border text-left transition-colors ${
+                              selected
+                                ? "border-white/30 bg-white/10"
+                                : "border-white/10 bg-white/5 hover:bg-white/8"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <div className="text-sm font-medium">
+                                  {opt.name}
+                                </div>
+                                <div className="text-xs text-white/60">
+                                  {opt.desc}
+                                </div>
+                              </div>
+                              {selected && (
+                                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                              )}
                             </div>
-                            {theme.chatInputStyle === opt.id && <div className="w-2 h-2 rounded-full bg-blue-500" />}
-                          </div>
-                          <div className="w-full h-16 rounded border border-white/15 flex items-center justify-center text-[10px] tracking-wide uppercase opacity-70 chat-input-shell ${opt.id === 'frosty' ? 'bg-white/10 backdrop-blur-md' : 'bg-black/30'}">
-                            Aa
-                          </div>
-                        </button>
-                      ))}
+                            <div
+                              className={`w-full h-16 rounded border border-white/15 flex items-center justify-center text-[10px] tracking-wide uppercase opacity-70 chat-input-shell ${
+                                opt.id === "default"
+                                  ? "bg-white/10 backdrop-blur-md"
+                                  : "bg-black/30"
+                              }`}
+                            >
+                              Aa
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="mt-2 p-3 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60">
-                      Frosty adds stronger glass effect, brightness separation and a focus ring when active.
+                      Frosty adds stronger glass effect, brightness separation
+                      and a focus ring when active.
                     </div>
                   </div>
                 )}
