@@ -23,6 +23,11 @@ export const applyThemeClasses = (
   config: ThemeConfig,
   targetElement?: Element
 ): void => {
+  // Check if we're in a browser environment (not SSR)
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
+
   const element = targetElement || document.documentElement;
   const classes = generateThemeClasses(config);
 
@@ -51,6 +56,11 @@ export const applyThemeClasses = (
 
 // CSS Variable Management
 export const updateCSSVariables = (config: ThemeConfig): void => {
+  // Check if we're in a browser environment (not SSR)
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
+
   const root = document.documentElement.style;
   const accent = ACCENT_COLORS[config.accent];
   const font = FONT_FAMILIES[config.font];
@@ -88,6 +98,11 @@ export const updateCSSVariables = (config: ThemeConfig): void => {
 
 // Complete Theme Application
 export const applyTheme = (config: ThemeConfig): void => {
+  // Check if we're in a browser environment (not SSR)
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
+
   applyThemeClasses(config);
   updateCSSVariables(config);
   if (process.env.NODE_ENV === "development") {
@@ -116,6 +131,10 @@ export const applyTheme = (config: ThemeConfig): void => {
 // Theme Persistence
 export const saveTheme = (config: ThemeConfig): void => {
   try {
+    // Check if we're in a browser environment (not SSR)
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return;
+    }
     localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(config));
   } catch (error) {
     console.warn("Failed to save theme to localStorage:", error);
@@ -124,6 +143,10 @@ export const saveTheme = (config: ThemeConfig): void => {
 
 export const loadTheme = (): ThemeConfig | null => {
   try {
+    // Check if we're in a browser environment (not SSR)
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return null;
+    }
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     return stored ? JSON.parse(stored) : null;
   } catch (error) {
@@ -137,6 +160,13 @@ export const withThemeTransition = (
   callback: () => void,
   duration: number = 300
 ): void => {
+  // Check if we're in a browser environment (not SSR)
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    // Just execute callback without transition in SSR
+    callback();
+    return;
+  }
+
   // Add transition class to body
   document.body.style.transition = `all ${duration}ms ease-in-out`;
 
@@ -166,6 +196,11 @@ export const getAccentColor = (
 
 // Font Loading Helpers - Completely non-blocking approach
 export const loadGoogleFont = (fontFamily: FontFamily): void => {
+  // Check if we're in a browser environment (not SSR)
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
+
   const font = FONT_FAMILIES[fontFamily];
 
   if (!font.googleFont) {
@@ -217,6 +252,11 @@ export const previewTheme = (
   config: ThemeConfig,
   previewElement: Element
 ): void => {
+  // Check if we're in a browser environment (not SSR)
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
+
   applyThemeClasses(config, previewElement);
 
   // Apply inline styles for preview since CSS variables are global
@@ -288,7 +328,7 @@ export const logAccentContrastIfLow = (accent: AccentColor): void => {
 
 // Initial one-time evaluation of stored theme (dev only)
 try {
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
     const stored = loadTheme();
     if (stored) logAccentContrastIfLow(stored.accent);
   }

@@ -171,8 +171,15 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
       initializeTheme();
     }
-  }, [isInitialized, initialTheme, enableLogging]); // Handle system theme changes (optional enhancement)
+  }, [isInitialized, initialTheme, enableLogging]);
+
+  // Handle system theme changes (optional enhancement)
   useEffect(() => {
+    // Check if we're in a browser environment (not SSR)
+    if (typeof window === "undefined") {
+      return;
+    }
+
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleSystemThemeChange = (e: MediaQueryListEvent) => {
@@ -260,25 +267,26 @@ export const ThemeDebugger: React.FC = () => {
     <div
       style={{
         position: "fixed",
-        top: 10,
-        right: 10,
+        top: 8,
+        right: 8,
         background: "rgba(0, 0, 0, 0.8)",
         color: "white",
-        padding: "10px",
-        borderRadius: "5px",
-        fontSize: "12px",
+        padding: "6px",
+        borderRadius: "3px",
+        fontSize: "10px",
         zIndex: 9999,
         fontFamily: "monospace",
+        lineHeight: "1.2",
       }}
     >
-      <div>
+      <div style={{ fontSize: "10px", marginBottom: "2px" }}>
         <strong>Theme Debug</strong>
       </div>
-      <div>Mode: {theme.mode}</div>
-      <div>Accent: {theme.accent}</div>
-      <div>Font: {theme.font}</div>
-      <div>Background: {theme.background}</div>
-      <div>Badge Pair: {theme.badgePair}</div>
+      <div style={{ fontSize: "9px" }}>Mode: {theme.mode}</div>
+      <div style={{ fontSize: "9px" }}>Accent: {theme.accent}</div>
+      <div style={{ fontSize: "9px" }}>Font: {theme.font}</div>
+      <div style={{ fontSize: "9px" }}>Background: {theme.background}</div>
+      <div style={{ fontSize: "9px" }}>Badge Pair: {theme.badgePair}</div>
     </div>
   );
 };

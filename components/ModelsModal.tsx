@@ -84,7 +84,7 @@ export default function ModelsModal({
             <button
               key={m.id}
               onClick={() => !disabled && onToggle(m.id)}
-              className={`model-chip flex items-center justify-between gap-3 w-full sm:w-auto min-w-[0] sm:min-w-[280px] md:min-w-[320px] h-11 sm:h-9 md:h-10 px-4 sm:px-3 md:px-4 text-sm sm:text-xs md:text-sm ${
+              className={`model-chip flex items-center justify-between gap-2 w-full sm:w-auto min-w-[0] sm:min-w-[280px] md:min-w-[320px] h-10 sm:h-8 md:h-9 px-3 sm:px-2.5 md:px-3 text-xs sm:text-[11px] md:text-sm ${
                 disabled ? "opacity-60 cursor-not-allowed text-zinc-500" : ""
               } ${
                 selected
