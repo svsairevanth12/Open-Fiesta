@@ -181,7 +181,7 @@ export function AiInput({
       animate={{ y: barVisible ? 0 : 72, opacity: barVisible ? 1 : 0.9 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="relative max-w-lg border rounded-[22px] border-black/5 p-1 w-full mx-auto chat-input-shell">
+      <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto chat-input-shell">
         <div className="relative rounded-2xl border border-black/5 overflow-hidden">
           <div
             className="ai-grow-area"
@@ -190,8 +190,8 @@ export function AiInput({
             }
           >
             {/* Content area (textarea + attachments + messages) gets bottom padding to make room for fixed toolbar */}
-            <div className="pb-12">
-              {/* 48px toolbar + gap */}
+            <div className="pb-10">
+              {/* 40px toolbar + gap */}
               {imagePreview ? (
                 <div className="grid grid-cols-[96px_1fr] gap-3 p-3 pr-4">
                   <div className="relative h-[96px] w-[96px] rounded-xl overflow-hidden border border-white/10 shadow-sm">
@@ -295,7 +295,7 @@ export function AiInput({
 
           {/* Fixed toolbar anchored to bottom; textarea grows upward above it */}
           <div
-            className="absolute inset-x-0 bottom-0 h-12 rounded-b-2xl backdrop-blur-sm flex items-center justify-between px-3"
+            className="absolute inset-x-0 bottom-0 h-10 rounded-b-2xl backdrop-blur-sm flex items-center justify-between px-3"
             style={{ backgroundColor: "rgba(14, 13, 13, 0.52)" }}
           >
             <div className="flex items-center gap-2">
