@@ -226,7 +226,12 @@ export default function ThemeToggle() {
               className="absolute inset-0 bg-black/80 backdrop-blur-md"
               onClick={handleClose}
             />
-            <div className="relative w-full mx-3 sm:mx-6 max-w-2xl lg:max-w-3xl rounded-2xl border border-white/10 bg-zinc-900/95 text-white p-5 md:p-6 lg:p-7 shadow-2xl backdrop-blur-sm z-10">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Theme Settings"
+              className="relative w-full mx-3 sm:mx-6 max-w-2xl lg:max-w-3xl max-h-[88vh] rounded-2xl border border-white/10 bg-zinc-900/95 text-white p-5 md:p-6 lg:p-7 shadow-2xl backdrop-blur-sm z-10 flex flex-col overflow-hidden"
+            >
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg md:text-xl font-semibold">
@@ -242,7 +247,7 @@ export default function ThemeToggle() {
               </div>
 
               {/* Quick Mode Toggle */}
-              <div className="mb-6 p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="mb-6 p-3 rounded-lg bg-white/5 border border-white/10 shrink-0">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Dark/Light Mode</span>
                   <button
@@ -260,7 +265,7 @@ export default function ThemeToggle() {
               </div>
 
               {/* Tab Navigation */}
-              <div className="flex gap-1 mb-4 p-1 rounded-lg bg-white/5">
+              <div className="flex gap-1 mb-4 p-1 rounded-lg bg-white/5 shrink-0">
                 {[
                   { id: "accent" as const, label: "Colors", icon: Palette },
                   { id: "font" as const, label: "Fonts", icon: Type },
@@ -285,8 +290,8 @@ export default function ThemeToggle() {
                 ))}
               </div>
 
-              {/* Tab Content */}
-              <div className="min-h-[200px]">
+              {/* Tab Content (scrollable) */}
+              <div className="min-h-[200px] flex-1 overflow-y-auto pr-1 space-y-0">
                 {/* Accent Colors Tab */}
                 {activeTab === "accent" && (
                   <div className="space-y-3">
@@ -346,7 +351,7 @@ export default function ThemeToggle() {
               </div>
 
               {/* Footer */}
-              <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/10">
+              <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/10 shrink-0">
                 <div className="text-xs text-white/60">
                   Current: {theme.mode} mode, {currentAccent.name},{" "}
                   {currentFont.name}, {currentBackground.name}
