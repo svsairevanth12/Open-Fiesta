@@ -8,17 +8,61 @@ function sseEncode(obj: unknown) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model, apiKey: apiKeyFromBody, referer, title } = await req.json();
+    const { messages, model, apiKey: apiKeyFromBody, referer, title, imageDataUrl } = await req.json();
     const apiKey = apiKeyFromBody || process.env.OPENROUTER_API_KEY;
     const usedKeyType = apiKeyFromBody ? 'user' : (process.env.OPENROUTER_API_KEY ? 'shared' : 'none');
     if (!apiKey) return new Response('Missing OpenRouter API key', { status: 400 });
     if (!model) return new Response('Missing model id', { status: 400 });
 
+    type InMsg = { role?: unknown; content?: unknown };
+    type OutMsg = { role: 'user' | 'assistant' | 'system'; content: string };
+    const isRole = (r: unknown): r is OutMsg['role'] => r === 'user' || r === 'assistant' || r === 'system';
+    const sanitize = (msgs: unknown[]): OutMsg[] =>
+      (Array.isArray(msgs) ? (msgs as InMsg[]) : [])
+        .map((m) => {
+          const role = isRole(m?.role) ? m.role : 'user';
+          const content = typeof m?.content === 'string' ? m.content : String(m?.content ?? '');
+          return { role, content };
+        })
+        .filter((m) => isRole(m.role));
+    const trimmed = (arr: OutMsg[]) => (arr.length > 8 ? arr.slice(-8) : arr);
+    const toUpstreamMessages = (msgs: OutMsg[]) => {
+      const arr = trimmed(msgs);
+      if (!imageDataUrl || !arr.length) return arr;
+      const lastIdx = [...arr].map((m, i) => ({ m, i })).reverse().find(p => p.m.role === 'user')?.i;
+      if (lastIdx == null) return arr;
+      const m = arr[lastIdx];
+      const [meta, base64] = String(imageDataUrl).split(',');
+      const mt = /data:(.*?);base64/.exec(meta || '')?.[1] || '';
+      if (/^image\//i.test(mt)) {
+        const content = [
+          { type: 'text', text: m.content },
+          { type: 'image_url', image_url: { url: String(imageDataUrl) } },
+        ];
+        return arr.map((mm, idx) => (idx === lastIdx ? ({ role: mm.role, content } as unknown as OutMsg) : mm));
+      }
+      if (/^text\/plain$/i.test(mt) && base64) {
+        try {
+          const decoded = atob(base64);
+          const clipped = decoded.slice(0, 20000);
+          const appended = `${m.content}\n\n[Attached text file contents:]\n${clipped}`;
+          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+        } catch {}
+      }
+      const noted = `${m.content}\n\n[Attached file: ${mt || 'unknown'} provided as Data URL. If your model supports reading this type via data URLs, use it.]`;
+      return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: noted } : mm));
+    };
+
     const body = {
       model,
-      messages,
+      messages: toUpstreamMessages(sanitize(messages as unknown[])),
       stream: true,
     };
+
+    // Add fetch timeout to avoid hanging steps
+    const aborter = new AbortController();
+    const timeoutMs = 60000; // 60s
+    const timeoutId = setTimeout(() => aborter.abort(), timeoutMs);
 
     const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -29,6 +73,7 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      signal: aborter.signal,
     });
 
     const headers = new Headers({
@@ -48,6 +93,7 @@ export async function POST(req: NextRequest) {
           controller.close();
         },
       });
+      clearTimeout(timeoutId);
       return new Response(stream, { status: 200, headers });
     }
 
@@ -62,60 +108,73 @@ export async function POST(req: NextRequest) {
         // Send a small meta event
         controller.enqueue(encoder.encode(sseEncode({ provider: 'openrouter', usedKeyType })));
 
-        const push = (): Promise<void> => reader.read().then(({ done, value }: ReadableStreamReadResult<Uint8Array>) => {
-          if (done) {
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-            controller.close();
-            return;
-          }
-          buffer += decoder.decode(value, { stream: true });
-          // OpenRouter sends SSE lines starting with 'data: '
-          const parts = buffer.split('\n\n');
-          buffer = parts.pop() || '';
-          for (const part of parts) {
-            const line = part.trim();
-            if (!line.startsWith('data:')) continue;
-            const payload = line.slice(5).trim();
-            if (payload === '[DONE]') {
+        const push = async (): Promise<void> => {
+          try {
+            const { done, value } = await reader.read();
+            if (done) {
+              clearTimeout(timeoutId);
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
               controller.close();
               return;
             }
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop() || '';
+            for (const part of parts) {
+              const line = part.trim();
+              if (!line.startsWith('data:')) continue;
+              const payload = line.slice(5).trim();
+              if (payload === '[DONE]') {
+                clearTimeout(timeoutId);
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.close();
+                return;
+              }
+              try {
+                const json = JSON.parse(payload);
+                const delta = json?.choices?.[0]?.delta;
+                let text = '';
+                if (typeof delta?.content === 'string') {
+                  text = delta.content;
+                } else if (Array.isArray(delta?.content)) {
+                  text = (delta.content as unknown[]).map((c: unknown) => {
+                    if (!c) return '';
+                    if (typeof c === 'string') return c;
+                    const obj = c as { text?: unknown; content?: unknown; value?: unknown };
+                    if (typeof obj.text === 'string') return obj.text;
+                    if (typeof obj.content === 'string') return obj.content;
+                    if (typeof obj.value === 'string') return obj.value;
+                    return '';
+                  }).filter(Boolean).join('');
+                }
+                if (text) {
+                  controller.enqueue(encoder.encode(sseEncode({ delta: text })));
+                }
+                if (json?.error) {
+                  controller.enqueue(encoder.encode(sseEncode({ error: json.error?.message || 'error', code: json.error?.code, provider: 'openrouter', usedKeyType })));
+                }
+              } catch {
+                // ignore parse errors
+              }
+            }
+            return push();
+          } catch (err) {
+            const aborted = (err as Error)?.name === 'AbortError';
+            const errorMsg = aborted ? `Request timed out after ${timeoutMs}ms` : 'Stream error';
             try {
-              const json = JSON.parse(payload);
-              // Try OpenAI-style delta
-              const delta = json?.choices?.[0]?.delta;
-              let text = '';
-              if (typeof delta?.content === 'string') {
-                text = delta.content;
-              } else if (Array.isArray(delta?.content)) {
-                text = (delta.content as unknown[]).map((c: unknown) => {
-                  if (!c) return '';
-                  if (typeof c === 'string') return c;
-                  const obj = c as { text?: unknown; content?: unknown; value?: unknown };
-                  if (typeof obj.text === 'string') return obj.text;
-                  if (typeof obj.content === 'string') return obj.content;
-                  if (typeof obj.value === 'string') return obj.value;
-                  return '';
-                }).filter(Boolean).join('');
-              }
-              if (text) {
-                controller.enqueue(encoder.encode(sseEncode({ delta: text })));
-              }
-              // forward error-like responses if present
-              if (json?.error) {
-                controller.enqueue(encoder.encode(sseEncode({ error: json.error?.message || 'error', code: json.error?.code, provider: 'openrouter', usedKeyType })));
-              }
-            } catch {
-              // ignore parse errors
+              controller.enqueue(encoder.encode(sseEncode({ error: errorMsg, code: aborted ? 408 : 500, provider: 'openrouter', usedKeyType })));
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            } finally {
+              clearTimeout(timeoutId);
+              controller.close();
             }
           }
-          return push();
-        });
+        };
         push();
       },
       cancel() {
         try { reader.cancel(); } catch {}
+        clearTimeout(timeoutId);
       }
     });
 

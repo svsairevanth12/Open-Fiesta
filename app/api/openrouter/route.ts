@@ -1,8 +1,13 @@
 import { NextRequest } from 'next/server';
+import type { Readable } from 'node:stream';
+export const runtime = 'nodejs';
+// Lazy require to avoid bundling when not used
+let pdfParse: ((data: Buffer | Uint8Array | ArrayBuffer | Readable) => Promise<{ text: string }>) | null = null;
+let mammoth: { extractRawText: (arg: { buffer: Buffer }) => Promise<{ value: string }> } | null = null;
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model, apiKey: apiKeyFromBody, referer, title } = await req.json();
+    const { messages, model, apiKey: apiKeyFromBody, referer, title, imageDataUrl } = await req.json();
     const apiKey = apiKeyFromBody || process.env.OPENROUTER_API_KEY;
     const usedKeyType = apiKeyFromBody ? 'user' : (process.env.OPENROUTER_API_KEY ? 'shared' : 'none');
     if (!apiKey) return new Response(JSON.stringify({ error: 'Missing OpenRouter API key' }), { status: 400 });
@@ -22,7 +27,90 @@ export async function POST(req: NextRequest) {
         .filter((m) => isRole(m.role));
     // Keep last 8 messages to avoid overly long histories for picky providers
     const trimmed = (arr: OutMsg[]) => (arr.length > 8 ? arr.slice(-8) : arr);
-    const makeBody = (msgs: unknown) => ({ model, messages: trimmed(sanitize((msgs as unknown[]) || [])) });
+    const toUpstreamMessages = async (msgs: OutMsg[]) => {
+      const arr = trimmed(msgs);
+      if (!imageDataUrl || !arr.length) return arr;
+      // Try to attach to the last user message
+      const lastIdx = [...arr].map((m, i) => ({ m, i })).reverse().find(p => p.m.role === 'user')?.i;
+      if (lastIdx == null) return arr;
+      const m = arr[lastIdx];
+      const [meta, base64] = String(imageDataUrl).split(',');
+      const mt = /data:(.*?);base64/.exec(meta || '')?.[1] || '';
+      let buf: Buffer | null = null;
+      if (base64) {
+        try { buf = Buffer.from(base64, 'base64'); } catch { buf = null; }
+      }
+      // If MIME is missing/unknown, detect by magic bytes
+      let detectedMt = mt;
+      if ((!detectedMt || /application\/octet-stream/i.test(detectedMt)) && buf && buf.length >= 4) {
+        const b0 = buf[0], b1 = buf[1], b2 = buf[2], b3 = buf[3], b4 = buf[4];
+        const ascii5 = buf.slice(0, 5).toString('ascii');
+        if (ascii5.startsWith('%PDF-')) {
+          detectedMt = 'application/pdf';
+        } else if (b0 === 0x50 && b1 === 0x4b) { // 'PK' ZIP header, likely DOCX
+          detectedMt = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        }
+      }
+      
+      if (/^image\//i.test(detectedMt)) {
+        const content = [
+          { type: 'text', text: m.content },
+          { type: 'image_url', image_url: { url: String(imageDataUrl) } },
+        ];
+        return arr.map((mm, idx) => (idx === lastIdx ? ({ role: mm.role, content } as unknown as OutMsg) : mm));
+      }
+      // text/plain: decode and append inline (limit)
+      if (/^text\/plain$/i.test(detectedMt) && base64) {
+        try {
+          const decoded = (buf ?? Buffer.from(base64, 'base64')).toString('utf8').slice(0, 20000);
+          const appended = `${m.content}\n\n[Attached text file contents:]\n${decoded}`;
+          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+        } catch {}
+      }
+      // PDF: extract text using pdf-parse
+      if (/^application\/pdf$/i.test(detectedMt) && base64 && (buf?.length ?? 0) > 0) {
+        try {
+          if (!pdfParse) {
+            const mod = await import('pdf-parse') as unknown as {
+              default?: (data: Buffer | Uint8Array | ArrayBuffer | Readable) => Promise<{ text: string }>;
+            } | ((data: Buffer | Uint8Array | ArrayBuffer | Readable) => Promise<{ text: string }>);
+            const fn = (typeof mod === 'function') ? mod as any : (mod as { default?: any }).default;
+            pdfParse = fn as any;
+          }
+          const out = await pdfParse!(buf!);
+          const text = (out?.text || '').trim().slice(0, 80000);
+          const appended = `${m.content}\n\n[Attached PDF extracted text:]\n${text || '(no extractable text)'}\n`;
+          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+        } catch (err) {
+          const appended = `${m.content}\n\n[Attached PDF could not be auto-extracted. Please copy/paste key text if needed.]`;
+          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+        }
+      }
+      // DOCX: extract text using mammoth
+      if (/^application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document$/i.test(detectedMt) && base64 && (buf?.length ?? 0) > 0) {
+        try {
+          if (!mammoth) {
+            const mod = await import('mammoth') as {
+              default?: { extractRawText: (arg: { buffer: Buffer }) => Promise<{ value: string }> };
+              extractRawText?: (arg: { buffer: Buffer }) => Promise<{ value: string }>;
+            };
+            mammoth = mod.default ?? ({ extractRawText: mod.extractRawText! });
+          }
+          const out = await mammoth!.extractRawText({ buffer: buf! });
+          const text = (out?.value || '').trim().slice(0, 80000);
+          const appended = `${m.content}\n\n[Attached DOCX extracted text:]\n${text || '(no extractable text)'}\n`;
+          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+        } catch (err) {
+          const appended = `${m.content}\n\n[Attached DOCX could not be auto-extracted. Please copy/paste key text if needed.]`;
+          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+        }
+      }
+      // Other types (pdf/docx): include a short note so assistant is aware
+      const noted = `${m.content}\n\n[Attached file: ${detectedMt || 'unknown'} provided as Data URL. If your model supports reading this type via data URLs, use it.]`;
+      return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: noted } : mm));
+    };
+
+    const makeBody = async (msgs: unknown) => ({ model, messages: await toUpstreamMessages(sanitize((msgs as unknown[]) || [])) });
     const requestInit = (bodyObj: unknown): RequestInit => ({
       method: 'POST',
       headers: {
@@ -34,8 +122,13 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(bodyObj),
     });
 
-    // First attempt
-    let resp = await fetch('https://openrouter.ai/api/v1/chat/completions', requestInit(makeBody(messages)));
+    // Build body first (may include extraction work for PDFs/DOCX)
+    const firstBody = await makeBody(messages);
+    // Now start timeout so extraction time doesn't count toward it
+    const timeoutMs = 120000; // 120s to allow for larger prompts
+    let aborter = new AbortController();
+    const timeoutId = setTimeout(() => aborter.abort(), timeoutMs);
+    let resp = await fetch('https://openrouter.ai/api/v1/chat/completions', { ...requestInit(firstBody), signal: aborter.signal });
 
     let data: unknown = await resp.json();
     if (!resp.ok) {
@@ -53,14 +146,16 @@ export async function POST(req: NextRequest) {
         return 'Unknown error';
       })();
       if (resp.status === 429) {
-        // Convert to a friendly guidance text while preserving raw error
+    
         const text = usedKeyType === 'user'
           ? 'Your OpenRouter API key hit a rate limit. Please retry after a moment or upgrade your plan/limits.'
           : 'This model hit a shared rate limit. Add your own OpenRouter API key for FREE in Settings for higher limits and reliability.';
+        clearTimeout(timeoutId);
         return Response.json({ text, error: errStr, code: 429, provider: 'openrouter', usedKeyType });
       }
       if (resp.status === 404 && /model not found/i.test(errStr)) {
         const text = 'This model is currently unavailable on OpenRouter (404 model not found). It may be renamed, private, or the free pool is paused. Try again later or pick another model.';
+        clearTimeout(timeoutId);
         return Response.json({ text, code: 404, provider: 'openrouter', usedKeyType }, { status: 404 });
       }
       // Special-case retry for Sarvam: try with only the last user message
@@ -72,21 +167,32 @@ export async function POST(req: NextRequest) {
           const cont = (lastUser as InMsg).content;
           const contentVal: string = typeof cont === 'string' ? cont : String(cont);
           const simpleMsgs: OutMsg[] = [{ role: 'user', content: contentVal }];
-          resp = await fetch('https://openrouter.ai/api/v1/chat/completions', requestInit(makeBody(simpleMsgs)));
+          // fresh controller + timer for retry
+          clearTimeout(timeoutId);
+          aborter = new AbortController();
+          const retryTimeoutId = setTimeout(() => aborter.abort(), timeoutMs);
+          try {
+            resp = await fetch('https://openrouter.ai/api/v1/chat/completions', { ...requestInit(await makeBody(simpleMsgs)), signal: aborter.signal });
+          } finally {
+            clearTimeout(retryTimeoutId);
+          }
           data = await resp.json();
           if (resp.ok) {
             // continue to normalization below using new data
           } else {
             const friendly2 = `Provider returned error for ${model} (after retry) [status ${resp.status}]`;
+            clearTimeout(timeoutId);
             return Response.json({ text: friendly2, code: resp.status, provider: 'openrouter', usedKeyType }, { status: resp.status });
           }
         } else {
           const friendly = `Provider returned error for ${model} [status ${resp.status}]`;
+          clearTimeout(timeoutId);
           return Response.json({ text: friendly, code: resp.status, provider: 'openrouter', usedKeyType }, { status: resp.status });
         }
       } else {
         // Return structured JSON but also a user-friendly text to render in UI
         const friendly = `Provider returned error${model ? ` for ${model}` : ''} [status ${resp.status}]`;
+        clearTimeout(timeoutId);
         return Response.json({ text: friendly, code: resp.status, provider: 'openrouter', usedKeyType }, { status: resp.status });
       }
     }
@@ -184,10 +290,13 @@ export async function POST(req: NextRequest) {
       text = 'No response from provider.';
     }
 
+    clearTimeout(timeoutId);
     return Response.json({ text, raw: data });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), { status: 500 });
+    const isAbort = e instanceof Error && e.name === 'AbortError';
+    const message = isAbort ? 'Request timed out' : (e instanceof Error ? e.message : 'Unknown error');
+    const code = isAbort ? 408 : 500;
+    return new Response(JSON.stringify({ error: message, code }), { status: code });
   }
 }
 

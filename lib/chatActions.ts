@@ -73,8 +73,23 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               return { ...t, messages: msgs };
             }));
           };
+          const mt = typeof imageDataUrl === 'string' ? (/^data:(.*?);base64/.exec(imageDataUrl)?.[1] || '') : '';
+          const isImage = !!mt && /^image\//i.test(mt);
+          // Treat attachments with missing/unknown MIME type as non-image to force non-stream (server-side extraction)
+          const isNonImageAttachment = !!imageDataUrl && (!mt || !isImage); // txt/pdf/docx or unknown
 
-          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory }, {
+          if (isNonImageAttachment) {
+            const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl });
+            const text = extractText(res);
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: String(text).trim() } : msg);
+              return { ...t, messages: msgs };
+            }));
+            return;
+          }
+
+          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl }, {
             onToken: (delta) => {
               gotAny = true;
               buffer += delta;
@@ -101,7 +116,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               flush();
               if (!gotAny) {
                 try {
-                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory });
+                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl });
                   const text = extractText(res);
                   setThreads(prev => prev.map(t => {
                     if (t.id !== thread.id) return t;
@@ -176,7 +191,8 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           let flushTimer: number | null = null;
           let gotAny = false;
           const flush = () => {
-            if (!buffer) return; const chunk = buffer; buffer = '';
+            if (!buffer) return;
+            const chunk = buffer; buffer = '';
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
               const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: (msg.content || '') + chunk } : msg);
@@ -184,7 +200,11 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             }));
           };
           await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory }, {
-            onToken: (delta) => { gotAny = true; buffer += delta; if (flushTimer == null) flushTimer = window.setTimeout(() => { flushTimer = null; flush(); }, 24); },
+            onToken: (delta) => {
+              gotAny = true;
+              buffer += delta;
+              if (flushTimer == null) flushTimer = window.setTimeout(() => { flushTimer = null; flush(); }, 24);
+            },
             onMeta: (meta) => {
               setThreads(prev => prev.map(tt => {
                 if (tt.id !== t.id) return tt;

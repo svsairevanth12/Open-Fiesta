@@ -10,7 +10,7 @@ export async function callGemini(args: { apiKey?: string; model: string; message
   return res.json();
 }
 
-export async function callOpenRouter(args: { apiKey?: string; model: string; messages: ChatMessage[] }) {
+export async function callOpenRouter(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }) {
   const res = await fetch('/api/openrouter', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -26,7 +26,7 @@ export type ORStreamHandlers = {
   onDone?: () => void;
 };
 
-export async function streamOpenRouter(args: { apiKey?: string; model: string; messages: ChatMessage[] }, handlers: ORStreamHandlers) {
+export async function streamOpenRouter(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }, handlers: ORStreamHandlers) {
   const res = await fetch('/api/openrouter/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -41,26 +41,39 @@ export async function streamOpenRouter(args: { apiKey?: string; model: string; m
   const decoder = new TextDecoder();
   let buffer = '';
   const pump = async (): Promise<void> => {
-    const { value, done } = await reader.read();
-    if (done) { handlers.onDone?.(); return; }
-    buffer += decoder.decode(value, { stream: true });
-    const parts = buffer.split('\n\n');
-    buffer = parts.pop() || '';
-    for (const part of parts) {
-      const line = part.trim();
-      if (!line.startsWith('data:')) continue;
-      const payload = line.slice(5).trim();
-      if (payload === '[DONE]') { handlers.onDone?.(); return; }
-      try {
-        const json = JSON.parse(payload);
-        if (typeof json?.delta === 'string' && json.delta) handlers.onToken(json.delta);
-        if (json?.provider || json?.usedKeyType) handlers.onMeta?.(json);
-        if (json?.error) handlers.onError?.({ error: json.error, code: json.code, provider: json.provider, usedKeyType: json.usedKeyType });
-      } catch {
-        // ignore
+    try {
+      const { value, done } = await reader.read();
+      if (done) { handlers.onDone?.(); return; }
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop() || '';
+      for (const part of parts) {
+        const line = part.trim();
+        if (!line.startsWith('data:')) continue;
+        const payload = line.slice(5).trim();
+        if (payload === '[DONE]') { handlers.onDone?.(); return; }
+        try {
+          const json = JSON.parse(payload);
+          if (typeof json?.delta === 'string' && json.delta) handlers.onToken(json.delta);
+          if (json?.provider || json?.usedKeyType) handlers.onMeta?.(json);
+          if (json?.error) handlers.onError?.({ error: json.error, code: json.code, provider: json.provider, usedKeyType: json.usedKeyType });
+        } catch {
+          // ignore individual event parse errors
+        }
       }
+      return pump();
+    } catch (err) {
+      const e = err as Error | undefined;
+      handlers.onError?.({ error: e?.message || 'Stream failed', provider: 'openrouter' });
+      handlers.onDone?.();
+      return;
     }
-    return pump();
   };
-  await pump();
+  try {
+    await pump();
+  } catch (err) {
+    const e = err as Error | undefined;
+    handlers.onError?.({ error: e?.message || 'Stream failed', provider: 'openrouter' });
+    handlers.onDone?.();
+  }
 }
