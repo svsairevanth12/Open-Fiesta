@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import GithubStar from "@/components/GithubStar";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Menu as MenuIcon } from "lucide-react";
 
 type Props = {
@@ -25,7 +26,9 @@ export default function HeaderBar({
   className,
 }: Props) {
   return (
-    <div className={["flex items-center mb-3 gap-2", className || ""].join(" ")}>      
+    <div
+      className={["flex items-center mb-3 gap-2", className || ""].join(" ")}
+    >
       {/* Left: author + menu */}
       <div className="flex items-center gap-2 min-w-0">
         <button
@@ -50,7 +53,12 @@ export default function HeaderBar({
             height={20}
             className="h-5 w-5 rounded-full object-cover"
           />
-          <span className="opacity-90 hidden sm:inline text-sm">Made by <span className="font-semibold underline decoration-dotted">{authorName}</span></span>
+          <span className="opacity-90 hidden sm:inline text-sm">
+            Made by{" "}
+            <span className="font-semibold underline decoration-dotted">
+              {authorName}
+            </span>
+          </span>
         </a>
       </div>
 
@@ -61,8 +69,9 @@ export default function HeaderBar({
         </h1>
       </div>
 
-      {/* Right: github */}
+      {/* Right: theme + github */}
       <div className="flex items-center gap-2 z-10">
+        <ThemeToggle />
         <GithubStar owner={githubOwner} repo={githubRepo} className="ml-1" />
       </div>
     </div>

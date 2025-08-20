@@ -76,6 +76,16 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Theme System Variables */
+  --accent-primary: #e42a42;
+  --accent-secondary: #cf243a;
+  --accent-tertiary: #b91c3c;
+  --accent-bg-primary: rgba(228, 42, 66, 0.15);
+  --accent-bg-secondary: rgba(228, 42, 66, 0.06);
+  --background-pattern: linear-gradient(135deg, #fecaca 0%, #f87171 25%, #ef4444 50%, #dc2626 75%, #b91c1c 100%);
+  --font-primary: var(--font-geist-sans);
+  --font-secondary: var(--font-geist-mono);
 }
 
 .dark {
@@ -110,6 +120,118 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Update background pattern for dark mode */
+  --background-pattern: linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, var(--accent-primary) 0%, var(--accent-secondary) 16%, var(--accent-tertiary) 32%, #591828 46%, #3c1722 60%, #2a151d 72%, #1f1317 84%, #141013 94%, #0a0a0a 100%);
+}
+
+/* Theme-specific dark mode overrides for each accent */
+.dark.accent-crimson {
+  --background-pattern: linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #c81e3a 0%, #a51d35 16%, #7d1a2f 32%, #591828 46%, #3c1722 60%, #2a151d 72%, #1f1317 84%, #141013 94%, #0a0a0a 100%);
+}
+
+.dark.accent-emerald {
+  --background-pattern: linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #10b981 0%, #059669 16%, #047857 32%, #065f46 46%, #064e3b 60%, #052e16 72%, #0a0e0a 84%, #0f0f0f 94%, #0a0a0a 100%);
+}
+
+.dark.accent-blue {
+  --background-pattern: linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #3b82f6 0%, #2563eb 16%, #1d4ed8 32%, #1e40af 46%, #1e3a8a 60%, #1e3a8a 72%, #0f1629 84%, #0f1419 94%, #0a0a0a 100%);
+}
+
+.dark.accent-purple {
+  --background-pattern: linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #8b5cf6 0%, #7c3aed 16%, #6d28d9 32%, #5b21b6 46%, #4c1d95 60%, #3730a3 72%, #1e1b4b 84%, #0f0f23 94%, #0a0a0a 100%);
+}
+
+/* Accent Color Theme Classes */
+.accent-crimson {
+  --accent-primary: #e42a42;
+  --accent-secondary: #cf243a;
+  --accent-tertiary: #b91c3c;
+  --accent-bg-primary: rgba(228, 42, 66, 0.15);
+  --accent-bg-secondary: rgba(228, 42, 66, 0.06);
+}
+
+.accent-emerald {
+  --accent-primary: #10b981;
+  --accent-secondary: #059669;
+  --accent-tertiary: #047857;
+  --accent-bg-primary: rgba(16, 185, 129, 0.15);
+  --accent-bg-secondary: rgba(16, 185, 129, 0.06);
+}
+
+.accent-blue {
+  --accent-primary: #3b82f6;
+  --accent-secondary: #2563eb;
+  --accent-tertiary: #1d4ed8;
+  --accent-bg-primary: rgba(59, 130, 246, 0.15);
+  --accent-bg-secondary: rgba(59, 130, 246, 0.06);
+}
+
+.accent-purple {
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #7c3aed;
+  --accent-tertiary: #6d28d9;
+  --accent-bg-primary: rgba(139, 92, 246, 0.15);
+  --accent-bg-secondary: rgba(139, 92, 246, 0.06);
+}
+
+/* Font Theme Classes */
+.font-geist {
+  --font-primary: var(--font-geist-sans);
+  --font-secondary: var(--font-geist-mono);
+}
+
+.font-inter {
+  --font-primary: var(--font-inter);
+  --font-secondary: var(--font-inter);
+}
+
+.font-mono {
+  --font-primary: var(--font-jetbrains);
+  --font-secondary: var(--font-jetbrains);
+}
+
+.font-poppins {
+  --font-primary: var(--font-poppins);
+  --font-secondary: var(--font-poppins);
+}
+
+/* Background Theme Classes */
+.bg-gradient-theme {
+  background: var(--background-pattern);
+}
+
+.bg-minimal-theme {
+  background: var(--background);
+}
+
+.bg-mesh-theme {
+  background: 
+    radial-gradient(circle at 20% 80%, var(--accent-bg-secondary) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, var(--accent-bg-secondary) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, var(--accent-bg-primary) 0%, transparent 50%),
+    var(--background);
+}
+
+.bg-particles-theme {
+  background: 
+    radial-gradient(1px 1px at 20px 30px, var(--accent-primary), transparent),
+    radial-gradient(1px 1px at 40px 70px, var(--accent-secondary), transparent),
+    radial-gradient(1px 1px at 90px 40px, var(--accent-primary), transparent),
+    radial-gradient(1px 1px at 130px 80px, var(--accent-secondary), transparent),
+    radial-gradient(1px 1px at 160px 30px, var(--accent-primary), transparent),
+    var(--background);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+}
+
+/* Theme Transition Classes */
+.theme-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-transition-colors {
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border-color 0.3s ease-in-out;
 }
 
 @layer base {
