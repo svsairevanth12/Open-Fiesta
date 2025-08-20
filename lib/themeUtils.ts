@@ -82,6 +82,27 @@ export const updateCSSVariables = (config: ThemeConfig): void => {
 export const applyTheme = (config: ThemeConfig): void => {
   applyThemeClasses(config);
   updateCSSVariables(config);
+  if (process.env.NODE_ENV === "development") {
+    try {
+      const rootStyles = getComputedStyle(document.documentElement);
+      const fontPrimary = rootStyles.getPropertyValue("--font-primary").trim();
+      const fontSecondary = rootStyles
+        .getPropertyValue("--font-secondary")
+        .trim();
+      // Force body font update explicitly (Tailwind base already sets it, but reinforce for debug)
+      document.body.style.fontFamily = `${fontPrimary}, system-ui, -apple-system, sans-serif`;
+      console.log("[Theme] Applied font:", config.font, {
+        fontPrimary,
+        fontSecondary,
+        bodyFont: document.body.style.fontFamily,
+        htmlClassList: Array.from(document.documentElement.classList).filter(
+          (c) => c.startsWith("font-")
+        ),
+      });
+    } catch (e) {
+      console.warn("[Theme] Font debug failed", e);
+    }
+  }
 };
 
 // Theme Persistence
@@ -135,8 +156,8 @@ export const getAccentColor = (
   return ACCENT_COLORS[accent][variant];
 };
 
-// Font Loading Helpers
-export const loadGoogleFont = async (fontFamily: FontFamily): Promise<void> => {
+// Font Loading Helpers - Completely non-blocking approach
+export const loadGoogleFont = (fontFamily: FontFamily): void => {
   const font = FONT_FAMILIES[fontFamily];
 
   if (!font.googleFont) {
@@ -144,28 +165,42 @@ export const loadGoogleFont = async (fontFamily: FontFamily): Promise<void> => {
   }
 
   try {
-    // Create link element for Google Fonts
-    const link = document.createElement("link");
-    link.rel = "preconnect";
-    link.href = "https://fonts.googleapis.com";
+    // Check if font is already loaded to avoid duplicate requests
+    const existingLink = document.querySelector(
+      `link[href*="${font.googleFont}"]`
+    );
+    if (existingLink) {
+      return;
+    }
 
-    const link2 = document.createElement("link");
-    link2.rel = "preconnect";
-    link2.href = "https://fonts.gstatic.com";
-    link2.crossOrigin = "anonymous";
+    // Create link elements for Google Fonts (non-blocking)
+    const preconnect1 = document.createElement("link");
+    preconnect1.rel = "preconnect";
+    preconnect1.href = "https://fonts.googleapis.com";
+
+    const preconnect2 = document.createElement("link");
+    preconnect2.rel = "preconnect";
+    preconnect2.href = "https://fonts.gstatic.com";
+    preconnect2.crossOrigin = "anonymous";
 
     const fontLink = document.createElement("link");
     fontLink.rel = "stylesheet";
     fontLink.href = `https://fonts.googleapis.com/css2?family=${font.googleFont}&display=swap`;
 
-    document.head.appendChild(link);
-    document.head.appendChild(link2);
+    // Add loading error handling but don't block UI
+    fontLink.onerror = () => {
+      console.warn(`Failed to load Google Font ${fontFamily}`);
+    };
+
+    // Append to head without waiting
+    document.head.appendChild(preconnect1);
+    document.head.appendChild(preconnect2);
     document.head.appendChild(fontLink);
 
-    // Wait for font to load
-    await document.fonts.ready;
+    // Note: We intentionally don't wait for document.fonts.ready
+    // to prevent UI blocking. The font will load asynchronously.
   } catch (error) {
-    console.warn(`Failed to load Google Font ${fontFamily}:`, error);
+    console.warn(`Error loading Google Font ${fontFamily}:`, error);
   }
 };
 

@@ -240,8 +240,16 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-primary), system-ui, -apple-system, sans-serif;
   }
 }
+
+/* Font preview utility classes (independent from active theme) */
+.font-preview { line-height: 1.25; }
+.font-preview-geist { font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif; }
+.font-preview-inter { font-family: var(--font-inter), system-ui, -apple-system, sans-serif; }
+.font-preview-mono { font-family: var(--font-jetbrains), monospace; }
+.font-preview-poppins { font-family: var(--font-poppins), system-ui, -apple-system, sans-serif; }
 
 /* Themed scrollbars (applies to sidebar and all scroll areas) */
 /* Firefox */

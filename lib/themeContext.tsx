@@ -69,152 +69,106 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Apply theme with optional transitions
-  const applyThemeWithTransition = useCallback(
-    (newTheme: ThemeConfig) => {
-      if (enableTransitions) {
-        withThemeTransition(() => applyTheme(newTheme));
-      } else {
-        applyTheme(newTheme);
-      }
+  // Individual theme setters - Pure state updates without side effects
+  const setMode = useCallback((mode: ThemeMode) => {
+    setTheme((currentTheme) => ({ ...currentTheme, mode }));
+  }, []);
 
-      if (enableLogging) {
-        logThemeInfo(newTheme);
-      }
-    },
-    [enableTransitions, enableLogging]
-  );
+  const setAccent = useCallback((accent: AccentColor) => {
+    setTheme((currentTheme) => ({ ...currentTheme, accent }));
+  }, []);
 
-  // Update theme state and apply changes
-  const updateThemeState = useCallback(
-    (newTheme: ThemeConfig) => {
-      setTheme(newTheme);
-      applyThemeWithTransition(newTheme);
-      saveTheme(newTheme);
-    },
-    [applyThemeWithTransition]
-  );
+  const setFont = useCallback((font: FontFamily) => {
+    if (font !== "geist") {
+      loadGoogleFont(font); // Fire and forget - don't wait or catch
+    }
+    setTheme((currentTheme) => ({ ...currentTheme, font }));
+  }, []);
 
-  // Individual theme setters
-  const setMode = useCallback(
-    (mode: ThemeMode) => {
-      setTheme((currentTheme) => {
-        const newTheme: ThemeConfig = { ...currentTheme, mode };
-        // Apply theme changes outside of setState to avoid infinite loops
-        setTimeout(() => updateThemeState(newTheme), 0);
-        return newTheme;
-      });
-    },
-    [updateThemeState]
-  );
-
-  const setAccent = useCallback(
-    (accent: AccentColor) => {
-      setTheme((currentTheme) => {
-        const newTheme: ThemeConfig = { ...currentTheme, accent };
-        setTimeout(() => updateThemeState(newTheme), 0);
-        return newTheme;
-      });
-    },
-    [updateThemeState]
-  );
-
-  const setFont = useCallback(
-    (font: FontFamily) => {
-      // Pre-load the font if it's a Google Font (non-blocking)
-      if (font !== "geist") {
-        loadGoogleFont(font).catch((error) => {
-          console.warn("Failed to load font:", error);
-        });
-      }
-
-      setTheme((currentTheme) => {
-        const newTheme: ThemeConfig = { ...currentTheme, font };
-        setTimeout(() => updateThemeState(newTheme), 0);
-        return newTheme;
-      });
-    },
-    [updateThemeState]
-  );
-
-  const setBackground = useCallback(
-    (background: BackgroundStyle) => {
-      setTheme((currentTheme) => {
-        const newTheme: ThemeConfig = { ...currentTheme, background };
-        setTimeout(() => updateThemeState(newTheme), 0);
-        return newTheme;
-      });
-    },
-    [updateThemeState]
-  );
+  const setBackground = useCallback((background: BackgroundStyle) => {
+    setTheme((currentTheme) => ({ ...currentTheme, background }));
+  }, []);
 
   // Convenience methods
   const toggleMode = useCallback(() => {
-    setTheme((currentTheme) => {
-      const newMode: ThemeMode =
-        currentTheme.mode === "dark" ? "light" : "dark";
-      const newTheme: ThemeConfig = { ...currentTheme, mode: newMode };
-      setTimeout(() => updateThemeState(newTheme), 0);
-      return newTheme;
-    });
-  }, [updateThemeState]);
+    setTheme((currentTheme) => ({
+      ...currentTheme,
+      mode: currentTheme.mode === "dark" ? "light" : "dark",
+    }));
+  }, []);
 
   const resetTheme = useCallback(() => {
     setTheme(DEFAULT_THEME);
-    setTimeout(() => updateThemeState(DEFAULT_THEME), 0);
-  }, [updateThemeState]);
+  }, []);
 
-  const updateTheme = useCallback(
-    (partial: Partial<ThemeConfig>) => {
-      setTheme((currentTheme) => {
-        const newTheme = validateThemeConfig({ ...currentTheme, ...partial });
-        setTimeout(() => updateThemeState(newTheme), 0);
-        return newTheme;
-      });
-    },
-    [updateThemeState]
-  );
+  const updateTheme = useCallback((partial: Partial<ThemeConfig>) => {
+    setTheme((currentTheme) =>
+      validateThemeConfig({ ...currentTheme, ...partial })
+    );
+  }, []);
 
-  // Initialize theme on mount
+  // Apply theme changes via useEffect to avoid side effects in render
   useEffect(() => {
-    const initializeTheme = async () => {
-      try {
-        // Load theme from localStorage or use initial/default theme
-        const savedTheme = loadTheme();
-        const baseTheme = savedTheme || { ...DEFAULT_THEME, ...initialTheme };
-        const validatedTheme = validateThemeConfig(baseTheme);
+    if (isInitialized) {
+      // STEP 1: Test basic theme application without transitions
+      applyTheme(theme);
 
-        // Pre-load the initial font if needed
-        if (validatedTheme.font !== "geist") {
-          try {
-            await loadGoogleFont(validatedTheme.font);
-          } catch (error) {
-            console.warn("Failed to load initial font:", error);
+      // STILL DISABLED: Transitions and logging
+      // if (enableTransitions) {
+      //   withThemeTransition(() => applyTheme(theme));
+      // } else {
+      //   applyTheme(theme);
+      // }
+
+      // if (enableLogging) {
+      //   logThemeInfo(theme);
+      // }
+
+      saveTheme(theme);
+    }
+  }, [theme, isInitialized]);
+
+  // Initialize theme on mount - SEPARATE from apply effect to prevent loops
+  useEffect(() => {
+    if (!isInitialized) {
+      const initializeTheme = async () => {
+        try {
+          // Load theme from localStorage or use initial/default theme
+          const savedTheme = loadTheme();
+          const baseTheme = savedTheme || { ...DEFAULT_THEME, ...initialTheme };
+          const validatedTheme = validateThemeConfig(baseTheme);
+
+          if (validatedTheme.font !== "geist") {
+            try {
+              await loadGoogleFont(validatedTheme.font);
+            } catch (error) {
+              console.warn("Failed to load initial font:", error);
+            }
           }
+
+          // Apply the theme BEFORE setting state to avoid triggering the other effect
+          applyTheme(validatedTheme);
+
+          if (enableLogging) {
+            logThemeInfo(validatedTheme);
+          }
+
+          // Set theme and mark as initialized - this will NOT trigger the apply effect
+          setTheme(validatedTheme);
+        } catch (error) {
+          console.error("Failed to initialize theme:", error);
+          // Fallback to default theme
+          applyTheme(DEFAULT_THEME);
+          setTheme(DEFAULT_THEME);
+        } finally {
+          setIsLoading(false);
+          setIsInitialized(true);
         }
+      };
 
-        // Apply the theme
-        setTheme(validatedTheme);
-        applyTheme(validatedTheme);
-
-        if (enableLogging) {
-          logThemeInfo(validatedTheme);
-        }
-      } catch (error) {
-        console.error("Failed to initialize theme:", error);
-        // Fallback to default theme
-        setTheme(DEFAULT_THEME);
-        applyTheme(DEFAULT_THEME);
-      } finally {
-        setIsLoading(false);
-        setIsInitialized(true);
-      }
-    };
-
-    initializeTheme();
-  }, [initialTheme, enableLogging]);
-
-  // Handle system theme changes (optional enhancement)
+      initializeTheme();
+    }
+  }, [isInitialized, initialTheme, enableLogging]); // Handle system theme changes (optional enhancement)
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 

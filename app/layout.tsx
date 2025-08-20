@@ -24,11 +24,13 @@ const geistMono = Geist_Mono({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const poppins = Poppins({
@@ -48,10 +50,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${jetbrainsMono.variable} ${poppins.variable} antialiased theme-transition-colors`}
-      >
+    <html
+      lang="en"
+      className={`dark ${geistSans.variable} ${geistMono.variable} ${inter.variable} ${jetbrainsMono.variable} ${poppins.variable}`}
+    >
+      <body className="antialiased theme-transition-colors">
         <ThemeProvider enableTransitions={true} enableLogging={false}>
           {children}
         </ThemeProvider>

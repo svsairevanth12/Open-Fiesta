@@ -27,6 +27,7 @@ export default function FontSelector({
           <span className="text-sm font-medium text-white/80">Font:</span>
         )}
         <select
+          aria-label="Font family"
           value={theme.font}
           onChange={(e) => handleFontChange(e.target.value as FontFamily)}
           className="px-3 py-1 rounded-md bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
@@ -66,8 +67,10 @@ export default function FontSelector({
                 <div className="w-2 h-2 rounded-full bg-blue-400" />
               )}
             </div>
-            <div className="text-sm text-white/80 font-mono">
-              The quick brown fox jumps
+            <div
+              className={`text-sm text-white/80 font-preview font-preview-${font.id}`}
+            >
+              The quick brown fox jumps 123456
             </div>
           </button>
         ))}
