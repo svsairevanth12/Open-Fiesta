@@ -33,10 +33,11 @@ export const BADGE_PAIRS: Record<BadgePair, BadgePairDefinition> = {
       glow: "rgba(228, 42, 66, 0.3)",
     },
     free: {
-      background: "rgba(16, 185, 129, 0.15)",
-      text: "rgb(167, 243, 208)",
-      border: "rgba(16, 185, 129, 0.3)",
-      glow: "rgba(16, 185, 129, 0.3)",
+      /* Gold (amber) tones replacing previous green */
+      background: "rgba(251, 191, 36, 0.15)" /* amber-400 */,
+      text: "rgb(253, 230, 138)" /* amber-200 */,
+      border: "rgba(251, 191, 36, 0.3)",
+      glow: "rgba(251, 191, 36, 0.35)",
     },
   },
   "purple-blue": {
@@ -56,21 +57,23 @@ export const BADGE_PAIRS: Record<BadgePair, BadgePairDefinition> = {
       glow: "rgba(59, 130, 246, 0.3)",
     },
   },
-  "green-emerald": {
-    id: "green-emerald",
-    name: "Green & Emerald",
-    description: "Natural success pairing - Growth and harmony",
+  "gold-green": {
+    id: "gold-green",
+    name: "Gold & Green",
+    description: "Owner original theme - Premium gold & vibrant green",
     pro: {
-      background: "rgba(34, 197, 94, 0.15)",
-      text: "rgb(134, 239, 172)",
-      border: "rgba(34, 197, 94, 0.3)",
-      glow: "rgba(34, 197, 94, 0.3)",
+      /* Gold / amber styled for Pro */
+      background: "rgba(251, 191, 36, 0.16)" /* amber-400 */,
+      text: "rgb(253, 230, 138)" /* amber-200 */,
+      border: "rgba(251, 191, 36, 0.38)",
+      glow: "rgba(251, 191, 36, 0.45)",
     },
     free: {
-      background: "rgba(52, 211, 153, 0.15)",
-      text: "rgb(110, 231, 183)",
-      border: "rgba(52, 211, 153, 0.3)",
-      glow: "rgba(52, 211, 153, 0.3)",
+      /* Green styled for Free */
+      background: "rgba(16, 185, 129, 0.18)",
+      text: "rgb(167, 243, 208)",
+      border: "rgba(16, 185, 129, 0.38)",
+      glow: "rgba(16, 185, 129, 0.45)",
     },
   },
   "orange-yellow": {
@@ -148,7 +151,7 @@ export const BADGE_CSS_CLASSES = {
 };
 
 // Current Badge Pair (matches existing design)
-export const CURRENT_BADGE_PAIR: BadgePair = "red-gold";
+export const CURRENT_BADGE_PAIR: BadgePair = "gold-green";
 
 // Badge Pair Options for Theme Selector
 export const BADGE_PAIR_OPTIONS = Object.values(BADGE_PAIRS).map((pair) => ({

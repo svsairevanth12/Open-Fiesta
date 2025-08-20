@@ -194,7 +194,7 @@ export default function AiInput() {
                 className={cn(
                   "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 border h-8",
                   showSearch
-                    ? "bg-[#ff3f17]/15 border-[#ff3f17] text-[#ff3f17]"
+                    ? "border-[var(--accent-interactive-primary)] text-[var(--accent-interactive-primary)] bg-[color:var(--accent-interactive-primary)]/15"
                     : "bg-black/5 dark:bg-white/5 border-transparent text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
                 )}
               >
@@ -222,7 +222,9 @@ export default function AiInput() {
                     <Globe
                       className={cn(
                         "w-4 h-4",
-                        showSearch ? "text-[#ff3f17]" : "text-inherit"
+                        showSearch
+                          ? "text-[var(--accent-interactive-primary)]"
+                          : "text-inherit"
                       )}
                     />
                   </motion.div>
@@ -237,7 +239,7 @@ export default function AiInput() {
                       }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="text-sm overflow-hidden whitespace-nowrap text-[#ff3f17] flex-shrink-0"
+                      className="text-sm overflow-hidden whitespace-nowrap text-[var(--accent-interactive-primary)] flex-shrink-0"
                     >
                       Search
                     </motion.span>

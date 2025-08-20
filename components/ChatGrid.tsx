@@ -87,33 +87,29 @@ export default function ChatGrid({
                       }`}
                     >
                       {m.good && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30 text-[11px] h-6 self-center">
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1 text-[11px] h-6 self-center"
+                          style={{
+                            background: "var(--badge-pro-background)",
+                            color: "var(--badge-pro-text)",
+                            borderColor: "var(--badge-pro-border)",
+                          }}
+                        >
                           <Star size={11} />
-                          <span
-                            className="hidden sm:inline text-xs px-2 py-0.5 rounded-full border"
-                            style={{
-                              background: "var(--badge-pro-background)",
-                              color: "var(--badge-pro-text)",
-                              borderColor: "var(--badge-pro-border)",
-                            }}
-                          >
-                            Pro
-                          </span>
+                          <span className="hidden sm:inline">Pro</span>
                         </span>
                       )}
                       {isFree && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0 rounded-full bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-300/30 text-[11px] h-6 self-center">
-                          <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                          <span
-                            className="hidden sm:inline text-xs px-2 py-0.5 rounded-full border"
-                            style={{
-                              background: "var(--badge-free-background)",
-                              color: "var(--badge-free-text)",
-                              borderColor: "var(--badge-free-border)",
-                            }}
-                          >
-                            Free
-                          </span>
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1 text-[11px] h-6 self-center"
+                          style={{
+                            background: "var(--badge-free-background)",
+                            color: "var(--badge-free-text)",
+                            borderColor: "var(--badge-free-border)",
+                          }}
+                        >
+                          <span className="h-2 w-2 rounded-full bg-current opacity-80" />
+                          <span className="hidden sm:inline">Free</span>
                         </span>
                       )}
                       <span className="truncate" title={m.label}>

@@ -1,20 +1,13 @@
 "use client";
-import { Layers, Star } from "lucide-react";
-import Settings from "@/components/Settings";
-import CustomModels from "@/components/CustomModels";
+import { Star } from "lucide-react";
 import type { AiModel } from "@/lib/types";
 
 type Props = {
   selectedModels: AiModel[];
   onToggle: (id: string) => void;
-  onOpenModelsModal: () => void;
 };
 
-export default function SelectedModelsBar({
-  selectedModels,
-  onToggle,
-  onOpenModelsModal,
-}: Props) {
+export default function SelectedModelsBar({ selectedModels, onToggle }: Props) {
   return (
     <div className="mb-3 flex items-start gap-3 min-w-0">
       {/* Chips: no wrap, horizontal scroll */}
@@ -82,19 +75,7 @@ export default function SelectedModelsBar({
           <span className="text-xs text-zinc-400">No models selected</span>
         )}
       </div>
-      {/* Actions pinned right */}
-      <div className="ml-auto flex items-center gap-2 shrink-0">
-        <button
-          onClick={onOpenModelsModal}
-          className="inline-flex items-center gap-1.5 text-xs h-9 px-3 py-2 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow"
-          title="Change models"
-        >
-          <Layers size={14} />
-          <span>Change models</span>
-        </button>
-        <CustomModels />
-        <Settings />
-      </div>
+      {/* Actions removed (moved to header) */}
     </div>
   );
 }

@@ -2,6 +2,9 @@
 import Image from "next/image";
 import GithubStar from "@/components/GithubStar";
 import ThemeToggle from "@/components/ThemeToggle";
+import CustomModels from "@/components/CustomModels";
+import Settings from "@/components/Settings";
+import { Layers } from "lucide-react";
 import { Menu as MenuIcon } from "lucide-react";
 
 type Props = {
@@ -13,6 +16,7 @@ type Props = {
   githubOwner: string;
   githubRepo: string;
   className?: string;
+  onOpenModelsModal?: () => void;
 };
 
 export default function HeaderBar({
@@ -24,6 +28,7 @@ export default function HeaderBar({
   githubOwner,
   githubRepo,
   className,
+  onOpenModelsModal,
 }: Props) {
   return (
     <div
@@ -69,10 +74,20 @@ export default function HeaderBar({
         </h1>
       </div>
 
-      {/* Right: theme + github */}
+      {/* Right cluster order (left→right visual): Change models, Custom models (icon), Theme (icon), Settings (icon), GitHub */}
       <div className="flex items-center gap-2 z-10">
-        <ThemeToggle />
-        <GithubStar owner={githubOwner} repo={githubRepo} className="ml-1" />
+        <button
+          onClick={() => onOpenModelsModal && onOpenModelsModal()}
+          className="inline-flex items-center gap-1.5 text-xs h-9 w-9 justify-center rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow"
+          title="Change models"
+          aria-label="Change models"
+        >
+          <Layers size={14} />
+        </button>
+        <CustomModels compact />
+        <ThemeToggle compact />
+        <Settings compact />
+        <GithubStar owner={githubOwner} repo={githubRepo} />
       </div>
     </div>
   );

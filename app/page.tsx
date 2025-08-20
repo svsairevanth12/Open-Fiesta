@@ -188,6 +188,7 @@ export default function Home() {
               authorLink="https://x.com/byteHumi"
               githubOwner="NiladriHazra"
               githubRepo="Open-Fiesta"
+              onOpenModelsModal={() => setModelsModalOpen(true)}
               className=""
             />
 
@@ -195,7 +196,6 @@ export default function Home() {
             <SelectedModelsBar
               selectedModels={selectedModels}
               onToggle={toggle}
-              onOpenModelsModal={() => setModelsModalOpen(true)}
             />
 
             <ModelsModal

@@ -343,6 +343,21 @@
   color: white;
 }
 
+/* Reusable accent action styles */
+.accent-action-fill {
+  background: var(--accent-interactive-primary);
+  color: #fff;
+  transition: background .2s ease-in-out, box-shadow .2s ease-in-out;
+}
+.accent-action-fill:hover { background: var(--accent-interactive-hover); }
+.accent-action-fill:active { background: var(--accent-interactive-active); }
+.accent-action-ring:focus-visible { box-shadow: 0 0 0 3px var(--accent-interactive-focus); }
+
+.accent-dot { background: var(--accent-interactive-primary); }
+.accent-dot-pulse { background: var(--accent-interactive-primary); position: relative; }
+.accent-dot-pulse::after { content: ""; position: absolute; inset: -4px; border-radius: 9999px; background: var(--accent-interactive-primary); opacity: 0.45; animation: accent-pulse 2.2s ease-in-out infinite; }
+@keyframes accent-pulse { 0% { transform: scale(.4); opacity:.55;} 50% { transform: scale(1); opacity:0;} 100% { transform: scale(.4); opacity:0;} }
+
 .accent-input-focus:focus {
   border-color: var(--accent-interactive-primary);
   box-shadow: 0 0 0 3px var(--accent-interactive-focus);
@@ -418,14 +433,14 @@
 .font-preview-mono { font-family: var(--font-jetbrains), monospace; }
 .font-preview-poppins { font-family: var(--font-poppins), system-ui, -apple-system, sans-serif; }
 
-/* Themed scrollbars (applies to sidebar and all scroll areas) */
+/* Themed scrollbars (accent-aware) */
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: oklch(0.5 0 0 / 0.35) oklch(1 0 0 / 0.06);
+  scrollbar-color: var(--accent-primary) var(--accent-bg-secondary);
 }
-.dark * {
-  scrollbar-color: oklch(0.6 0.25 28 / 0.55) oklch(1 0 0 / 0.06); /* crimson thumb on dark track */
+body.light * {
+  scrollbar-color: var(--accent-secondary) var(--accent-bg-secondary);
 }
 
 /* WebKit (Chrome/Safari/Edge) */
@@ -434,14 +449,24 @@
   height: 10px;
 }
 *::-webkit-scrollbar-track {
-  background: oklch(1 0 0 / 0.06);
+  background: var(--accent-bg-secondary);
   border-radius: 9999px;
 }
 *::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, color-mix(in oklab, #e42a42 60%, transparent), color-mix(in oklab, #e42a42 30%, transparent));
+  background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
   border-radius: 9999px;
-  border: 2px solid oklch(0.145 0 0 / 0.4); /* dark inset border */
+  border: 2px solid rgba(0,0,0,0.25); /* creates inner gap */
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
+  transition: background .25s ease, box-shadow .25s ease;
+}
+.light *::-webkit-scrollbar-thumb {
+  border-color: rgba(255,255,255,0.4);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08) inset;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, color-mix(in oklab, #e42a42 75%, transparent), color-mix(in oklab, #e42a42 45%, transparent));
+  background: linear-gradient(180deg, var(--accent-secondary), var(--accent-tertiary));
+  box-shadow: 0 0 0 1px var(--accent-interactive-focus) inset, 0 0 6px 1px var(--accent-glow-soft);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }

@@ -13,8 +13,8 @@ export type BackgroundStyle = "gradient" | "minimal";
 export type BadgePair =
   | "red-gold"
   | "purple-blue"
-  | "green-emerald"
-  | "orange-yellow";
+  | "orange-yellow"
+  | "gold-green"; // new default owner theme
 export type BadgeType = "pro" | "free";
 
 // New: Accent System Types
@@ -200,7 +200,7 @@ export const DEFAULT_THEME: ThemeConfig = {
   accent: "crimson",
   font: "geist",
   background: "gradient",
-  badgePair: "red-gold",
+  badgePair: "gold-green",
 };
 
 // Theme Validation Helpers
@@ -339,19 +339,19 @@ export const BADGE_PAIRS: Record<BadgePair, BadgeDefinition> = {
       border: "rgba(59, 130, 246, 0.3)",
     },
   },
-  "green-emerald": {
-    id: "green-emerald",
-    name: "Green & Emerald",
-    description: "Natural success pairing",
+  "gold-green": {
+    id: "gold-green",
+    name: "Gold & Green",
+    description: "Owner original theme",
     pro: {
-      background: "linear-gradient(45deg, #10b981, #059669)",
-      text: "#ffffff",
-      border: "rgba(16, 185, 129, 0.3)",
+      background: "linear-gradient(45deg, #fbbf24, #f59e0b)",
+      text: "#000000",
+      border: "rgba(251, 191, 36, 0.35)",
     },
     free: {
-      background: "linear-gradient(45deg, #34d399, #10b981)",
-      text: "#000000",
-      border: "rgba(52, 211, 153, 0.3)",
+      background: "linear-gradient(45deg, #10b981, #059669)",
+      text: "#ffffff",
+      border: "rgba(16, 185, 129, 0.35)",
     },
   },
   "orange-yellow": {

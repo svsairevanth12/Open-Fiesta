@@ -181,36 +181,30 @@ const BadgeOption = React.memo<{
         {isSelected && <div className="w-2 h-2 rounded-full bg-blue-500" />}
       </div>
 
-      {/* Badge Preview */}
+      {/* Badge Preview (single-layer containers matching real badges) */}
       <div className="flex items-center gap-3">
-        {/* Pro Badge Preview */}
-        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
+        <div
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1"
+          style={{
+            background: badge.pro.background,
+            color: badge.pro.text,
+            // Use border color for ring stroke via box-shadow fallback; ring-1 inherits currentColor so use outline
+            boxShadow: `0 0 0 1px ${badge.pro.border}`,
+          }}
+        >
           <Star size={10} className="shrink-0" />
-          <span
-            className="text-xs px-2 py-0.5 rounded-full border"
-            style={{
-              background: badge.pro.background,
-              color: badge.pro.text,
-              borderColor: badge.pro.border,
-            }}
-          >
-            Pro
-          </span>
+          <span className="text-xs">Pro</span>
         </div>
-
-        {/* Free Badge Preview */}
-        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-300/30">
-          <span className="h-2 w-2 rounded-full bg-emerald-300" />
-          <span
-            className="text-xs px-2 py-0.5 rounded-full border"
-            style={{
-              background: badge.free.background,
-              color: badge.free.text,
-              borderColor: badge.free.border,
-            }}
-          >
-            Free
-          </span>
+        <div
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1"
+          style={{
+            background: badge.free.background,
+            color: badge.free.text,
+            boxShadow: `0 0 0 1px ${badge.free.border}`,
+          }}
+        >
+          <span className="h-2 w-2 rounded-full bg-current opacity-80" />
+          <span className="text-xs">Free</span>
         </div>
       </div>
     </button>
@@ -219,7 +213,9 @@ const BadgeOption = React.memo<{
 
 BadgeOption.displayName = "BadgeOption";
 
-export default function ThemeToggle() {
+type ThemeToggleProps = { compact?: boolean };
+
+export default function ThemeToggle({ compact }: ThemeToggleProps) {
   const { theme, setAccent, setFont, setBackground, setBadgePair, toggleMode } =
     useTheme();
   const [open, setOpen] = useState(false);
@@ -293,11 +289,14 @@ export default function ThemeToggle() {
     <div>
       <button
         onClick={handleOpen}
-        className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow transition-colors"
+        className={`inline-flex items-center gap-1.5 text-xs ${
+          compact ? "h-9 w-9 justify-center px-0" : "px-3 py-2"
+        } rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow transition-colors`}
         title="Theme Settings"
+        aria-label="Theme Settings"
       >
         <Palette size={14} />
-        <span>Theme</span>
+        {!compact && <span>Theme</span>}
       </button>
 
       {open &&
@@ -400,7 +399,7 @@ export default function ThemeToggle() {
                     <h3 className="text-sm font-medium text-white/80 mb-3">
                       Choose your badge colors
                     </h3>
-                    <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {badgeValues.map((badge) => (
                         <BadgeOption
                           key={badge.id}

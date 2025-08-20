@@ -177,7 +177,10 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
     >
       <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto backdrop-blur-sm">
         <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5 flex flex-col backdrop-blur-sm">
-          <div className="overflow-y-auto" style={{ maxHeight: `${MAX_HEIGHT}px` }}>
+          <div
+            className="overflow-y-auto"
+            style={{ maxHeight: `${MAX_HEIGHT}px` }}
+          >
             {imagePreview ? (
               <div className="grid grid-cols-[96px_1fr] gap-3 p-3 pr-4">
                 <div className="relative h-[96px] w-[96px] rounded-xl overflow-hidden border border-white/10 shadow-sm">
@@ -205,13 +208,13 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                     ref={textareaRef}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSubmit()
+                        e.preventDefault();
+                        handleSubmit();
                       }
                     }}
                     onChange={(e) => {
-                      setValue(e.target.value)
-                      adjustHeight()
+                      setValue(e.target.value);
+                      adjustHeight();
                     }}
                   />
                   {!value && (
@@ -231,13 +234,13 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   ref={textareaRef}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSubmit()
+                      e.preventDefault();
+                      handleSubmit();
                     }
                   }}
                   onChange={(e) => {
-                    setValue(e.target.value)
-                    adjustHeight()
+                    setValue(e.target.value);
+                    adjustHeight();
                   }}
                 />
                 {!value && (
@@ -259,8 +262,15 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
             <div className="px-4 py-2 border-t border-white/10 bg-white/5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <FileText className="w-4 h-4 text-white/80" />
-                <span className="truncate text-sm text-white/90" title={attachedFile.name}>{attachedFile.name}</span>
-                <span className="text-xs text-white/60 flex-shrink-0">{Math.max(1, Math.round(attachedFile.size / 1024))} KB</span>
+                <span
+                  className="truncate text-sm text-white/90"
+                  title={attachedFile.name}
+                >
+                  {attachedFile.name}
+                </span>
+                <span className="text-xs text-white/60 flex-shrink-0">
+                  {Math.max(1, Math.round(attachedFile.size / 1024))} KB
+                </span>
               </div>
               <button
                 onClick={handelClose}
@@ -278,7 +288,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                 className={cn(
                   "cursor-pointer relative rounded-full p-2 bg-black/30 dark:bg-white/10",
                   attachedFile
-                    ? "bg-[#ff3f17]/15 border border-[#ff3f17] text-[#ff3f17]"
+                    ? "bg-[var(--accent-interactive-primary)]/15 border border-[var(--accent-interactive-primary)] text-[var(--accent-interactive-primary)]"
                     : "text-white/60 hover:text-white"
                 )}
               >
@@ -290,18 +300,23 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                   className="hidden"
                 />
                 <Paperclip
-                  className={cn("w-4 h-4 transition-colors", attachedFile ? "text-[#ff3f17]" : "text-white/60 hover:text-white")}
+                  className={cn(
+                    "w-4 h-4 transition-colors",
+                    attachedFile
+                      ? "text-[var(--accent-interactive-primary)]"
+                      : "text-white/60 hover:text-white"
+                  )}
                 />
               </label>
               <button
                 type="button"
                 onClick={() => {
-                  setShowSearch(!showSearch)
+                  setShowSearch(!showSearch);
                 }}
                 className={cn(
                   "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 border h-8",
                   showSearch
-                    ? "bg-[#ff3f17]/15 border-[#ff3f17] text-[#ff3f17]"
+                    ? "bg-[var(--accent-interactive-primary)]/15 border-[var(--accent-interactive-primary)] text-[var(--accent-interactive-primary)]"
                     : "bg-black/30 dark:bg-white/10 border-transparent text-white/80 hover:text-white"
                 )}
               >
@@ -329,7 +344,9 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                     <Globe
                       className={cn(
                         "w-4 h-4",
-                        showSearch ? "text-[#ff3f17]" : "text-inherit"
+                        showSearch
+                          ? "text-[var(--accent-interactive-primary)]"
+                          : "text-inherit"
                       )}
                     />
                   </motion.div>
@@ -344,7 +361,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                       }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="text-sm overflow-hidden whitespace-nowrap text-[#ff3f17] flex-shrink-0"
+                      className="text-sm overflow-hidden whitespace-nowrap text-[var(--accent-interactive-primary)] flex-shrink-0"
                     >
                       Search
                     </motion.span>
@@ -359,9 +376,9 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                 className={cn(
                   "rounded-full p-2 transition-colors",
                   loading
-                    ? "bg-[#e42a42]/20 text-[#e42a42] cursor-not-allowed"
-                  : value
-                    ? "bg-[#ff3f17]/15 text-[#ff3f17]"
+                    ? "bg-[var(--accent-interactive-primary)]/20 text-[var(--accent-interactive-primary)] cursor-not-allowed"
+                    : value
+                    ? "bg-[var(--accent-interactive-primary)]/15 text-[var(--accent-interactive-primary)]"
                     : "bg-black/30 dark:bg-white/10 text-white/85 hover:text-white"
                 )}
                 disabled={loading}
@@ -378,5 +395,5 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
