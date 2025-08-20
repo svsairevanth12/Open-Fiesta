@@ -99,7 +99,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
         onClick={() => setOpen(true)}
         className={`inline-flex items-center gap-1.5 text-xs h-9 ${
           compact ? "w-9 justify-center px-0" : "px-3 py-2"
-        } rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow`}
+        } rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow accent-focus`}
         title="Custom models"
         aria-label="Custom models"
       >
@@ -181,7 +181,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
                 <button
                   onClick={addCustom}
                   disabled={validState !== "ok"}
-                  className="px-3.5 py-2 rounded-md bg-[#e42a42] hover:bg-[#cf243a] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm md:text-base"
+                  className="px-3.5 py-2 rounded-md accent-action-fill accent-focus disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm md:text-base"
                 >
                   Add Model
                 </button>

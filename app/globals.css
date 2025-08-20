@@ -470,3 +470,63 @@ body.light * {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Additional Accent Utilities for unified theming */
+.accent-chip-active {
+  background: var(--accent-bg-primary);
+  border: 1px solid var(--accent-interactive-primary);
+  color: var(--accent-interactive-primary);
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+.accent-chip-active:hover { background: var(--accent-bg-secondary); }
+.accent-chip-active:active { background: var(--accent-bg-primary); }
+
+.accent-selected {
+  background: var(--accent-interactive-primary);
+  color: #fff;
+  border: 1px solid var(--accent-interactive-primary);
+  box-shadow: 0 0 0 1px var(--accent-interactive-focus), 0 0 0 3px var(--accent-interactive-focus);
+}
+
+.accent-bar-faint {
+  background: var(--accent-interactive-primary);
+  opacity: .3;
+}
+
+/* Icon button base */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  height: 2.25rem;
+  width: 2.25rem;
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.12); }
+.icon-btn:active { background: rgba(255,255,255,0.18); }
+.dark .icon-btn { background: rgba(255,255,255,0.08); }
+.icon-btn.accent-focus:focus-visible { box-shadow: 0 0 0 4px var(--accent-interactive-focus); }
+
+/* Unified focus outline */
+.accent-focus:focus-visible {
+  outline: 2px solid var(--accent-interactive-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--accent-interactive-focus);
+}
+
+/* Neutral chip (inactive state) */
+.accent-chip {
+  background: var(--accent-bg-secondary);
+  border: 1px solid transparent;
+  color: var(--accent-interactive-primary);
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.accent-chip:hover { background: var(--accent-bg-primary); }
+.accent-chip:active { background: var(--accent-bg-secondary); }
+
+@media (prefers-reduced-motion: reduce) {
+  .accent-dot-pulse::after { animation: none; opacity: .35; }
+}

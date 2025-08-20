@@ -56,7 +56,7 @@ export default function ThreadSidebar({
           <>
             <button
               onClick={onNewChat}
-              className="mb-3 text-sm px-3 py-2 rounded-md text-white shadow transition-colors accent-action-fill"
+              className="mb-3 text-sm px-3 py-2 rounded-md text-white shadow transition-colors accent-action-fill accent-focus"
             >
               + New Chat
             </button>
@@ -88,7 +88,7 @@ export default function ThreadSidebar({
             <button
               title="New Chat"
               onClick={onNewChat}
-              className="h-8 w-8 rounded-full flex items-center justify-center mb-4 mx-auto shrink-0 text-white transition-colors accent-action-fill"
+              className="h-8 w-8 rounded-full flex items-center justify-center mb-4 mx-auto shrink-0 text-white transition-colors accent-action-fill accent-focus"
             >
               <Plus size={14} />
             </button>
@@ -148,7 +148,7 @@ export default function ThreadSidebar({
                 onNewChat();
                 onCloseMobile();
               }}
-              className="mb-3 text-sm px-3 py-2 w-full rounded-md text-white transition-colors accent-action-fill"
+              className="mb-3 text-sm px-3 py-2 w-full rounded-md text-white transition-colors accent-action-fill accent-focus"
             >
               + New Chat
             </button>

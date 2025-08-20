@@ -151,9 +151,7 @@ export default function AiInput() {
               <label
                 className={cn(
                   "cursor-pointer relative rounded-full p-2 bg-black/5 dark:bg-white/5",
-                  imagePreview
-                    ? "bg-[#ff3f17]/15 border border-[#ff3f17] text-[#ff3f17]"
-                    : "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
+                  imagePreview ? "accent-chip-active" : "accent-chip"
                 )}
               >
                 <input
@@ -165,7 +163,7 @@ export default function AiInput() {
                 <Paperclip
                   className={cn(
                     "w-4 h-4 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors",
-                    imagePreview && "text-[#ff3f17]"
+                    imagePreview && "text-[var(--accent-interactive-primary)]"
                   )}
                 />
                 {imagePreview && (
@@ -192,11 +190,11 @@ export default function AiInput() {
                   setShowSearch(!showSearch);
                 }}
                 className={cn(
-                  "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 border h-8",
-                  showSearch
-                    ? "border-[var(--accent-interactive-primary)] text-[var(--accent-interactive-primary)] bg-[color:var(--accent-interactive-primary)]/15"
-                    : "bg-black/5 dark:bg-white/5 border-transparent text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
+                  "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 h-8 accent-focus",
+                  showSearch ? "accent-chip-active" : "accent-chip"
                 )}
+                aria-label={showSearch ? "Disable web search" : "Enable web search"}
+                title={showSearch ? "Disable web search" : "Enable web search"}
               >
                 <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
                   <motion.div

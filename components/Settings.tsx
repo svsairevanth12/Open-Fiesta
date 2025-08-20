@@ -39,7 +39,7 @@ export default function Settings({ compact }: SettingsProps) {
         onClick={() => setOpen(true)}
         className={`inline-flex items-center gap-1.5 text-xs ${
           compact ? "h-9 w-9 justify-center px-0" : "px-3 py-2"
-        } rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow`}
+        } rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow accent-focus`}
         title="Settings"
         aria-label="Settings"
       >
@@ -123,7 +123,7 @@ export default function Settings({ compact }: SettingsProps) {
               </button>
               <button
                 onClick={save}
-                className="px-4 py-2 rounded-md bg-[#e42a42] hover:bg-[#cf243a] text-sm font-medium"
+                className="px-4 py-2 rounded-md text-sm font-medium accent-action-fill accent-focus"
               >
                 Save
               </button>

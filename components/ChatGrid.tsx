@@ -125,7 +125,7 @@ export default function ChatGrid({
                             prev.filter((id) => id !== m.id)
                           )
                         }
-                        className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-white/10"
+                        className="icon-btn h-7 w-7 accent-focus"
                         title={`Expand ${m.label}`}
                       >
                         <Eye size={13} />
@@ -137,7 +137,7 @@ export default function ChatGrid({
                             prev.includes(m.id) ? prev : [...prev, m.id]
                           )
                         }
-                        className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 hover:bg-white/10"
+                        className="text-[11px] px-2 py-1 rounded-md border border-white/10 bg-white/5 hover:bg-white/10 accent-focus"
                         title={`Collapse ${m.label}`}
                       >
                         <EyeOff size={12} />
@@ -173,7 +173,7 @@ export default function ChatGrid({
                             setEditingIdx(null);
                             setDraft("");
                           }}
-                          className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/10 hover:bg-white/20"
+                          className="icon-btn h-7 w-7 accent-focus"
                           title="Save"
                         >
                           <Save size={14} />
@@ -183,7 +183,7 @@ export default function ChatGrid({
                             setEditingIdx(null);
                             setDraft("");
                           }}
-                          className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-white/10"
+                          className="icon-btn h-7 w-7 accent-focus"
                           title="Cancel"
                         >
                           <X size={14} />
@@ -206,7 +206,7 @@ export default function ChatGrid({
                         setEditingIdx(i);
                         setDraft(row.user.content);
                       }}
-                      className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-white/10"
+                      className="icon-btn h-7 w-7 accent-focus"
                       title="Edit prompt"
                     >
                       <Pencil size={13} />
@@ -229,11 +229,11 @@ export default function ChatGrid({
                       setCopiedAllIdx(i);
                       window.setTimeout(() => setCopiedAllIdx(null), 1200);
                     }}
-                    className={`h-7 w-7 inline-flex items-center justify-center rounded-md border transition-all ${
+                    className={`icon-btn h-7 w-7 transition-all ${
                       copiedAllIdx === i
                         ? "bg-emerald-500/15 border-emerald-300/30 text-emerald-100"
-                        : "bg-white/5 border-white/10 hover:bg-white/10"
-                    }`}
+                        : ""
+                    } accent-focus`}
                     title="Copy all model responses for this prompt"
                   >
                     {copiedAllIdx === i ? (
@@ -284,15 +284,15 @@ export default function ChatGrid({
                                 1200
                               );
                             }}
-                            className={`absolute top-2 right-2 z-10 h-7 w-7 inline-flex items-center justify-center rounded border ${
+                            className={`absolute top-2 right-2 z-10 icon-btn h-7 w-7 ${
                               isCollapsed
                                 ? "opacity-0 pointer-events-none"
                                 : "opacity-0 group-hover:opacity-100"
                             } transition-all ${
                               copiedKey === `${i}:${m.id}`
                                 ? "bg-emerald-500/15 border-emerald-300/30 text-emerald-100"
-                                : "bg-white/5 border-white/10 hover:bg-white/10"
-                            }`}
+                                : ""
+                            } accent-focus`}
                             title={`Copy ${m.label} response`}
                           >
                             {copiedKey === `${i}:${m.id}` ? (
@@ -353,7 +353,7 @@ export default function ChatGrid({
                                         new Event("open-settings")
                                       )
                                     }
-                                    className="text-xs px-2.5 py-1 rounded bg-[#e42a42] text-white border border-white/10 hover:bg-[#cf243a]"
+                                    className="text-xs px-2.5 py-1 rounded text-white border border-white/10 accent-action-fill"
                                   >
                                     Add keys
                                   </button>
@@ -369,7 +369,7 @@ export default function ChatGrid({
                                 </span>
                               </div>
                               <div className="animate-pulse space-y-2">
-                                <div className="h-2.5 w-1/3 rounded bg-[#e42a42]/30" />
+                                <div className="h-2.5 w-1/3 rounded accent-bar-faint" />
                                 <div className="h-2 rounded bg-white/10" />
                                 <div className="h-2 rounded bg-white/10 w-5/6" />
                                 <div className="h-2 rounded bg-white/10 w-2/3" />
