@@ -569,6 +569,27 @@ body.light * {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
+
+/* Chat Input Style Variants */
+.chat-input-shell { transition: background .35s ease, border-color .35s ease, box-shadow .35s ease; }
+
+.chatinput-default .chat-input-shell {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.chatinput-frosty .chat-input-shell {
+  background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 4px 24px -6px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+.chatinput-frosty .chat-input-shell:hover { border-color: rgba(255,255,255,0.18); }
+.chatinput-frosty .chat-input-shell:focus-within { box-shadow: 0 0 0 1px var(--accent-interactive-primary), 0 0 0 3px var(--accent-interactive-focus); }
 .dark .search-toggle { color: #fafafa; }
 .search-toggle[data-active="true"] {
   background: linear-gradient(135deg, var(--accent-interactive-primary), var(--accent-interactive-hover));

@@ -175,7 +175,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
       animate={{ y: barVisible ? 0 : 72, opacity: barVisible ? 1 : 0.9 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto backdrop-blur-sm">
+      <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto backdrop-blur-sm chat-input-shell">
         <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5 flex flex-col backdrop-blur-sm">
           <div
             className="overflow-y-auto ai-grow-area"

@@ -8,6 +8,7 @@ export type ThemeMode = "light" | "dark";
 export type AccentColor = "crimson" | "emerald" | "blue" | "purple" | "black";
 export type FontFamily = "geist" | "inter" | "mono" | "poppins";
 export type BackgroundStyle = "gradient" | "minimal";
+export type ChatInputStyle = "default" | "frosty";
 
 // New: Badge Pairing Types
 export type BadgePair =
@@ -28,6 +29,7 @@ export interface ThemeConfig {
   font: FontFamily;
   background: BackgroundStyle;
   badgePair: BadgePair;
+  chatInputStyle?: ChatInputStyle; // optional for backward compatibility
 }
 
 // Accent Color Definitions
@@ -219,6 +221,7 @@ export const DEFAULT_THEME: ThemeConfig = {
   font: "geist",
   background: "gradient",
   badgePair: "gold-green",
+  chatInputStyle: "default",
 };
 
 // Theme Validation Helpers
@@ -259,6 +262,7 @@ export const validateThemeConfig = (
     badgePair: isValidBadgePair(config.badgePair || "")
       ? config.badgePair!
       : DEFAULT_THEME.badgePair,
+  chatInputStyle: (config.chatInputStyle as ChatInputStyle) || DEFAULT_THEME.chatInputStyle,
   };
 };
 
@@ -269,6 +273,7 @@ export const generateThemeClasses = (config: ThemeConfig): string[] => {
     `accent-${config.accent}`,
     `font-${config.font}`,
     BACKGROUND_STYLES[config.background].className,
+  config.chatInputStyle ? `chatinput-${config.chatInputStyle}` : "chatinput-default",
   ];
 };
 

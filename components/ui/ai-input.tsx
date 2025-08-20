@@ -114,7 +114,7 @@ export default function AiInput() {
   }, [imagePreview])
   return (
     <div className="w-full py-4">
-      <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto">
+      <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto chat-input-shell">
         <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5 flex flex-col">
           <div
             className="overflow-y-auto ai-grow-area"

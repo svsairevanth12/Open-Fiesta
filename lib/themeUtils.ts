@@ -43,6 +43,7 @@ export const applyThemeClasses = (
     "bg-minimal-theme",
     "bg-mesh-theme",
     "bg-particles-theme"
+  ,"chatinput-default","chatinput-frosty"
   );
 
   // Apply new theme classes
