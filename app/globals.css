@@ -152,6 +152,10 @@
   --background-pattern: linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #8b5cf6 0%, #7c3aed 16%, #6d28d9 32%, #5b21b6 46%, #4c1d95 60%, #3730a3 72%, #1e1b4b 84%, #0f0f23 94%, #0a0a0a 100%);
 }
 
+.dark.accent-black {
+  --background-pattern: linear-gradient(0deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7)), radial-gradient(68% 58% at 50% 50%, #222222 0%, #1a1a1a 20%, #141414 40%, #0f0f0f 58%, #090909 76%, #050505 90%, #000000 100%);
+}
+
 /* Accent Color Theme Classes - Enhanced System */
 .accent-crimson {
   --accent-primary: #e42a42;
@@ -273,6 +277,28 @@
   --accent-glow-strong: rgba(139, 92, 246, 0.7);
 }
 
+.accent-black {
+  --accent-primary: #000000;
+  --accent-secondary: #141414;
+  --accent-tertiary: #1f1f1f;
+  --accent-bg-primary: rgba(255,255,255,0.08);
+  --accent-bg-secondary: rgba(255,255,255,0.04);
+  --accent-interactive-primary: #141414;
+  --accent-interactive-hover: #1f1f1f;
+  --accent-interactive-active: #000000;
+  --accent-interactive-focus: rgba(255,255,255,0.35);
+  --accent-highlight-primary: #ffffff;
+  --accent-highlight-secondary: #d9d9d9;
+  --accent-highlight-subtle: rgba(255,255,255,0.12);
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-error: #ef4444;
+  --accent-info: #3b82f6;
+  --accent-glow-soft: rgba(255,255,255,0.15);
+  --accent-glow-medium: rgba(255,255,255,0.28);
+  --accent-glow-strong: rgba(255,255,255,0.45);
+}
+
 /* Font Theme Classes */
 .font-geist {
   --font-primary: var(--font-geist-sans);
@@ -304,6 +330,14 @@
   background-image: 
     radial-gradient(circle at 25% 25%, var(--accent-bg-secondary) 0%, transparent 50%),
     radial-gradient(circle at 75% 75%, var(--accent-bg-secondary) 0%, transparent 50%);
+}
+
+/* Darker minimal surface specifically for black accent */
+.accent-black.bg-minimal-theme, .bg-minimal-theme.accent-black {
+  background: #050505 !important;
+  background-image: none !important;
+  --background-pattern: #050505 !important;
+  --background: #050505 !important;
 }
 
 /* Theme Transition Classes */
@@ -527,6 +561,105 @@ body.light * {
 .accent-chip:hover { background: var(--accent-bg-primary); }
 .accent-chip:active { background: var(--accent-bg-secondary); }
 
+/* High-contrast search toggle (stands out in monochrome/black accent) */
+.search-toggle {
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--accent-interactive-primary);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.dark .search-toggle { color: #fafafa; }
+.search-toggle[data-active="true"] {
+  background: linear-gradient(135deg, var(--accent-interactive-primary), var(--accent-interactive-hover));
+  color: #fff;
+  border-color: var(--accent-interactive-primary);
+  box-shadow: 0 0 0 1px var(--accent-interactive-focus), 0 0 12px -2px var(--accent-glow-soft);
+}
+.search-toggle[data-active="true"] .search-toggle-label { color: #fff; }
+.search-toggle:hover { border-color: rgba(255,255,255,0.28); }
+.search-toggle:focus-visible { box-shadow: 0 0 0 3px var(--accent-interactive-focus); }
+
 @media (prefers-reduced-motion: reduce) {
   .accent-dot-pulse::after { animation: none; opacity: .35; }
 }
+
+/* Accent swatch utilities */
+.accent-swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.4) inset;
+  position: relative;
+  cursor: pointer;
+  transition: outline .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.accent-swatch[data-tone="primary"] { background: var(--accent-primary); }
+.accent-swatch[data-tone="secondary"] { background: var(--accent-secondary); }
+.accent-swatch[data-tone="tertiary"] { background: var(--accent-tertiary); }
+.accent-swatch:focus-visible { outline: 2px solid var(--accent-interactive-primary); outline-offset: 2px; }
+.accent-swatch[data-active="true"] { box-shadow: 0 0 0 2px var(--accent-interactive-focus), 0 0 0 1px rgba(255,255,255,0.4) inset; }
+
+/* Accent preview swatches (static per-accent so Theme Settings shows all variants simultaneously) */
+.accent-preview-crimson-primary { background:#e42a42; }
+.accent-preview-crimson-secondary { background:#cf243a; }
+.accent-preview-crimson-tertiary { background:#b91c3c; }
+.accent-preview-emerald-primary { background:#10b981; }
+.accent-preview-emerald-secondary { background:#059669; }
+.accent-preview-emerald-tertiary { background:#047857; }
+.accent-preview-blue-primary { background:#3b82f6; }
+.accent-preview-blue-secondary { background:#2563eb; }
+.accent-preview-blue-tertiary { background:#1d4ed8; }
+.accent-preview-purple-primary { background:#8b5cf6; }
+.accent-preview-purple-secondary { background:#7c3aed; }
+.accent-preview-purple-tertiary { background:#6d28d9; }
+/* Black accent preview */
+.accent-preview-black-primary { background:#000000; }
+.accent-preview-black-secondary { background:#141414; }
+.accent-preview-black-tertiary { background:#1f1f1f; }
+
+.accent-preview { border-radius:9999px; }
+
+/* Chat prompt (history) bar accent gradient utilities */
+.chat-prompt-accent {
+  position: relative;
+  background: linear-gradient(90deg, var(--accent-primary)0%, var(--accent-secondary)40%, transparent 100%);
+  background-blend-mode: normal;
+}
+.chat-prompt-accent::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--accent-primary)0%, var(--accent-secondary)50%, transparent 110%);
+  opacity: 0.08;
+  pointer-events: none;
+}
+.chat-prompt-accent .chat-prompt-side {
+  position: absolute;
+  left: 0; top: 0; bottom: 0; width: 6px;
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+  background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset;
+}
+
+/* Scrollbar gutter utility */
+.scroll-stable-gutter { scrollbar-gutter: stable both-edges; }
+
+/* AI input max height utility (use via inline CSS var once on wrapper) */
+.ai-grow-area { max-height: var(--ai-input-max, 320px); overflow-y: auto; }
+
+/* Model chip system (borders & states reuse badge pair vars) */
+.model-chip { @apply h-9 px-3 text-xs rounded-full inline-flex items-center gap-2 transition-colors shrink-0 border bg-white/5 hover:bg-white/10; }
+.model-chip-pro { border-color: var(--badge-pro-border); }
+.model-chip-free { border-color: var(--badge-free-border); }
+.model-chip-selected { background: var(--badge-pro-background); }
+.model-chip-selected[data-type="free"] { background: var(--badge-free-background); }
+
+/* Toggle pill inside model chip uses pair colors */
+.model-toggle-pill { position: relative; inline-size: 1.75rem; block-size: 1rem; border-radius: 9999px; background: var(--badge-free-background); display: inline-flex; align-items: center; }
+.model-toggle-pill[data-type="pro"] { background: var(--badge-pro-background); }
+.model-toggle-thumb { inline-size: .75rem; block-size: .75rem; border-radius: 9999px; background: var(--badge-free-text); transform: translateX(.125rem); transition: transform .25s ease, background .25s ease; }
+.model-toggle-pill[data-type="pro"] .model-toggle-thumb { background: var(--badge-pro-text); }
+.model-toggle-pill[data-active="true"] .model-toggle-thumb { transform: translateX(0.9rem); }
