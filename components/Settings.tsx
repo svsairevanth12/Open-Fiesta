@@ -30,7 +30,7 @@ export default function Settings() {
 
   return (
     <div>
-      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow" title="Settings">
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow" title="Settings">
         <Cog size={14} />
         <span>Settings</span>
       </button>

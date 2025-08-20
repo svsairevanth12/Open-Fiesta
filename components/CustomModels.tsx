@@ -89,7 +89,7 @@ export default function CustomModels() {
 
   return (
     <div>
-      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow" title="Custom models">
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-xs h-9 px-3 py-2 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow" title="Custom models">
         <Wrench size={14} />
         <span>Custom models</span>
       </button>

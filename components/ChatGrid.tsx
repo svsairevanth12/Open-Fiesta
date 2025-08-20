@@ -34,21 +34,21 @@ export default function ChatGrid({
   const headerCols = useMemo(() => headerTemplate || `repeat(${selectedModels.length}, minmax(260px, 1fr))`, [headerTemplate, selectedModels.length]);
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 px-2 pt-5 overflow-x-auto flex-1 overflow-y-auto pb-28">
+    <div className="rounded-lg border border-white/5 bg-white/5 px-2 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28">
       {selectedModels.length === 0 ? (
         <div className="p-4 text-zinc-400">Select up to 5 models to compare.</div>
       ) : (
         <div className="min-w-full space-y-3">
           {/* Header row: model labels */}
           <div
-            className="grid gap-3 items-center overflow-visible mt-3 pt-1"
+            className="grid gap-3 items-center overflow-visible mt-0 sticky top-0 z-20 bg-black/40 backdrop-blur-sm border-b border-white/10 -mx-2 px-2 py-1 shadow-[0_1px_0_rgba(0,0,0,0.4)]"
             style={{ gridTemplateColumns: headerCols }}
           >
             {selectedModels.map((m) => {
               const isFree = /(\(|\s)free\)/i.test(m.label);
               const isCollapsed = collapsedIds.includes(m.id);
               return (
-                <div key={m.id} className={`px-1 py-4 min-h[56px] min-h-[56px] border-b flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} overflow-visible ${m.good ? 'border-amber-300/40' : 'border-white/10'}`}>
+                <div key={m.id} className={`px-1 py-2 min-h-[40px] border-b flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} overflow-visible ${m.good ? 'border-amber-300/40' : 'border-white/10'}`}>
                   {!isCollapsed && (
                     <div className={`text-[13px] leading-normal font-medium pr-2 inline-flex items-center gap-1.5 min-w-0 ${m.good || isFree ? 'opacity-100 text-white' : 'opacity-90'}`}>
                       {m.good && (
@@ -94,10 +94,15 @@ export default function ChatGrid({
           </div>
 
           {pairs.map((row, i) => (
-            <div key={i} className="space-y-2">
-              <div className="text-sm text-zinc-300 flex items-center justify-between gap-2">
-                <div>
-                  <span className="opacity-60">You:</span> {row.user.content}
+            <div key={i} className="space-y-3">
+              {/* Prompt callout */}
+              <div className="relative flex items-start justify-between gap-3 px-3 py-2 rounded-lg ring-1 ring-rose-300/20 bg-gradient-to-r from-rose-500/10 to-transparent">
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-md bg-gradient-to-b from-rose-400/60 to-rose-500/40" />
+                <div className="flex items-start gap-2 min-w-0">
+                  <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-medium bg-rose-500/20 text-rose-100 ring-1 ring-rose-300/30 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">You</span>
+                  <div className="min-w-0">
+                    <div className="text-[13.5px] sm:text-sm text-zinc-100 leading-relaxed truncate drop-shadow-[0_1px_0_rgba(0,0,0,0.2)]" title={row.user.content}>{row.user.content}</div>
+                  </div>
                 </div>
                 <button
                   onClick={() => {
@@ -111,10 +116,10 @@ export default function ChatGrid({
                     setCopiedAllIdx(i);
                     window.setTimeout(() => setCopiedAllIdx(null), 1200);
                   }}
-                  className={`text-[11px] px-2.5 py-1 rounded-md border shadow-sm transition-all ${
+                  className={`text-[11px] px-2.5 py-1 rounded-md border transition-all shrink-0 ${
                     copiedAllIdx === i
-                      ? 'bg-emerald-500/20 border-emerald-300/40 text-emerald-100 scale-[1.02]'
-                      : 'bg-white/10 border-white/15 hover:bg-white/15'
+                      ? 'bg-emerald-500/15 border-emerald-300/30 text-emerald-100'
+                      : 'bg-white/5 border-white/10 hover:bg-white/10'
                   }`}
                   title="Copy all model responses for this prompt"
                 >
@@ -138,12 +143,13 @@ export default function ChatGrid({
                   return (
                     <div key={m.id} className="h-full">
                       <div
-                        className={`group relative rounded-md ${isCollapsed ? 'p-2' : 'p-3'} h-full min-h-[160px] flex overflow-hidden ring-1 ${m.good ? 'bg-gradient-to-b from-amber-400/10 to-white/5 ring-amber-300/30' : isFree ? 'bg-gradient-to-b from-emerald-400/10 to-white/5 ring-emerald-300/30' : 'bg-white/5 ring-white/5'} ${isCollapsed ? 'cursor-pointer' : ''}`}
+                        className={`group relative rounded-lg ${isCollapsed ? 'p-2.5' : 'p-3'} h-full min-h-[140px] flex overflow-hidden ring-1 transition-shadow bg-gradient-to-b from-black/40 to-black/20 ring-white/10 backdrop-blur-[2px] ${isCollapsed ? 'cursor-pointer' : 'hover:ring-white/20'}`}
                         onClick={() => {
                           if (isCollapsed) setCollapsedIds(prev => prev.filter(id => id !== m.id));
                         }}
                         title={isCollapsed ? 'Click to expand' : undefined}
                       >
+                        {/* decorative overlay removed for cleaner look */}
                         {ans && (
                           <button
                             onClick={() => {
@@ -154,8 +160,8 @@ export default function ChatGrid({
                             }}
                             className={`absolute top-2 right-2 z-10 text-[11px] px-2 py-1 rounded border whitespace-nowrap ${isCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-0 group-hover:opacity-100'} transition-all ${
                               copiedKey === `${i}:${m.id}`
-                                ? 'bg-emerald-500/20 border-emerald-300/40 text-emerald-100 scale-[1.02]'
-                                : 'bg-white/10 border-white/10 hover:bg-white/15'
+                                ? 'bg-emerald-500/15 border-emerald-300/30 text-emerald-100'
+                                : 'bg-white/5 border-white/10 hover:bg-white/10'
                             }`}
                             title={`Copy ${m.label} response`}
                           >
@@ -168,10 +174,12 @@ export default function ChatGrid({
                             )}
                           </button>
                         )}
-                        <div className={`text-sm leading-relaxed w-full pr-8 ${isCollapsed ? 'overflow-hidden max-h-20 opacity-70' : ''}`}>
+                        <div className={`text-sm leading-relaxed w-full pr-8 ${isCollapsed ? 'overflow-hidden max-h-20 opacity-70' : 'space-y-2'}`}>
                           {ans ? (
                             <>
-                              <MarkdownLite text={ans.content} />
+                              <div className="max-w-[72ch]">
+                                <MarkdownLite text={ans.content} />
+                              </div>
                               {(() => {
                                 try {
                                   const txt = String(ans.content || '');
@@ -199,6 +207,7 @@ export default function ChatGrid({
                           ) : (
                             <span className="text-zinc-400 text-sm">No response</span>
                           )}
+                          
                         </div>
                         {isCollapsed && (
                           <div className="absolute inset-0 flex items-center justify-center">

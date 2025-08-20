@@ -12,8 +12,9 @@ type Props = {
 
 export default function SelectedModelsBar({ selectedModels, onToggle, onOpenModelsModal }: Props) {
   return (
-    <div className="mb-3 flex items-center gap-2">
-      <div className="hidden sm:flex flex-wrap items-center gap-2">
+    <div className="mb-3 flex items-start gap-3 min-w-0">
+      {/* Chips: no wrap, horizontal scroll */}
+      <div className="hidden sm:flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pr-1 pb-2 min-w-0" style={{ scrollbarGutter: 'stable both-edges' }}>
         {selectedModels.map((m) => {
           const isFree = /(\(|\s)free\)/i.test(m.label);
           const isUncensored = /uncensored/i.test(m.label) || /venice/i.test(m.model);
@@ -21,7 +22,7 @@ export default function SelectedModelsBar({ selectedModels, onToggle, onOpenMode
             <button
               key={m.id}
               onClick={() => onToggle(m.id)}
-              className={`h-9 px-3 text-xs rounded-full text-white border flex items-center gap-2 bg-white/5 hover:bg-white/10 transition-colors ${
+              className={`h-9 px-3 text-xs rounded-full text-white border inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 transition-colors shrink-0 ${
                 m.good ? 'border-amber-300/40' : isFree ? 'border-emerald-300/40' : 'border-white/10'
               }`}
               title="Click to toggle"
@@ -55,10 +56,11 @@ export default function SelectedModelsBar({ selectedModels, onToggle, onOpenMode
           <span className="text-xs text-zinc-400">No models selected</span>
         )}
       </div>
-      <div className="ml-auto flex items-center gap-2">
+      {/* Actions pinned right */}
+      <div className="ml-auto flex items-center gap-2 shrink-0">
         <button
           onClick={onOpenModelsModal}
-          className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow"
+          className="inline-flex items-center gap-1.5 text-xs h-9 px-3 py-2 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow"
           title="Change models"
         >
           <Layers size={14} />

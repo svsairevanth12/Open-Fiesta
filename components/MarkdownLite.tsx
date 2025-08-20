@@ -15,10 +15,11 @@ type Props = { text: string };
 export default function MarkdownLite({ text }: Props) {
   if (!text) return null;
 
+  // Split out fenced code blocks first so we don't transform inside them
   const blocks = splitFencedCodeBlocks(text);
 
   return (
-    <div className="text-zinc-200 leading-relaxed whitespace-pre-wrap">
+    <div className="text-zinc-100 leading-relaxed whitespace-pre-wrap text-[13.5px] sm:text-sm space-y-2 tracking-[0.004em]">
       {blocks.map((b, i) =>
         b.type === "code" ? (
           <pre
@@ -28,7 +29,8 @@ export default function MarkdownLite({ text }: Props) {
             <code>{b.content}</code>
           </pre>
         ) : (
-          <BlockRenderer key={i} text={b.content} />
+          // For non-code text, clean simple math delimiters like \( \) \[ \] and $...$
+          <BlockRenderer key={i} text={sanitizeMath(b.content)} />
         )
       )}
     </div>
@@ -63,11 +65,43 @@ function BlockRenderer({ text }: { text: string }) {
   while (i < lines.length) {
     const line = lines[i];
 
+    // Headings: # to ######
+    const heading = /^\s{0,3}(#{1,6})\s+(.*)$/.exec(line);
+    if (heading) {
+      const level = heading[1].length;
+      const content = heading[2].trim();
+      const Tag = (`h${Math.min(6, Math.max(1, level))}` as unknown) as React.ElementType;
+      nodes.push(
+        <Tag key={`h-${i}`} className={`mt-2 mb-1 font-semibold tracking-tight ${
+          level <= 2 ? 'text-base md:text-lg' : level === 3 ? 'text-sm md:text-base' : 'text-sm'
+        }`}>
+          {renderInline(content)}
+        </Tag>
+      );
+      i++;
+      continue;
+    }
+
+    // Blockquote: lines starting with ">"; group consecutive
+    if (/^\s*>\s?/.test(line)) {
+      const quoteLines: string[] = [];
+      while (i < lines.length && /^\s*>\s?/.test(lines[i])) {
+        quoteLines.push(lines[i].replace(/^\s*>\s?/, ''));
+        i++;
+      }
+      nodes.push(
+        <div key={`q-${i}`} className="my-2 px-3 py-2 rounded-md border border-white/10 bg-white/5">
+          <BlockRenderer text={quoteLines.join('\n')} />
+        </div>
+      );
+      continue;
+    }
+
     // Table detection: header | --- | --- | followed by rows starting with |
     if (isTableHeader(lines, i)) {
       const { element, nextIndex } = parseTable(lines, i);
       nodes.push(
-        <div key={`tbl-${i}`} className="my-2 overflow-x-auto">
+        <div key={`tbl-${i}`} className="my-2 overflow-x-auto rounded-lg ring-1 ring-white/20 bg-gradient-to-b from-black/40 to-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] p-2">
           {element}
         </div>
       );
@@ -94,12 +128,12 @@ function BlockRenderer({ text }: { text: string }) {
       continue;
     }
 
-    // Regular paragraph line(s) until next blank/table/list
+    // Regular paragraph line(s) until next blank/table/list/heading/blockquote
     const start = i;
     const buf: string[] = [];
     while (i < lines.length) {
       const l = lines[i];
-      if (!l.trim() || isTableHeader(lines, i) || isListLine(l)) break;
+      if (!l.trim() || isTableHeader(lines, i) || isListLine(l) || /^\s{0,3}#{1,6}\s+/.test(l) || /^\s*>\s?/.test(l)) break;
       buf.push(l);
       i++;
     }
@@ -113,12 +147,23 @@ function BlockRenderer({ text }: { text: string }) {
   return <>{nodes}</>;
 }
 
+// Remove simple math delimiters so math reads cleanly without a renderer
+function sanitizeMath(input: string): string {
+  let out = input;
+  // Remove escaped LaTeX inline/block delimiters \( \) \[ \]
+  out = out.replace(/\\[()\[\]]/g, '');
+  // Replace $...$ or $$...$$ with the inner content
+  out = out.replace(/\${1,2}([\s\S]*?)\${1,2}/g, (_, inner) => inner);
+  return out;
+}
+
 function isTableHeader(lines: string[], idx: number): boolean {
   const header = lines[idx] || "";
   const sep = lines[idx + 1] || "";
-  // Require at least two pipes and a separator line like |---|---|
+  // Require some pipes and a separator line like |---|---| (allow spaces/colons)
   if (!/\|/.test(header) || !/\|/.test(sep)) return false;
-  const looksLikeSep = /^\s*\|?\s*(-+:?\s*\|\s*)*-+:?\s*\|?\s*$/.test(sep);
+  const looksLikeSep = /^\s*\|?\s*(?::?-+\s*\|\s*)*:?-+\s*\|?\s*$/.test(sep) ||
+    /^\s*\|?\s*(-+\s*\|\s*)*-+\s*\|?\s*$/.test(sep);
   return looksLikeSep;
 }
 
@@ -127,22 +172,47 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
   // skip separator line
   let i = idx + 2;
   const rows: string[] = [];
-  while (i < lines.length && /\|/.test(lines[i]) && lines[i].trim() !== "") {
-    rows.push(lines[i]);
+  while (i < lines.length) {
+    const raw = lines[i];
+    if (!raw || raw.trim() === "") break;
+    if (!/\|/.test(raw)) {
+      // continuation text for previous row
+      if (rows.length > 0) {
+        rows[rows.length - 1] = rows[rows.length - 1] + " " + raw.trim();
+        i++;
+        continue;
+      } else {
+        break;
+      }
+    }
+    const pipeCount = (raw.match(/\|/g) || []).length;
+    if (pipeCount < 2 && rows.length > 0) {
+      // Likely a continuation that begins with a single pipe
+      rows[rows.length - 1] = rows[rows.length - 1] + " " + raw.replace(/^\|?\s*/, '').trim();
+    } else {
+      rows.push(raw);
+    }
     i++;
   }
 
   const headers = splitRow(headerLine);
-  const body = rows.map(splitRow);
+  const bodyRaw = rows.map(splitRow);
+  const colCount = headers.length;
+  const body = bodyRaw.map((cols) => {
+    if (cols.length === colCount) return cols;
+    if (cols.length < colCount) return cols.concat(Array(colCount - cols.length).fill(""));
+    // If too many, merge extras into last cell
+    return cols.slice(0, colCount - 1).concat([cols.slice(colCount - 1).join(" | ")]);
+  });
 
   const element = (
-    <table className="text-xs min-w-max border-separate border-spacing-0">
+    <table className="text-[13px] sm:text-sm w-full table-auto border-separate border-spacing-0">
       <thead>
         <tr>
           {headers.map((h, hi) => (
             <th
               key={hi}
-              className="text-left font-semibold bg-white/5 border border-white/10 px-2 py-1"
+              className="text-left font-semibold text-zinc-100 bg-black/30 border border-white/15 px-3 py-1.5"
             >
               {renderInline(h)}
             </th>
@@ -151,9 +221,9 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
       </thead>
       <tbody>
         {body.map((r, ri) => (
-          <tr key={ri}>
+          <tr key={ri} className="even:bg-black/20">
             {r.map((c, ci) => (
-              <td key={ci} className="align-top border border-white/10 px-2 py-1">
+              <td key={ci} className="align-top border border-white/15 px-3 py-1.5 whitespace-pre-wrap text-zinc-200">
                 {renderInline(c)}
               </td>
             ))}
@@ -167,9 +237,10 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
 }
 
 function splitRow(line: string): string[] {
-  // Trim outer pipes, then split; keep empty cells
+  // Trim outer pipes, then split; keep empty cells; collapse inner spaces
   const core = line.trim().replace(/^\|/, "").replace(/\|$/, "");
-  return core.split("|").map((s) => s.trim());
+  const parts = core.split("|").map((s) => s.replace(/\s+/g, ' ').trim());
+  return parts;
 }
 
 function isListLine(line: string): boolean {
@@ -200,7 +271,7 @@ function parseList(lines: string[], idx: number): { element: React.ReactElement;
   }
 
   const element = mode === "ol" ? (
-    <ol className="list-decimal list-inside space-y-1">
+    <ol className="list-decimal list-outside pl-5 space-y-1">
       {items.map((it, idx2) => (
         <li key={idx2} className="whitespace-pre-wrap">
           {renderInline(it.text)}
@@ -208,7 +279,7 @@ function parseList(lines: string[], idx: number): { element: React.ReactElement;
       ))}
     </ol>
   ) : (
-    <ul className="list-disc list-inside space-y-1">
+    <ul className="list-disc list-outside pl-5 space-y-1">
       {items.map((it, idx2) => (
         <li key={idx2} className="whitespace-pre-wrap">
           {renderInline(it.text)}
