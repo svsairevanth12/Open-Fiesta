@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X, Palette, Sun, Moon, Type, Grid3X3 } from "lucide-react";
+import { X, Palette, Sun, Moon, Type, Grid3X3, Star } from "lucide-react";
 import { useTheme } from "@/lib/themeContext";
 import {
   ACCENT_COLORS,
@@ -11,7 +11,9 @@ import {
   type AccentColor,
   type FontFamily,
   type BackgroundStyle,
+  type BadgePair,
 } from "@/lib/themes";
+import { BADGE_PAIRS } from "@/lib/badgeSystem";
 
 // Memoized accent option component
 const AccentOption = React.memo<{
@@ -146,17 +148,90 @@ const BackgroundOption = React.memo<{
 
 BackgroundOption.displayName = "BackgroundOption";
 
-export default function ThemeToggle() {
-  const { theme, setAccent, setFont, setBackground, toggleMode } = useTheme();
-  const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"accent" | "font" | "background">(
-    "accent"
+// Memoized badge option component
+const BadgeOption = React.memo<{
+  badge: {
+    id: BadgePair;
+    name: string;
+    description: string;
+    pro: { background: string; text: string; border: string };
+    free: { background: string; text: string; border: string };
+  };
+  isSelected: boolean;
+  onSelect: (id: BadgePair) => void;
+}>(({ badge, isSelected, onSelect }) => {
+  const handleClick = useCallback(() => {
+    onSelect(badge.id);
+  }, [badge.id, onSelect]);
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`p-3 rounded-lg border transition-colors text-left ${
+        isSelected
+          ? "border-white/30 bg-white/10"
+          : "border-white/10 bg-white/5 hover:bg-white/8"
+      }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-sm font-medium">{badge.name}</div>
+          <div className="text-xs text-white/60">{badge.description}</div>
+        </div>
+        {isSelected && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+      </div>
+
+      {/* Badge Preview */}
+      <div className="flex items-center gap-3">
+        {/* Pro Badge Preview */}
+        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
+          <Star size={10} className="shrink-0" />
+          <span
+            className="text-xs px-2 py-0.5 rounded-full border"
+            style={{
+              background: badge.pro.background,
+              color: badge.pro.text,
+              borderColor: badge.pro.border,
+            }}
+          >
+            Pro
+          </span>
+        </div>
+
+        {/* Free Badge Preview */}
+        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-300/30">
+          <span className="h-2 w-2 rounded-full bg-emerald-300" />
+          <span
+            className="text-xs px-2 py-0.5 rounded-full border"
+            style={{
+              background: badge.free.background,
+              color: badge.free.text,
+              borderColor: badge.free.border,
+            }}
+          >
+            Free
+          </span>
+        </div>
+      </div>
+    </button>
   );
+});
+
+BadgeOption.displayName = "BadgeOption";
+
+export default function ThemeToggle() {
+  const { theme, setAccent, setFont, setBackground, setBadgePair, toggleMode } =
+    useTheme();
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "accent" | "font" | "background" | "badges"
+  >("accent");
 
   // Memoize the arrays to prevent recreating on every render
   const accentValues = useMemo(() => Object.values(ACCENT_COLORS), []);
   const fontValues = useMemo(() => Object.values(FONT_FAMILIES), []);
   const backgroundValues = useMemo(() => Object.values(BACKGROUND_STYLES), []);
+  const badgeValues = useMemo(() => Object.values(BADGE_PAIRS), []);
 
   // Memoized handlers
   const handleOpen = useCallback(() => setOpen(true), []);
@@ -189,8 +264,15 @@ export default function ThemeToggle() {
     [setBackground]
   );
 
+  const handleBadgeChange = useCallback(
+    (badge: BadgePair) => {
+      setBadgePair(badge);
+    },
+    [setBadgePair]
+  );
+
   const handleTabChange = useCallback(
-    (tab: "accent" | "font" | "background") => {
+    (tab: "accent" | "font" | "background" | "badges") => {
       setActiveTab(tab);
     },
     []
@@ -268,6 +350,7 @@ export default function ThemeToggle() {
               <div className="flex gap-1 mb-4 p-1 rounded-lg bg-white/5 shrink-0">
                 {[
                   { id: "accent" as const, label: "Colors", icon: Palette },
+                  { id: "badges" as const, label: "Badges", icon: Star },
                   { id: "font" as const, label: "Fonts", icon: Type },
                   {
                     id: "background" as const,
@@ -307,6 +390,31 @@ export default function ThemeToggle() {
                           onSelect={handleAccentChange}
                         />
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Badge Colors Tab */}
+                {activeTab === "badges" && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-white/80 mb-3">
+                      Choose your badge colors
+                    </h3>
+                    <div className="space-y-3">
+                      {badgeValues.map((badge) => (
+                        <BadgeOption
+                          key={badge.id}
+                          badge={badge}
+                          isSelected={theme.badgePair === badge.id}
+                          onSelect={handleBadgeChange}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                      <p className="text-xs text-white/60">
+                        Badge colors change the Pro/Free badge appearance while
+                        maintaining the same shape, size, and icons.
+                      </p>
                     </div>
                   </div>
                 )}

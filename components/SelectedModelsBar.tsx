@@ -40,14 +40,28 @@ export default function SelectedModelsBar({
               title="Click to toggle"
             >
               {m.good && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 ring-1 ring-amber-300/30">
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1"
+                  style={{
+                    backgroundColor: "var(--badge-pro-background)",
+                    color: "var(--badge-pro-text)",
+                    borderColor: "var(--badge-pro-border)",
+                  }}
+                >
                   <Star size={12} className="shrink-0" />
                   <span className="hidden sm:inline">Pro</span>
                 </span>
               )}
               {isFree && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-300/30">
-                  <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1"
+                  style={{
+                    backgroundColor: "var(--badge-free-background)",
+                    color: "var(--badge-free-text)",
+                    borderColor: "var(--badge-free-border)",
+                  }}
+                >
+                  <span className="h-2 w-2 rounded-full bg-current opacity-80" />
                   <span className="hidden sm:inline">Free</span>
                 </span>
               )}
