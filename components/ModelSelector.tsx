@@ -29,11 +29,20 @@ export default function ModelSelector({
             key={m.id}
             onClick={() => onToggle(m.id)}
             disabled={!selected && disabled}
-            className={`px-3 py-1.5 rounded-md border text-sm tracking-tight ${selected ? 'bg-[#e42a42] border-[#d0253b] text-white shadow-[0_0_0_1px_rgba(228,42,66,0.4)_inset]' : 'bg-white/10 border-white/15 text-white'} ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/20'}`}
-            title={disabled ? `Max ${max} models at once` : ''}
+            className={`px-3 py-1.5 rounded-md border text-sm tracking-tight transition-colors accent-focus ${
+              selected
+                ? "accent-selected"
+                : "bg-white/10 border-white/15 text-white hover:bg-white/20"
+            } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+            title={disabled ? `Max ${max} models at once` : ""}
           >
-            {selected ? '✓ ' : ''}{m.label}
-            {'custom' in m ? <span className="ml-1 text-[10px] px-1 py-0.5 rounded bg-white/10 border border-white/15">custom</span> : null}
+            {selected ? "✓ " : ""}
+            {m.label}
+            {"custom" in m ? (
+              <span className="ml-1 text-[10px] px-1 py-0.5 rounded bg-white/10 border border-white/15">
+                custom
+              </span>
+            ) : null}
           </button>
         );
       })}

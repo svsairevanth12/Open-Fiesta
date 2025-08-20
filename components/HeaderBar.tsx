@@ -1,6 +1,10 @@
 "use client";
 import Image from "next/image";
 import GithubStar from "@/components/GithubStar";
+import ThemeToggle from "@/components/ThemeToggle";
+import CustomModels from "@/components/CustomModels";
+import Settings from "@/components/Settings";
+import { Layers } from "lucide-react";
 import { Menu as MenuIcon } from "lucide-react";
 
 type Props = {
@@ -12,6 +16,7 @@ type Props = {
   githubOwner: string;
   githubRepo: string;
   className?: string;
+  onOpenModelsModal?: () => void;
 };
 
 export default function HeaderBar({
@@ -23,9 +28,12 @@ export default function HeaderBar({
   githubOwner,
   githubRepo,
   className,
+  onOpenModelsModal,
 }: Props) {
   return (
-    <div className={["flex items-center mb-3 gap-2", className || ""].join(" ")}>      
+    <div
+      className={["flex items-center mb-3 gap-2", className || ""].join(" ")}
+    >
       {/* Left: author + menu */}
       <div className="flex items-center gap-2 min-w-0">
         <button
@@ -50,7 +58,12 @@ export default function HeaderBar({
             height={20}
             className="h-5 w-5 rounded-full object-cover"
           />
-          <span className="opacity-90 hidden sm:inline text-sm">Made by <span className="font-semibold underline decoration-dotted">{authorName}</span></span>
+          <span className="opacity-90 hidden sm:inline text-sm">
+            Made by{" "}
+            <span className="font-semibold underline decoration-dotted">
+              {authorName}
+            </span>
+          </span>
         </a>
       </div>
 
@@ -61,9 +74,20 @@ export default function HeaderBar({
         </h1>
       </div>
 
-      {/* Right: github */}
+      {/* Right cluster order (left→right visual): Change models, Custom models (icon), Theme (icon), Settings (icon), GitHub */}
       <div className="flex items-center gap-2 z-10">
-        <GithubStar owner={githubOwner} repo={githubRepo} className="ml-1" />
+        <button
+          onClick={() => onOpenModelsModal && onOpenModelsModal()}
+          className="inline-flex items-center gap-1.5 text-xs h-9 w-9 justify-center rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow accent-focus"
+          title="Change models"
+          aria-label="Change models"
+        >
+          <Layers size={14} />
+        </button>
+        <CustomModels compact />
+        <ThemeToggle compact />
+        <Settings compact />
+        <GithubStar owner={githubOwner} repo={githubRepo} />
       </div>
     </div>
   );

@@ -68,41 +68,74 @@ export async function POST(req: NextRequest) {
         } catch {}
       }
       // PDF: extract text using pdf-parse
-      if (/^application\/pdf$/i.test(detectedMt) && base64 && (buf?.length ?? 0) > 0) {
+      if (
+        /^application\/pdf$/i.test(detectedMt) &&
+        base64 &&
+        (buf?.length ?? 0) > 0
+      ) {
         try {
           if (!pdfParse) {
-            type PdfParseFn = (data: Buffer | Uint8Array | ArrayBuffer | Readable) => Promise<{ text: string }>;
+            type PdfParseFn = (
+              data: Buffer | Uint8Array | ArrayBuffer | Readable
+            ) => Promise<{ text: string }>;
             type PdfParseModule = { default?: PdfParseFn } | PdfParseFn;
-            const mod = (await import('pdf-parse')) as PdfParseModule;
-            const fn: PdfParseFn = typeof mod === 'function' ? (mod as PdfParseFn) : (mod.default as PdfParseFn);
+            const mod = (await import("pdf-parse")) as PdfParseModule;
+            const fn: PdfParseFn =
+              typeof mod === "function"
+                ? (mod as PdfParseFn)
+                : (mod.default as PdfParseFn);
             pdfParse = fn;
           }
           const out = await pdfParse!(buf!);
-          const text = (out?.text || '').trim().slice(0, 80000);
-          const appended = `${m.content}\n\n[Attached PDF extracted text:]\n${text || '(no extractable text)'}\n`;
-          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
-        } catch (_err) {
+          const text = (out?.text || "").trim().slice(0, 80000);
+          const appended = `${m.content}\n\n[Attached PDF extracted text:]\n${
+            text || "(no extractable text)"
+          }\n`;
+          return arr.map((mm, idx) =>
+            idx === lastIdx ? { role: mm.role, content: appended } : mm
+          );
+        } catch {
           const appended = `${m.content}\n\n[Attached PDF could not be auto-extracted. Please copy/paste key text if needed.]`;
-          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+          return arr.map((mm, idx) =>
+            idx === lastIdx ? { role: mm.role, content: appended } : mm
+          );
         }
       }
       // DOCX: extract text using mammoth
-      if (/^application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document$/i.test(detectedMt) && base64 && (buf?.length ?? 0) > 0) {
+      if (
+        /^application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document$/i.test(
+          detectedMt
+        ) &&
+        base64 &&
+        (buf?.length ?? 0) > 0
+      ) {
         try {
           if (!mammoth) {
-            const mod = await import('mammoth') as {
-              default?: { extractRawText: (arg: { buffer: Buffer }) => Promise<{ value: string }> };
-              extractRawText?: (arg: { buffer: Buffer }) => Promise<{ value: string }>;
+            const mod = (await import("mammoth")) as {
+              default?: {
+                extractRawText: (arg: {
+                  buffer: Buffer;
+                }) => Promise<{ value: string }>;
+              };
+              extractRawText?: (arg: {
+                buffer: Buffer;
+              }) => Promise<{ value: string }>;
             };
-            mammoth = mod.default ?? ({ extractRawText: mod.extractRawText! });
+            mammoth = mod.default ?? { extractRawText: mod.extractRawText! };
           }
           const out = await mammoth!.extractRawText({ buffer: buf! });
-          const text = (out?.value || '').trim().slice(0, 80000);
-          const appended = `${m.content}\n\n[Attached DOCX extracted text:]\n${text || '(no extractable text)'}\n`;
-          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
-        } catch (_err) {
+          const text = (out?.value || "").trim().slice(0, 80000);
+          const appended = `${m.content}\n\n[Attached DOCX extracted text:]\n${
+            text || "(no extractable text)"
+          }\n`;
+          return arr.map((mm, idx) =>
+            idx === lastIdx ? { role: mm.role, content: appended } : mm
+          );
+        } catch {
           const appended = `${m.content}\n\n[Attached DOCX could not be auto-extracted. Please copy/paste key text if needed.]`;
-          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+          return arr.map((mm, idx) =>
+            idx === lastIdx ? { role: mm.role, content: appended } : mm
+          );
         }
       }
       // Other types (pdf/docx): include a short note so assistant is aware
