@@ -41,9 +41,8 @@ export const applyThemeClasses = (
     "font-poppins",
     "bg-gradient-theme",
     "bg-minimal-theme",
-    "bg-mesh-theme",
-    "bg-particles-theme"
-  ,"chatinput-default","chatinput-frosty"
+    "chatinput-default",
+    "chatinput-frosty"
   );
 
   // Apply new theme classes
@@ -228,6 +227,74 @@ export const previewTheme = (
   element.style.setProperty("--accent-secondary", accent.secondary);
   element.style.setProperty("--accent-bg-primary", accent.background.primary);
 };
+
+// Accessibility / Contrast Helpers
+// Relative luminance calculation per WCAG
+const relativeLuminance = (hex: string): number => {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const transform = (c: number) =>
+    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const rl = transform(r);
+  const gl = transform(g);
+  const bl = transform(b);
+  return 0.2126 * rl + 0.7152 * gl + 0.0722 * bl;
+};
+
+export const contrastRatio = (hex1: string, hex2: string): number => {
+  const L1 = relativeLuminance(hex1);
+  const L2 = relativeLuminance(hex2);
+  const lighter = Math.max(L1, L2);
+  const darker = Math.min(L1, L2);
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
+// Evaluate accent contrast against dark/light base text colors
+export const evaluateAccentContrast = (
+  accent: AccentColor
+): { light: number; dark: number } => {
+  const accentPrimary = ACCENT_COLORS[accent].primary;
+  // Assume body text colors (#000 for light mode, #fff for dark surfaces)
+  return {
+    light: contrastRatio(accentPrimary, "#000000"),
+    dark: contrastRatio(accentPrimary, "#ffffff"),
+  };
+};
+
+export const logAccentContrastIfLow = (accent: AccentColor): void => {
+  if (process.env.NODE_ENV !== "development") return;
+  try {
+    const ratios = evaluateAccentContrast(accent);
+    const MIN_RATIO = 4.5; // WCAG AA for normal text
+    if (ratios.light < MIN_RATIO || ratios.dark < MIN_RATIO) {
+      console.warn(
+        `[Accessibility] Accent '${accent}' contrast warning: light=${ratios.light.toFixed(
+          2
+        )}, dark=${ratios.dark.toFixed(2)} (target >= ${MIN_RATIO})`
+      );
+    } else {
+      // Subtle debug log (could be silenced later)
+      console.log(
+        `[Accessibility] Accent '${accent}' contrast OK: light=${ratios.light.toFixed(
+          2
+        )}, dark=${ratios.dark.toFixed(2)}`
+      );
+    }
+  } catch (e) {
+    console.warn("[Accessibility] Contrast evaluation failed", e);
+  }
+};
+
+// Initial one-time evaluation of stored theme (dev only)
+try {
+  if (process.env.NODE_ENV === "development") {
+    const stored = loadTheme();
+    if (stored) logAccentContrastIfLow(stored.accent);
+  }
+} catch {
+  // ignore
+}
 
 // Theme Comparison Helpers
 export const getThemeDifferences = (

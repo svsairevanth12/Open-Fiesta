@@ -102,7 +102,9 @@ P2 (Nice to Have / Stretch):
 
 (Add entries as decisions are made during sprint)
 
-- 2025-08-20: &lt;Pending decisions&gt;
+- 2025-08-20: De-scoped mesh & particles backgrounds (not enough value vs complexity); removed their class references.
+- 2025-08-20: GlowWrapper deferred (no strong current use-case; badge glows cover need).
+- 2025-08-20: Focus for sprint narrowed to docs alignment, contrast helper, theming spec, minor chat input cleanup.
 
 ---
 Prepared for the final polish sprint. Ready for review.

@@ -1,4 +1,30 @@
-# Open-Fiesta Theme System: CRITICAL FAILURE REPORT
+# Open-Fiesta Theme System (Historical Report + 2025-08-20 Update)
+
+> Update (2025-08-20 Refresh Pass): The legacy "CRITICAL FAILURE REPORT" below is retained for historical context. Current theme system is functional. Mesh / particles backgrounds and animated visual layers have been formally **de-scoped**. Final sprint focuses on documentation alignment, contrast helper, cleanup of unused class references, and a concise theming spec. See added sections below.
+
+## Current Status Summary (Supersedes Legacy Emergency Section)
+
+- Core theming (accents, light/dark, backgrounds: gradient | minimal, fonts, badge pairs, chat input variants) is stable.
+- Performance concerns (font loading freeze, render loops) previously reported are resolved in codebase.
+- De-scoped: mesh background, particles background, generalized animation layer, speculative GlowWrapper (pending decision — default: de-scoped unless reinstated explicitly).
+- Outstanding Work (P0/P1):
+  1. Prune outdated docs & references to de-scoped items.
+  2. Add contrast helper (dev-only warning) for future accent additions.
+  3. Produce concise `theme_spec.md` documenting guaranteed CSS variables & class contract.
+  4. Chat input minor cleanup (remove any redundant background classes, if present).
+
+## De-Scoped Items (Decision Log)
+
+| Item | Rationale | Action |
+|------|-----------|--------|
+| Mesh background | Complexity vs value; not differentiating core UX | Remove mentions & unused class removal list entries |
+| Particles background | Same as mesh; performance overhead risk | Remove mentions & unused class removal list entries |
+| Animated background layer | Visual polish deferred | Not referenced going forward |
+| GlowWrapper component | Overlaps badge glow & accent shadows | (Tentative) De-scope; can reintroduce if a real use-case emerges |
+
+---
+
+# Legacy Section Below (Unmodified Historical Report)
 
 ## 🚨 SYSTEM STATUS: COMPLETELY BROKEN - NOT FIXED
 
@@ -45,30 +71,35 @@
 **Root Cause Analysis Completed:**
 
 #### 1. **React Infinite Render Loop** (CRITICAL)
+
 - **Location**: `themeContext.tsx` - All setter functions
 - **Problem**: `setTimeout(() => updateThemeState(newTheme), 0)` creates race conditions
 - **Root Cause**: Circular dependency between state setters and `updateThemeState`
 - **Effect**: "Maximum update depth exceeded" errors, app crashes
 
 #### 2. **Font Loading Browser Freeze** (CRITICAL)
+
 - **Location**: `themeContext.tsx` - `setFont` function, `themeUtils.ts` - `loadGoogleFont`
 - **Problem**: Font loading still blocks UI thread despite async approach
 - **Root Cause**: Google Fonts loading strategy not truly non-blocking
 - **Effect**: Complete browser freeze when selecting fonts
 
 #### 3. **Z-Index Conflicts** (HIGH)
+
 - **Location**: `ThemeToggle.tsx` - Modal uses `z-50`
 - **Problem**: Chat grid uses `z-20`, other modals use `z-50`, fixed input uses `z-20`
 - **Root Cause**: Theme modal not high enough in z-index hierarchy
 - **Effect**: Theme modal hidden behind other UI elements
 
 #### 4. **Background Functionality Broken** (HIGH)
+
 - **Location**: Background CSS classes and theme application
 - **Problem**: Background changes not visually applying
 - **Root Cause**: CSS class application or CSS variable updates not working
 - **Effect**: Background styles don't change visually
 
 #### 5. **Modal Interaction Issues** (MEDIUM)
+
 - **Location**: Button click handlers and modal overlay
 - **Problem**: "Done" button and modal interactions unreliable
 - **Root Cause**: Event propagation and z-index conflicts
@@ -79,6 +110,7 @@
 ### TECHNICAL SOLUTION STRATEGY
 
 #### **Solution 1: Fix React Render Loops**
+
 ```typescript
 // REMOVE: setTimeout approach causing race conditions
 setTimeout(() => updateThemeState(newTheme), 0);
@@ -93,6 +125,7 @@ const setAccent = useCallback((accent: AccentColor) => {
 ```
 
 #### **Solution 2: Fix Font Loading**
+
 ```typescript
 // REPLACE: Blocking font loading
 await loadGoogleFont(font);
@@ -103,6 +136,7 @@ loadGoogleFont(font); // Fire and forget
 ```
 
 #### **Solution 3: Fix Z-Index Hierarchy**
+
 ```css
 /* Theme Modal: z-[100] (highest priority) */
 .theme-modal { z-index: 100; }
@@ -113,6 +147,7 @@ loadGoogleFont(font); // Fire and forget
 ```
 
 #### **Solution 4: Debug Background Application**
+
 - Verify CSS class application in dev tools
 - Check CSS variable updates
 - Test background pattern rendering
@@ -593,7 +628,7 @@ The implementation would provide a comprehensive theming system with:
 
 ## Final Implementation Summary
 
-**🎉 COMPLETE THEME SYSTEM DELIVERED**
+### 🎉 COMPLETE THEME SYSTEM DELIVERED
 
 **Core Features Implemented:**
 
