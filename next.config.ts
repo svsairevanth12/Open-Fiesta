@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Needed for Docker multi-stage build that runs `server.js` from `.next/standalone`
+  output: 'standalone',
 };
 
 export default nextConfig;

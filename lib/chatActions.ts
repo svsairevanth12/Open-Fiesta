@@ -1,5 +1,6 @@
 import { callGemini, callOpenRouter, streamOpenRouter } from './client';
 import type { AiModel, ApiKeys, ChatMessage, ChatThread } from './types';
+import { toast } from "react-toastify";
 
 export type ChatDeps = {
   selectedModels: AiModel[];
@@ -42,7 +43,16 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
   async function send(text: string, imageDataUrl?: string) {
     const prompt = text.trim();
     if (!prompt) return;
-    if (selectedModels.length === 0) return alert('Select at least one model.');
+
+  if (selectedModels.length === 0) { 
+  toast.warn("Select at least one model.", {
+    style: {
+    background: "#ff4d4f",
+    color: "#fff",
+          },
+         }); 
+     }
+    
     const userMsg: ChatMessage = { role: 'user', content: prompt, ts: Date.now() };
     const thread = ensureThread();
     const nextHistory = [...(thread.messages ?? []), userMsg];
@@ -82,7 +92,8 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           }
         } else {
           const placeholderTs = Date.now();
-          const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
+          const initialText = 'Typing…';
+          const placeholder: ChatMessage = { role: 'assistant', content: initialText, modelId: m.id, ts: placeholderTs };
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
           let buffer = '';
@@ -93,7 +104,12 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             const chunk = buffer; buffer = '';
             setThreads(prev => prev.map(t => {
               if (t.id !== thread.id) return t;
-              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: (msg.content || '') + chunk } : msg);
+              const msgs = (t.messages ?? []).map(msg => {
+                if (!(msg.ts === placeholderTs && msg.modelId === m.id)) return msg;
+                const cur = msg.content || '';
+                const next = cur === initialText ? chunk : cur + chunk;
+                return { ...msg, content: next };
+              });
               return { ...t, messages: msgs };
             }));
           };
@@ -235,7 +251,12 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             const chunk = buffer; buffer = '';
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
-              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: (msg.content || '') + chunk } : msg);
+              const msgs = (tt.messages ?? []).map(msg => {
+                if (!(msg.ts === placeholderTs && msg.modelId === m.id)) return msg;
+                const cur = msg.content || '';
+                const next = cur === 'Typing…' ? chunk : cur + chunk;
+                return { ...msg, content: next };
+              });
               return { ...tt, messages: msgs };
             }));
           };

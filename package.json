@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:build": "docker build -t ai_fiesta .",
+    "docker:run": "docker run -p 3000:3000 ai_fiesta",
+    "docker:dev": "docker-compose up ai_fiesta_dev",
+    "docker:prod": "docker-compose up ai_fiesta"
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
@@ -20,6 +24,7 @@
     "pdf-parse": "^1.1.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
