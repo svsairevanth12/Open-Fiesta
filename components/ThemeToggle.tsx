@@ -304,6 +304,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
     <div className="relative">
       <button
         aria-label="Open Theme Settings"
+        title="Theme Settings"
         onClick={handleOpen}
         className={`inline-flex items-center ${
           compact ? "justify-center h-9 w-9 gap-0" : "gap-2 px-3 py-2"

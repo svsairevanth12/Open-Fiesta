@@ -210,7 +210,7 @@ export function AiInput({
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <div className="relative rounded-xl bg-black/45 dark:bg-white/10 border border-white/10 backdrop-blur-sm">
+                  <div className="relative rounded-xl bg-black/80 dark:bg-white/15 border border-white/10 backdrop-blur-sm">
                     <Textarea
                       id="ai-input-04"
                       value={value}
@@ -241,7 +241,7 @@ export function AiInput({
                     id="ai-input-04"
                     value={value}
                     placeholder=""
-                    className="w-full rounded-2xl rounded-b-none px-4 py-3 bg-black/45 dark:bg-white/10 border-none text-white resize-none focus-visible:ring-0 leading-[1.2]"
+                    className="w-full rounded-2xl rounded-b-none px-4 py-3 bg-black/90 dark:bg-white/15 border-none text-white resize-none focus-visible:ring-0 leading-[1.2]"
                     ref={textareaRef}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
@@ -294,9 +294,13 @@ export function AiInput({
           </div>
 
           {/* Fixed toolbar anchored to bottom; textarea grows upward above it */}
-          <div className="absolute inset-x-0 bottom-0 h-12 rounded-b-2xl bg-black/40 backdrop-blur-sm flex items-center justify-between px-3">
+          <div
+            className="absolute inset-x-0 bottom-0 h-12 rounded-b-2xl backdrop-blur-sm flex items-center justify-between px-3"
+            style={{ backgroundColor: "rgba(14, 13, 13, 0.52)" }}
+          >
             <div className="flex items-center gap-2">
               <label
+                title="Attach file"
                 className={cn(
                   "cursor-pointer relative rounded-full p-1.5 bg-black/30 dark:bg-white/10",
                   attachedFile
@@ -385,6 +389,7 @@ export function AiInput({
             <div>
               <button
                 type="button"
+                title={loading ? "Sending..." : "Send message"}
                 onClick={handleSubmit}
                 className={cn(
                   "rounded-full p-1.5 transition-colors",
