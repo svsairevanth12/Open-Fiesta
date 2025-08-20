@@ -184,7 +184,7 @@ export default function ChatGrid({
                         title={isCollapsed ? 'Click to expand' : undefined}
                       >
                         {/* decorative overlay removed for cleaner look */}
-                        {ans && (
+                        {ans && String(ans.content || '').length > 0 && (
                           <button
                             onClick={() => {
                               copyToClipboard(ans.content);
@@ -203,7 +203,7 @@ export default function ChatGrid({
                           </button>
                         )}
                         <div className={`text-sm leading-relaxed w-full pr-8 ${isCollapsed ? 'overflow-hidden max-h-20 opacity-70' : 'space-y-2'}`}>
-                          {ans ? (
+                          {(ans && String(ans.content || '').length > 0) ? (
                             <>
                               <div className="max-w-[72ch]">
                                 <MarkdownLite text={ans.content} />

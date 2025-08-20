@@ -4,8 +4,8 @@ import HeaderBar from "@/components/HeaderBar";
 import SelectedModelsBar from "@/components/SelectedModelsBar";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { mergeModels, useCustomModels } from "@/lib/customModels";
-import { AiModel, ChatMessage, ApiKeys, ChatThread } from "@/lib/types";
-import { callGemini, streamOpenRouter } from "@/lib/client";
+import { ChatMessage, ApiKeys, ChatThread } from "@/lib/types";
+import { createChatActions } from "@/lib/chatActions";
 import ModelsModal from "@/components/ModelsModal";
 import FirstVisitNote from "@/components/FirstVisitNote";
 import FixedInputBar from "@/components/FixedInputBar";
@@ -82,119 +82,19 @@ export default function Home() {
     });
   };
 
-  function ensureThread() {
-    if (activeThread) return activeThread;
-    const t: ChatThread = { id: crypto.randomUUID(), title: "New Chat", messages: [], createdAt: Date.now() };
-    setThreads(prev => [t, ...prev]);
-    setActiveId(t.id);
-    return t;
-  }
+  
 
-  async function send(text: string, imageDataUrl?: string) {
-    const prompt = text.trim();
-    if (!prompt) return;
-    if (selectedModels.length === 0) return alert("Select at least one model.");
-    const userMsg: ChatMessage = { role: "user", content: prompt, ts: Date.now() };
-    const thread = ensureThread();
-    const nextHistory = [...(thread.messages ?? []), userMsg];
-    // set thread messages and optional title
-    setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, title: thread.title === "New Chat" ? prompt.slice(0, 40) : t.title, messages: nextHistory } : t));
-    // input reset handled within AiInput component
-
-    // fire all selected models in parallel
-    setLoadingIds(selectedModels.map(m => m.id));
-    await Promise.allSettled(selectedModels.map(async (m: AiModel) => {
-      try {
-        let res: unknown;
-        if (m.provider === "gemini") {
-          // If user hasn't set a key, rely on server env fallback
-          res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: nextHistory, imageDataUrl });
-        } else {
-          // Streaming OpenRouter for smooth typing
-          const placeholderTs = Date.now();
-          // Insert a placeholder assistant message to update progressively
-          const placeholder: ChatMessage = { role: "assistant", content: "", modelId: m.id, ts: placeholderTs };
-          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
-
-          let buffer = "";
-          let flushTimer: number | null = null;
-          const flush = () => {
-            if (!buffer) return;
-            const chunk = buffer;
-            buffer = "";
-            setThreads(prev => prev.map(t => {
-              if (t.id !== thread.id) return t;
-              const msgs = (t.messages ?? []).map(msg => {
-                if (msg.ts === placeholderTs && msg.modelId === m.id && msg.role === 'assistant') {
-                  return { ...msg, content: (msg.content || "") + chunk };
-                }
-                return msg;
-              });
-              return { ...t, messages: msgs };
-            }));
-          };
-
-          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory }, {
-            onToken: (delta) => {
-              buffer += delta;
-              // micro-batch every ~24ms for smoothness
-              if (flushTimer == null) {
-                flushTimer = window.setTimeout(() => { flushTimer = null; flush(); }, 24);
-              }
-            },
-            onMeta: (meta) => {
-              // attach provider meta once
-              setThreads(prev => prev.map(t => {
-                if (t.id !== thread.id) return t;
-                const msgs = (t.messages ?? []).map(msg => {
-                  if (msg.ts === placeholderTs && msg.modelId === m.id && msg.role === 'assistant') {
-                    return { ...msg, provider: meta.provider, usedKeyType: meta.usedKeyType } as ChatMessage;
-                  }
-                  return msg;
-                });
-                return { ...t, messages: msgs };
-              }));
-            },
-            onError: (err) => {
-              // finalize with error text and meta
-              if (flushTimer != null) { window.clearTimeout(flushTimer); flushTimer = null; }
-              const text = err.error || 'Error';
-              setThreads(prev => prev.map(t => {
-                if (t.id !== thread.id) return t;
-                const msgs = (t.messages ?? []).map(msg => {
-                  if (msg.ts === placeholderTs && msg.modelId === m.id && msg.role === 'assistant') {
-                    return { ...msg, content: text, code: err.code, provider: err.provider, usedKeyType: err.usedKeyType } as ChatMessage;
-                  }
-                  return msg;
-                });
-                return { ...t, messages: msgs };
-              }));
-            },
-            onDone: () => {
-              if (flushTimer != null) { window.clearTimeout(flushTimer); flushTimer = null; }
-              flush();
-            }
-          });
-          return; // skip the non-stream flow below
-        }
-        // Non-stream (Gemini) path
-        const text = (() => {
-          const r = res as { text?: unknown; error?: unknown } | null | undefined;
-          const t = r && typeof r === 'object' ? (typeof r.text === 'string' ? r.text : undefined) : undefined;
-          const e = r && typeof r === 'object' ? (typeof r.error === 'string' ? r.error : undefined) : undefined;
-          return t || e || "No response";
-        })();
-        const asst: ChatMessage = { role: "assistant", content: String(text).trim(), modelId: m.id, ts: Date.now() };
-        setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        const asst: ChatMessage = { role: "assistant", content: `[${m.label}] Error: ${msg}`.trim(), modelId: m.id, ts: Date.now() };
-        setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), asst] } : t));
-      } finally {
-        setLoadingIds(prev => prev.filter(x => x !== m.id));
-      }
-    }));
-  }
+  // Chat actions (send and onEditUser) moved to lib/chatActions.ts to avoid state races
+  const { send, onEditUser } = useMemo(() => createChatActions({
+    selectedModels,
+    keys,
+    threads,
+    activeThread,
+    setThreads,
+    setActiveId,
+    setLoadingIds: (updater) => setLoadingIds(updater),
+    setLoadingIdsInit: (ids) => setLoadingIds(ids),
+  }), [selectedModels, keys, threads, activeThread, setThreads, setActiveId]);
 
   // group assistant messages by turn for simple compare view
   const pairs = useMemo(() => {
@@ -210,26 +110,6 @@ export default function Home() {
     }
     return rows;
   }, [messages]);
-
-  const onEditUser = (turnIndex: number, newText: string) => {
-    if (!activeThread) return;
-    setThreads(prev => prev.map(t => {
-      if (t.id !== activeThread.id) return t;
-      let userIdx = -1;
-      const updated = (t.messages ?? []).map(m => {
-        if (m.role === 'user') userIdx += 1;
-        if (m.role === 'user' && userIdx === turnIndex) {
-          return { ...m, content: newText };
-        }
-        return m;
-      });
-      // If title was the default deriving from first user message, refresh it
-      const title = t.title === 'New Chat' || t.title === (messages[0]?.content?.slice?.(0,40) ?? t.title)
-        ? (updated.find(mm => mm.role === 'user')?.content ?? 'New Chat').slice(0,40)
-        : t.title;
-      return { ...t, messages: updated, title };
-    }));
-  };
 
   return (
     <div className="min-h-screen w-full bg-black relative text-white">
