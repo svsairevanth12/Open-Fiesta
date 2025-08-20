@@ -91,69 +91,69 @@ export const ACCENT_COLORS: Record<AccentColor, AccentDefinition> = {
   crimson: {
     id: "crimson",
     name: "Crimson",
-    description: "Bold and energetic red",
+    description: "Muted deep red",
     primary: "#9d1c2b",
     secondary: "#821624",
     tertiary: "#66111b",
     background: {
-      primary: "rgba(157, 28, 43, 0.10)",
+      primary: "rgba(157, 28, 43, 0.12)",
       secondary: "rgba(157, 28, 43, 0.045)",
     },
     gradient: {
       light:
-        "linear-gradient(135deg, #e9c4c8 0%, #c95b67 22%, #a83443 48%, #821624 74%, #5a0f18 100%)",
-      dark: "linear-gradient(0deg, rgba(0,0,0,0.68), rgba(0,0,0,0.68)), radial-gradient(68% 58% at 50% 50%, #821624 0%, #66111b 20%, #4a0d14 38%, #320a0f 54%, #21080b 70%, #140507 86%, #090304 100%)",
+        "linear-gradient(135deg, #d7b4b8 0%, #b94c58 22%, #8f2f3d 48%, #66111b 76%, #3c0b12 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7)), radial-gradient(68% 58% at 50% 50%, #821624 0%, #66111b 22%, #4a0d14 42%, #320a0f 58%, #21080b 72%, #140507 86%, #090304 100%)",
     },
   },
   emerald: {
     id: "emerald",
     name: "Emerald",
-    description: "Fresh and natural green",
+    description: "Muted deep green",
     primary: "#0b7f5a",
     secondary: "#086247",
     tertiary: "#044432",
     background: {
-      primary: "rgba(11, 127, 90, 0.10)",
+      primary: "rgba(11, 127, 90, 0.115)",
       secondary: "rgba(11, 127, 90, 0.045)",
     },
     gradient: {
       light:
-        "linear-gradient(135deg, #bfe9dc 0%, #47b993 22%, #1f8c67 48%, #086247 74%, #04402d 100%)",
-      dark: "linear-gradient(0deg, rgba(0,0,0,0.68), rgba(0,0,0,0.68)), radial-gradient(68% 58% at 50% 50%, #086247 0%, #044432 20%, #03352a 38%, #02261f 54%, #021a16 70%, #01110e 86%, #010807 100%)",
+        "linear-gradient(135deg, #b1d8cd 0%, #3d9f80 22%, #1c7557 48%, #054f38 76%, #033226 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7)), radial-gradient(68% 58% at 50% 50%, #086247 0%, #044432 22%, #03352a 40%, #02261f 56%, #021a16 72%, #01110e 86%, #010807 100%)",
     },
   },
   blue: {
     id: "blue",
     name: "Ocean Blue",
-    description: "Calm and professional blue",
+    description: "Muted deep blue",
     primary: "#2a62ba",
     secondary: "#1e4c91",
     tertiary: "#16386c",
     background: {
-      primary: "rgba(42, 98, 186, 0.11)",
+      primary: "rgba(42, 98, 186, 0.12)",
       secondary: "rgba(42, 98, 186, 0.045)",
     },
     gradient: {
       light:
-        "linear-gradient(135deg, #c6dcf4 0%, #6e9edb 22%, #3d72b8 48%, #1e4c91 74%, #12315e 100%)",
-      dark: "linear-gradient(0deg, rgba(0,0,0,0.68), rgba(0,0,0,0.68)), radial-gradient(68% 58% at 50% 50%, #1e4c91 0%, #16386c 20%, #122c53 38%, #0e203c 54%, #0a1629 70%, #071020 86%, #040910 100%)",
+        "linear-gradient(135deg, #b9cbe0 0%, #5d88c4 22%, #315d94 48%, #1b426e 76%, #112843 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7)), radial-gradient(68% 58% at 50% 50%, #1e4c91 0%, #16386c 22%, #122c53 40%, #0e203c 56%, #0a1629 72%, #071020 86%, #040910 100%)",
     },
   },
   purple: {
     id: "purple",
     name: "Royal Purple",
-    description: "Creative and sophisticated purple",
+    description: "Muted deep purple",
     primary: "#663fba",
     secondary: "#522f99",
     tertiary: "#3f2376",
     background: {
-      primary: "rgba(102, 63, 186, 0.11)",
+      primary: "rgba(102, 63, 186, 0.125)",
       secondary: "rgba(102, 63, 186, 0.045)",
     },
     gradient: {
       light:
-        "linear-gradient(135deg, #dacff4 0%, #a484e3 22%, #744fbe 48%, #522f99 74%, #351d64 100%)",
-      dark: "linear-gradient(0deg, rgba(0,0,0,0.68), rgba(0,0,0,0.68)), radial-gradient(68% 58% at 50% 50%, #522f99 0%, #3f2376 20%, #2f1a59 38%, #21113f 54%, #170b2c 70%, #10081f 86%, #090411 100%)",
+        "linear-gradient(135deg, #cfc4e4 0%, #8e6ac8 22%, #5d3b97 48%, #42296d 76%, #2a1846 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7)), radial-gradient(68% 58% at 50% 50%, #522f99 0%, #3f2376 22%, #2f1a59 40%, #21113f 56%, #170b2c 72%, #10081f 86%, #090411 100%)",
     },
   },
 };
