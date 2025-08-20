@@ -178,8 +178,10 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
       <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto backdrop-blur-sm">
         <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5 flex flex-col backdrop-blur-sm">
           <div
-            className="overflow-y-auto"
-            style={{ maxHeight: `${MAX_HEIGHT}px` }}
+            className="overflow-y-auto ai-grow-area"
+            style={
+              { "--ai-input-max": `${MAX_HEIGHT}px` } as React.CSSProperties
+            }
           >
             {imagePreview ? (
               <div className="grid grid-cols-[96px_1fr] gap-3 p-3 pr-4">
@@ -310,15 +312,16 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
               </label>
               <button
                 type="button"
-                onClick={() => {
-                  setShowSearch(!showSearch);
-                }}
+                onClick={() => setShowSearch(!showSearch)}
                 className={cn(
-                  "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 border h-8",
-                  showSearch
-                    ? "bg-[var(--accent-interactive-primary)]/15 border-[var(--accent-interactive-primary)] text-[var(--accent-interactive-primary)]"
-                    : "bg-black/30 dark:bg-white/10 border-transparent text-white/80 hover:text-white"
+                  "rounded-full transition-all flex items-center gap-2 px-2 py-1.5 h-8 search-toggle"
                 )}
+                data-active={showSearch}
+                aria-pressed={showSearch ? "true" : "false"}
+                aria-label={
+                  showSearch ? "Disable web search" : "Enable web search"
+                }
+                title={showSearch ? "Disable web search" : "Enable web search"}
               >
                 <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
                   <motion.div
@@ -345,8 +348,8 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                       className={cn(
                         "w-4 h-4",
                         showSearch
-                          ? "text-[var(--accent-interactive-primary)]"
-                          : "text-inherit"
+                          ? "text-white"
+                          : "text-black/60 dark:text-white/50"
                       )}
                     />
                   </motion.div>
@@ -361,7 +364,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                       }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="text-sm overflow-hidden whitespace-nowrap text-[var(--accent-interactive-primary)] flex-shrink-0"
+                      className="text-sm overflow-hidden whitespace-nowrap search-toggle-label flex-shrink-0"
                     >
                       Search
                     </motion.span>
@@ -382,7 +385,7 @@ export function AiInput({ onSubmit, loading = false }: { onSubmit: (text: string
                     : "bg-black/30 dark:bg-white/10 text-white/85 hover:text-white"
                 )}
                 disabled={loading}
-                aria-busy={loading}
+                aria-busy={loading ? "true" : "false"}
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

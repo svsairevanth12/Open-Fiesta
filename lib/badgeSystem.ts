@@ -22,6 +22,23 @@ export interface BadgePairDefinition {
 
 // Badge Pair Definitions
 export const BADGE_PAIRS: Record<BadgePair, BadgePairDefinition> = {
+  "white-white": {
+    id: "white-white",
+    name: "White & White",
+    description: "Monochrome minimal pairing - neutral presentation",
+    pro: {
+      background: "rgba(255,255,255,0.28)",
+      text: "#111111",
+      border: "rgba(255,255,255,0.7)",
+      glow: "rgba(255,255,255,0.5)",
+    },
+    free: {
+      background: "rgba(255,255,255,0.22)",
+      text: "#161616",
+      border: "rgba(255,255,255,0.55)",
+      glow: "rgba(255,255,255,0.4)",
+    },
+  },
   "red-gold": {
     id: "red-gold",
     name: "Red & Gold",

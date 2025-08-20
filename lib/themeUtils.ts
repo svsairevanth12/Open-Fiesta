@@ -34,6 +34,7 @@ export const applyThemeClasses = (
     "accent-emerald",
     "accent-blue",
     "accent-purple",
+    "accent-black",
     "font-geist",
     "font-inter",
     "font-mono",
@@ -254,6 +255,7 @@ export const getContrastColor = (
     emerald: "#ffffff",
     blue: "#ffffff",
     purple: "#ffffff",
+    black: "#ffffff",
   };
 
   const darkColors: Record<AccentColor, string> = {
@@ -261,6 +263,7 @@ export const getContrastColor = (
     emerald: "#000000",
     blue: "#000000",
     purple: "#000000",
+    black: "#ffffff", // inverted for readability on very dark surfaces
   };
 
   return mode === "dark" ? lightColors[accent] : darkColors[accent];

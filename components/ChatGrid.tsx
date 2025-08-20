@@ -138,10 +138,10 @@ export default function ChatGrid({
           {pairs.map((row, i) => (
             <div key={i} className="space-y-3">
               {/* Prompt callout */}
-              <div className="relative flex items-start justify-between gap-3 px-3 py-2 rounded-lg ring-1 ring-rose-300/20 bg-gradient-to-r from-rose-500/10 to-transparent">
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-md bg-gradient-to-b from-rose-400/60 to-rose-500/40" />
+              <div className="relative flex items-start justify-between gap-3 px-3 py-2 rounded-lg ring-1 ring-white/10 chat-prompt-accent">
+                <div className="chat-prompt-side" />
                 <div className="flex items-start gap-2 min-w-0 flex-1">
-                  <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-medium bg-rose-500/20 text-rose-100 ring-1 ring-rose-300/30 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+                  <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-medium bg-[var(--accent-primary)]/25 text-white ring-1 ring-white/15 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.05)]">
                     You
                   </span>
                   <div className="min-w-0 flex-1">

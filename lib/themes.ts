@@ -5,7 +5,7 @@
 
 // Theme Mode Types
 export type ThemeMode = "light" | "dark";
-export type AccentColor = "crimson" | "emerald" | "blue" | "purple";
+export type AccentColor = "crimson" | "emerald" | "blue" | "purple" | "black";
 export type FontFamily = "geist" | "inter" | "mono" | "poppins";
 export type BackgroundStyle = "gradient" | "minimal";
 
@@ -14,7 +14,8 @@ export type BadgePair =
   | "red-gold"
   | "purple-blue"
   | "orange-yellow"
-  | "gold-green"; // new default owner theme
+  | "gold-green"
+  | "white-white"; // new black/white minimal pair
 export type BadgeType = "pro" | "free";
 
 // New: Accent System Types
@@ -68,72 +69,89 @@ export interface BackgroundDefinition {
 
 // Accent Color Configurations
 export const ACCENT_COLORS: Record<AccentColor, AccentDefinition> = {
+  black: {
+    id: "black",
+    name: "Black",
+    description: "Neutral black & charcoal",
+    primary: "#000000",
+    secondary: "#141414",
+    tertiary: "#1f1f1f",
+    background: {
+      primary: "rgba(255,255,255,0.08)",
+      secondary: "rgba(255,255,255,0.04)",
+    },
+    gradient: {
+      light:
+        "linear-gradient(135deg, #ffffff 0%, #ececec 12%, #cfcfcf 24%, #9f9f9f 40%, #595959 60%, #2e2e2e 78%, #141414 90%, #000000 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.72), rgba(0,0,0,0.72)), radial-gradient(68% 58% at 50% 50%, #222222 0%, #1a1a1a 22%, #141414 44%, #0f0f0f 66%, #090909 82%, #050505 100%)",
+    },
+  },
   crimson: {
     id: "crimson",
     name: "Crimson",
     description: "Bold and energetic red",
-    primary: "#e42a42",
-    secondary: "#cf243a",
-    tertiary: "#b91c3c",
+    primary: "#9d1c2b",
+    secondary: "#821624",
+    tertiary: "#66111b",
     background: {
-      primary: "rgba(228, 42, 66, 0.15)",
-      secondary: "rgba(228, 42, 66, 0.06)",
+      primary: "rgba(157, 28, 43, 0.10)",
+      secondary: "rgba(157, 28, 43, 0.045)",
     },
     gradient: {
       light:
-        "linear-gradient(135deg, #fecaca 0%, #f87171 25%, #ef4444 50%, #dc2626 75%, #b91c1c 100%)",
-      dark: "linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #c81e3a 0%, #a51d35 16%, #7d1a2f 32%, #591828 46%, #3c1722 60%, #2a151d 72%, #1f1317 84%, #141013 94%, #0a0a0a 100%)",
+        "linear-gradient(135deg, #e9c4c8 0%, #c95b67 22%, #a83443 48%, #821624 74%, #5a0f18 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.68), rgba(0,0,0,0.68)), radial-gradient(68% 58% at 50% 50%, #821624 0%, #66111b 20%, #4a0d14 38%, #320a0f 54%, #21080b 70%, #140507 86%, #090304 100%)",
     },
   },
   emerald: {
     id: "emerald",
     name: "Emerald",
     description: "Fresh and natural green",
-    primary: "#10b981",
-    secondary: "#059669",
-    tertiary: "#047857",
+    primary: "#0b7f5a",
+    secondary: "#086247",
+    tertiary: "#044432",
     background: {
-      primary: "rgba(16, 185, 129, 0.15)",
-      secondary: "rgba(16, 185, 129, 0.06)",
+      primary: "rgba(11, 127, 90, 0.10)",
+      secondary: "rgba(11, 127, 90, 0.045)",
     },
     gradient: {
       light:
-        "linear-gradient(135deg, #d1fae5 0%, #6ee7b7 25%, #34d399 50%, #10b981 75%, #059669 100%)",
-      dark: "linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #10b981 0%, #059669 16%, #047857 32%, #065f46 46%, #064e3b 60%, #052e16 72%, #0a0e0a 84%, #0f0f0f 94%, #0a0a0a 100%)",
+        "linear-gradient(135deg, #bfe9dc 0%, #47b993 22%, #1f8c67 48%, #086247 74%, #04402d 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.68), rgba(0,0,0,0.68)), radial-gradient(68% 58% at 50% 50%, #086247 0%, #044432 20%, #03352a 38%, #02261f 54%, #021a16 70%, #01110e 86%, #010807 100%)",
     },
   },
   blue: {
     id: "blue",
     name: "Ocean Blue",
     description: "Calm and professional blue",
-    primary: "#3b82f6",
-    secondary: "#2563eb",
-    tertiary: "#1d4ed8",
+    primary: "#2a62ba",
+    secondary: "#1e4c91",
+    tertiary: "#16386c",
     background: {
-      primary: "rgba(59, 130, 246, 0.15)",
-      secondary: "rgba(59, 130, 246, 0.06)",
+      primary: "rgba(42, 98, 186, 0.11)",
+      secondary: "rgba(42, 98, 186, 0.045)",
     },
     gradient: {
       light:
-        "linear-gradient(135deg, #dbeafe 0%, #93c5fd 25%, #60a5fa 50%, #3b82f6 75%, #2563eb 100%)",
-      dark: "linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #3b82f6 0%, #2563eb 16%, #1d4ed8 32%, #1e40af 46%, #1e3a8a 60%, #1e3a8a 72%, #0f1629 84%, #0f1419 94%, #0a0a0a 100%)",
+        "linear-gradient(135deg, #c6dcf4 0%, #6e9edb 22%, #3d72b8 48%, #1e4c91 74%, #12315e 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.68), rgba(0,0,0,0.68)), radial-gradient(68% 58% at 50% 50%, #1e4c91 0%, #16386c 20%, #122c53 38%, #0e203c 54%, #0a1629 70%, #071020 86%, #040910 100%)",
     },
   },
   purple: {
     id: "purple",
     name: "Royal Purple",
     description: "Creative and sophisticated purple",
-    primary: "#8b5cf6",
-    secondary: "#7c3aed",
-    tertiary: "#6d28d9",
+    primary: "#663fba",
+    secondary: "#522f99",
+    tertiary: "#3f2376",
     background: {
-      primary: "rgba(139, 92, 246, 0.15)",
-      secondary: "rgba(139, 92, 246, 0.06)",
+      primary: "rgba(102, 63, 186, 0.11)",
+      secondary: "rgba(102, 63, 186, 0.045)",
     },
     gradient: {
       light:
-        "linear-gradient(135deg, #ede9fe 0%, #c4b5fd 25%, #a78bfa 50%, #8b5cf6 75%, #7c3aed 100%)",
-      dark: "linear-gradient(0deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), radial-gradient(68% 58% at 50% 50%, #8b5cf6 0%, #7c3aed 16%, #6d28d9 32%, #5b21b6 46%, #4c1d95 60%, #3730a3 72%, #1e1b4b 84%, #0f0f23 94%, #0a0a0a 100%)",
+        "linear-gradient(135deg, #dacff4 0%, #a484e3 22%, #744fbe 48%, #522f99 74%, #351d64 100%)",
+      dark: "linear-gradient(0deg, rgba(0,0,0,0.68), rgba(0,0,0,0.68)), radial-gradient(68% 58% at 50% 50%, #522f99 0%, #3f2376 20%, #2f1a59 38%, #21113f 54%, #170b2c 70%, #10081f 86%, #090411 100%)",
     },
   },
 };
@@ -309,6 +327,23 @@ export interface BadgeDefinition {
 }
 
 export const BADGE_PAIRS: Record<BadgePair, BadgeDefinition> = {
+  "white-white": {
+    id: "white-white",
+    name: "White & White",
+    description: "Monochrome minimal badges",
+    pro: {
+      background:
+        "linear-gradient(135deg, #ffffff 0%, #f5f5f5 60%, #eaeaea 100%)",
+      text: "#111111",
+      border: "rgba(255,255,255,0.65)",
+    },
+    free: {
+      background:
+        "linear-gradient(135deg, #fcfcfc 0%, #f2f2f2 65%, #e6e6e6 100%)",
+      text: "#161616",
+      border: "rgba(255,255,255,0.5)",
+    },
+  },
   "red-gold": {
     id: "red-gold",
     name: "Red & Gold",

@@ -117,8 +117,10 @@ export default function AiInput() {
       <div className="relative max-w-xl border rounded-[22px] border-black/5 p-1 w-full mx-auto">
         <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5 flex flex-col">
           <div
-            className="overflow-y-auto"
-            style={{ maxHeight: `${MAX_HEIGHT}px` }}
+            className="overflow-y-auto ai-grow-area"
+            style={
+              { "--ai-input-max": `${MAX_HEIGHT}px` } as React.CSSProperties
+            }
           >
             <div className="relative">
               <Textarea
@@ -186,14 +188,16 @@ export default function AiInput() {
               </label>
               <button
                 type="button"
-                onClick={() => {
-                  setShowSearch(!showSearch);
-                }}
+                onClick={() => setShowSearch(!showSearch)}
                 className={cn(
-                  "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 h-8 accent-focus",
-                  showSearch ? "accent-chip-active" : "accent-chip"
+                  "rounded-full transition-all flex items-center gap-2 px-2 py-1.5 h-8 search-toggle",
+                  showSearch && "data-[active=true]:shadow"
                 )}
-                aria-label={showSearch ? "Disable web search" : "Enable web search"}
+                data-active={showSearch}
+                aria-pressed={showSearch ? true : false}
+                aria-label={
+                  showSearch ? "Disable web search" : "Enable web search"
+                }
                 title={showSearch ? "Disable web search" : "Enable web search"}
               >
                 <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
@@ -221,8 +225,8 @@ export default function AiInput() {
                       className={cn(
                         "w-4 h-4",
                         showSearch
-                          ? "text-[var(--accent-interactive-primary)]"
-                          : "text-inherit"
+                          ? "text-white"
+                          : "text-black/60 dark:text-white/50"
                       )}
                     />
                   </motion.div>
@@ -237,7 +241,7 @@ export default function AiInput() {
                       }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="text-sm overflow-hidden whitespace-nowrap text-[var(--accent-interactive-primary)] flex-shrink-0"
+                      className="text-sm overflow-hidden whitespace-nowrap search-toggle-label flex-shrink-0"
                     >
                       Search
                     </motion.span>
@@ -249,6 +253,7 @@ export default function AiInput() {
               <button
                 type="button"
                 onClick={handleSubmit}
+                aria-label="Send message"
                 className={cn(
                   "rounded-full p-2 transition-colors",
                   value

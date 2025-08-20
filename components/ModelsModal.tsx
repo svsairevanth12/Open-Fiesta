@@ -1,5 +1,5 @@
 "use client";
-import { X, Layers, Eye, EyeOff, Star } from "lucide-react";
+import { X, Star } from "lucide-react";
 import type { AiModel } from "@/lib/types";
 import { MODEL_CATALOG } from "@/lib/models";
 
@@ -84,25 +84,24 @@ export default function ModelsModal({
             <button
               key={m.id}
               onClick={() => !disabled && onToggle(m.id)}
-              className={`h-11 sm:h-9 md:h-10 px-4 sm:px-3 md:px-4 text-sm sm:text-xs md:text-sm rounded-full border transition-colors flex items-center justify-between gap-3 w-full sm:w-auto min-w-[0] sm:min-w-[280px] md:min-w-[320px] ${
+              className={`model-chip flex items-center justify-between gap-3 w-full sm:w-auto min-w-[0] sm:min-w-[280px] md:min-w-[320px] h-11 sm:h-9 md:h-10 px-4 sm:px-3 md:px-4 text-sm sm:text-xs md:text-sm ${
+                disabled ? "opacity-60 cursor-not-allowed text-zinc-500" : ""
+              } ${
                 selected
-                  ? `${
-                      m.good
-                        ? "border-amber-300/50"
-                        : free
-                        ? "border-emerald-300/50"
-                        : "border-white/20"
-                    } bg-white/10`
-                  : disabled
-                  ? "bg-white/5 text-zinc-500 border-white/10 cursor-not-allowed opacity-60"
-                  : `${
-                      m.good
-                        ? "border-amber-300/30"
-                        : free
-                        ? "border-emerald-300/30"
-                        : "border-white/10"
-                    } bg-white/5 hover:bg-white/10`
+                  ? m.good
+                    ? "model-chip-pro"
+                    : free
+                    ? "model-chip-free"
+                    : "border-white/20 bg-white/10"
+                  : m.good
+                  ? "model-chip-pro"
+                  : free
+                  ? "model-chip-free"
+                  : "border-white/10 bg-white/5 hover:bg-white/10"
               }`}
+              data-selected={selected || undefined}
+              data-type={m.good ? "pro" : free ? "free" : unc ? "unc" : "other"}
+              {...(disabled ? { "aria-disabled": "true" } : {})}
               title={
                 selected
                   ? "Click to unselect"
@@ -113,27 +112,13 @@ export default function ModelsModal({
             >
               <span className="pr-1 inline-flex items-center gap-1.5 min-w-0">
                 {showBadges && m.good && (
-                  <span
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1"
-                    style={{
-                      background: "var(--badge-pro-background)",
-                      color: "var(--badge-pro-text)",
-                      borderColor: "var(--badge-pro-border)",
-                    }}
-                  >
+                  <span className="badge-base badge-pro inline-flex items-center gap-1 px-1.5 py-0.5">
                     <Star size={12} className="shrink-0" />
                     <span className="hidden sm:inline">Pro</span>
                   </span>
                 )}
                 {showBadges && free && (
-                  <span
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1"
-                    style={{
-                      background: "var(--badge-free-background)",
-                      color: "var(--badge-free-text)",
-                      borderColor: "var(--badge-free-border)",
-                    }}
-                  >
+                  <span className="badge-base badge-free inline-flex items-center gap-1 px-1.5 py-0.5">
                     <span className="h-2 w-2 rounded-full bg-current opacity-80" />
                     <span className="hidden sm:inline">Free</span>
                   </span>
@@ -149,17 +134,11 @@ export default function ModelsModal({
                 </span>
               </span>
               <span
-                className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${
-                  selected ? "bg-orange-500/40" : "bg-white/10"
-                }`}
+                className="model-toggle-pill"
+                data-type={m.good ? "pro" : free ? "free" : "other"}
+                data-active={selected || undefined}
               >
-                <span
-                  className={`h-3 w-3 rounded-full transition-transform ${
-                    selected
-                      ? "bg-orange-200 translate-x-3.5"
-                      : "bg-white translate-x-0.5"
-                  }`}
-                />
+                <span className="model-toggle-thumb" />
               </span>
             </button>
           );

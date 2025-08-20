@@ -11,10 +11,7 @@ export default function SelectedModelsBar({ selectedModels, onToggle }: Props) {
   return (
     <div className="mb-3 flex items-start gap-3 min-w-0">
       {/* Chips: no wrap, horizontal scroll */}
-      <div
-        className="hidden sm:flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pr-1 pb-2 min-w-0"
-        style={{ scrollbarGutter: "stable both-edges" }}
-      >
+      <div className="hidden sm:flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pr-1 pb-2 min-w-0 scroll-stable-gutter">
         {selectedModels.map((m) => {
           const isFree = /(\(|\s)free\)/i.test(m.label);
           const isUncensored =
@@ -23,37 +20,25 @@ export default function SelectedModelsBar({ selectedModels, onToggle }: Props) {
             <button
               key={m.id}
               onClick={() => onToggle(m.id)}
-              className={`h-9 px-3 text-xs rounded-full text-white border inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 transition-colors shrink-0 ${
+              className={`model-chip text-white ${
                 m.good
-                  ? "border-amber-300/40"
+                  ? "model-chip-pro"
                   : isFree
-                  ? "border-emerald-300/40"
+                  ? "model-chip-free"
                   : "border-white/10"
               }`}
+              data-selected={true}
+              data-type={m.good ? "pro" : isFree ? "free" : "other"}
               title="Click to toggle"
             >
               {m.good && (
-                <span
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1"
-                  style={{
-                    backgroundColor: "var(--badge-pro-background)",
-                    color: "var(--badge-pro-text)",
-                    borderColor: "var(--badge-pro-border)",
-                  }}
-                >
+                <span className="badge-base badge-pro inline-flex items-center gap-1 px-1.5 py-0.5">
                   <Star size={12} className="shrink-0" />
                   <span className="hidden sm:inline">Pro</span>
                 </span>
               )}
               {isFree && (
-                <span
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ring-1"
-                  style={{
-                    backgroundColor: "var(--badge-free-background)",
-                    color: "var(--badge-free-text)",
-                    borderColor: "var(--badge-free-border)",
-                  }}
-                >
+                <span className="badge-base badge-free inline-flex items-center gap-1 px-1.5 py-0.5">
                   <span className="h-2 w-2 rounded-full bg-current opacity-80" />
                   <span className="hidden sm:inline">Free</span>
                 </span>
@@ -65,8 +50,12 @@ export default function SelectedModelsBar({ selectedModels, onToggle }: Props) {
                 </span>
               )}
               <span className="truncate max-w-[180px]">{m.label}</span>
-              <span className="relative inline-flex h-4 w-7 items-center rounded-full bg-orange-500/40">
-                <span className="h-3 w-3 rounded-full bg-orange-200 translate-x-3.5" />
+              <span
+                className="model-toggle-pill"
+                data-type={m.good ? "pro" : "free"}
+                data-active={true}
+              >
+                <span className="model-toggle-thumb" />
               </span>
             </button>
           );

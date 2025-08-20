@@ -43,8 +43,14 @@ const AccentOption = React.memo<{
     >
       <div className="flex items-center gap-3 mb-2">
         <div
-          className="w-6 h-6 rounded-full border border-white/20"
-          style={{ backgroundColor: accent.primary }}
+          className={`w-6 h-6 rounded-full border border-white/20 accent-preview accent-preview-${
+            accent.id
+          }-primary ${
+            isSelected
+              ? "ring-2 ring-[var(--accent-interactive-focus)] ring-offset-1 ring-offset-black/20"
+              : ""
+          }`}
+          aria-hidden="true"
         />
         <div>
           <div className="text-sm font-medium">{accent.name}</div>
@@ -53,16 +59,16 @@ const AccentOption = React.memo<{
       </div>
       <div className="flex gap-1">
         <div
-          className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: accent.primary }}
+          className={`w-3 h-3 accent-preview accent-preview-${accent.id}-primary`}
+          aria-hidden="true"
         />
         <div
-          className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: accent.secondary }}
+          className={`w-3 h-3 accent-preview accent-preview-${accent.id}-secondary`}
+          aria-hidden="true"
         />
         <div
-          className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: accent.tertiary }}
+          className={`w-3 h-3 accent-preview accent-preview-${accent.id}-tertiary`}
+          aria-hidden="true"
         />
       </div>
     </button>
