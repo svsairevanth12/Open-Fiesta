@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -63,9 +63,21 @@ export default function ChatGrid({
   );
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [draft, setDraft] = useState<string>("");
+  const scrollRef=useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+   if (scrollRef.current) {
+     scrollRef.current.scrollTo({
+       top: scrollRef.current.scrollHeight,
+       behavior: "smooth", // change to "auto" if you want instant jump
+     });
+    }
+  }, [pairs])
 
   return (
-    <div className="relative rounded-lg border border-white/5 bg-white/5 px-3 lg:px-4 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28 sm:scroll-stable-gutter">
+    <div
+     ref={scrollRef} 
+     className="relative rounded-lg border border-white/5 bg-white/5 px-3 lg:px-4 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28 sm:scroll-stable-gutter">
       {selectedModels.length === 0 ? (
         <div className="p-4 text-zinc-400">
           Select up to 5 models to compare.
