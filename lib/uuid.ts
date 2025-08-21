@@ -1,15 +1,10 @@
 // Safe UUID generator: uses crypto.randomUUID when available, otherwise falls back to a simple v4 implementation
 export function safeUUID(): string {
-  // Browser crypto.randomUUID
-  if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
-    try { return (crypto as any).randomUUID(); } catch {}
-  }
-  // Node 19+ globalThis.crypto
-  if (typeof globalThis !== 'undefined') {
-    const g: any = globalThis as any;
-    if (g.crypto && typeof g.crypto.randomUUID === 'function') {
-      try { return g.crypto.randomUUID(); } catch {}
-    }
+  // Prefer globalThis.crypto.randomUUID when present (browser or Node >=19)
+  const g = globalThis as unknown as { crypto?: { randomUUID?: () => string } };
+  const rnd = g.crypto?.randomUUID;
+  if (typeof rnd === 'function') {
+    try { return rnd(); } catch { /* ignore and fall through */ }
   }
   // Fallback (not cryptographically strong)
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {

@@ -21,15 +21,19 @@ export default function ModelsModal({
   customModels,
   onToggle,
 }: ModelsModalProps) {
-  if (!open) return null;
-
   // Lock background scroll while modal is open
   useEffect(() => {
-    document.body.classList.add("modal-open");
-    return () => {
+    if (open) {
+      document.body.classList.add("modal-open");
+      return () => {
+        document.body.classList.remove("modal-open");
+      };
+    } else {
       document.body.classList.remove("modal-open");
-    };
-  }, []);
+    }
+  }, [open]);
+
+  if (!open) return null;
 
   const buckets: Record<string, AiModel[]> = {
     Favorites: [],
