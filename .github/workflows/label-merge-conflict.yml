@@ -8,14 +8,14 @@ permissions:
 on: 
  push: 
   branches: [main]
- pull-request: 
+ pull_request: 
    branches: [main]
 
 jobs: 
   auto-Label:
    if: github.repository == 'NiladriHazra/Open-Fiesta'
-   run-on: ubuntu-24.04-arm
-   setps: 
+   runs-on: ubuntu-latest
+   steps: 
     - uses: prince-chrismc/label-merge-conflicts-action@v3
       with: 
         conflict_label_name: "Merge Conflict"
@@ -24,4 +24,5 @@ jobs:
         wait_ms: 15000
         detect_merge_changes: false
         conflict_comment: |
-          Conflict have been detected against base branch. please solve merge connflict before merge into your branch
+          Conflicts have been detected against the base branch. 
+          Please resolve merge conflicts before merging.
