@@ -13,19 +13,9 @@ import ThreadSidebar from "@/components/ThreadSidebar";
 import ChatGrid from "@/components/ChatGrid";
 import { useTheme } from "@/lib/themeContext";
 import { BACKGROUND_STYLES } from "@/lib/themes";
+import { safeUUID } from "@/lib/uuid";
 
-// UUID fallback for browsers that don't support crypto.randomUUID
-function generateUUID(): string {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Fallback UUID v4 generator
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
+// Use shared safeUUID to avoid browser incompatibilities
 
 export default function Home() {
   const { theme } = useTheme();
@@ -165,7 +155,7 @@ export default function Home() {
             onSelectThread={(id) => setActiveId(id)}
             onNewChat={() => {
               const t: ChatThread = {
-                id: generateUUID(),
+                id: safeUUID(),
                 title: "New Chat",
                 messages: [],
                 createdAt: Date.now(),

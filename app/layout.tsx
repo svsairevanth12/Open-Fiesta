@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Script from "next/script";
 import { ThemeProvider } from "@/lib/themeContext";
 
 const geistSans = Geist({
@@ -20,6 +21,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "OpenSource Fiesta",
   description: "Compare and chat with multiple open models",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -46,8 +53,13 @@ export default function RootLayout({
           theme="colored"
         />
 
-        <SpeedInsights />
-        <Analytics />
+        {process.env.NEXT_PUBLIC_VERCEL_ANALYTICS === "1" && (
+          <>
+            <SpeedInsights />
+            <Analytics />
+          </>
+        )}
+        <Script src="https://scripts.simpleanalyticscdn.com/latest.js" />
       </body>
     </html>
   );

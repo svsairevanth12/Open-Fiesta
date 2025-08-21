@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { X, Star } from "lucide-react";
 import type { AiModel } from "@/lib/types";
 import { MODEL_CATALOG } from "@/lib/models";
@@ -21,6 +22,14 @@ export default function ModelsModal({
   onToggle,
 }: ModelsModalProps) {
   if (!open) return null;
+
+  // Lock background scroll while modal is open
+  useEffect(() => {
+    document.body.classList.add("modal-open");
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, []);
 
   const buckets: Record<string, AiModel[]> = {
     Favorites: [],
@@ -74,7 +83,7 @@ export default function ModelsModal({
       <div className="text-sm md:text-base font-semibold uppercase tracking-wide text-zinc-200">
         {title}
       </div>
-      <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
         {models.map((m) => {
           const free = isFree(m);
           const unc = isUnc(m);
@@ -84,7 +93,7 @@ export default function ModelsModal({
             <button
               key={m.id}
               onClick={() => !disabled && onToggle(m.id)}
-              className={`model-chip flex items-center justify-between gap-2 w-full sm:w-auto min-w-[0] sm:min-w-[280px] md:min-w-[320px] h-10 sm:h-8 md:h-9 px-3 sm:px-2.5 md:px-3 text-xs sm:text-[11px] md:text-sm ${
+              className={`model-chip flex items-center justify-between gap-2 w-full h-10 sm:h-9 md:h-9 px-3 sm:px-3 md:px-3 text-xs sm:text-[11px] md:text-sm ${
                 disabled ? "opacity-60 cursor-not-allowed text-zinc-500" : ""
               } ${
                 selected
@@ -129,7 +138,7 @@ export default function ModelsModal({
                     <span className="hidden sm:inline">Uncensored</span>
                   </span>
                 )}
-                <span className="truncate max-w-[70vw] sm:max-w-[240px] md:max-w-[300px]">
+                <span className="truncate max-w-full">
                   {m.label}
                 </span>
               </span>
@@ -173,8 +182,12 @@ export default function ModelsModal({
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-3 sm:mx-auto rounded-2xl border border-white/10 bg-zinc-900/90 p-6 md:p-7 lg:p-8 shadow-2xl">
-        <div className="sticky top-0 z-10 -mx-6 md:-mx-7 lg:-mx-8 px-6 md:px-7 lg:px-8 pt-1 pb-3 mb-3 flex items-center justify-between bg-zinc-900/95 backdrop-blur border-b border-white/10">
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="relative w-full sm:w-full max-w-none sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-3 sm:mx-auto rounded-xl sm:rounded-2xl border border-white/10 bg-zinc-900/90 p-4 sm:p-6 md:p-7 lg:p-8 shadow-2xl h-[90vh] sm:max-h-[90vh] overflow-hidden flex flex-col min-h-0"
+      >
+        <div className="px-4 sm:-mx-6 md:-mx-7 lg:-mx-8 sm:px-6 md:px-7 lg:px-8 pt-1 pb-3 mb-3 flex items-center justify-between bg-zinc-900/95 backdrop-blur border-b border-white/10">
           <h3 className="text-base md:text-lg lg:text-xl font-semibold tracking-wide">
             Select up to 5 models
           </h3>
@@ -189,7 +202,7 @@ export default function ModelsModal({
         <div className="text-xs md:text-sm text-zinc-300 mb-4">
           Selected: {selectedModels.length}/5
         </div>
-        <div className="space-y-4 max-h[70vh] md:max-h-[70vh] overflow-y-auto pr-1">
+        <div className="space-y-4 flex-1 overflow-y-auto pr-1 scroll-touch safe-inset">
           {customSection}
           {builtInSections}
         </div>

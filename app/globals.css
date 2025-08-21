@@ -702,10 +702,25 @@ body.light * {
   scrollbar-gutter: stable both-edges; 
 }
 
-/* AI input max height utility (use via inline CSS var once on wrapper) */
-.ai-grow-area { max-height: var(--ai-input-max, 320px); overflow-y: auto; }
+/* Mobile scrolling helpers */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch; /* smooth momentum scroll on iOS */
+  overscroll-behavior: contain;      /* prevent scroll chaining to body */
+}
 
-/* Model chip system (borders & states reuse badge pair vars) */
+/* Lock background scroll when modal is open */
+.modal-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+/* Respect iOS safe areas */
+.safe-inset {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 .model-chip { @apply h-8 px-2.5 text-[11px] rounded-full inline-flex items-center gap-1.5 transition-colors shrink-0 border bg-white/5 hover:bg-white/10; }
 .model-chip-pro { border-color: var(--badge-pro-border); }
 .model-chip-free { border-color: var(--badge-free-border); }

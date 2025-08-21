@@ -1,4 +1,5 @@
 import { callGemini, callOpenRouter, streamOpenRouter } from './client';
+import { safeUUID } from './uuid';
 import type { AiModel, ApiKeys, ChatMessage, ChatThread } from './types';
 import { toast } from "react-toastify";
 
@@ -34,7 +35,7 @@ function extractText(res: unknown): string {
 export function createChatActions({ selectedModels, keys, threads, activeThread, setThreads, setActiveId, setLoadingIds, setLoadingIdsInit }: ChatDeps) {
   function ensureThread(): ChatThread {
     if (activeThread) return activeThread;
-    const t: ChatThread = { id: crypto.randomUUID(), title: 'New Chat', messages: [], createdAt: Date.now() };
+    const t: ChatThread = { id: safeUUID(), title: 'New Chat', messages: [], createdAt: Date.now() };
     setThreads(prev => [t, ...prev]);
     setActiveId(t.id);
     return t;
