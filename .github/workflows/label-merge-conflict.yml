@@ -1,0 +1,27 @@
+name: Auto Label Conflicts
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+on: 
+ push: 
+  branches: [main]
+ pull-request: 
+   branches: [main]
+
+jobs: 
+  auto-Label:
+   if: github.repository == 'NiladriHazra/Open-Fiesta'
+   run-on: ubuntu-24.04-arm
+   setps: 
+    - uses: prince-chrismc/label-merge-conflicts-action@v3
+      with: 
+        conflict_label_name: "Merge Conflict"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        max_retries: 5
+        wait_ms: 15000
+        detect_merge_changes: false
+        conflict_comment: |
+          Conflict have been detected against base branch. please solve merge connflict before merge into your branch

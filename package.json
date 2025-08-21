@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "unimported": "unimported",
     "docker:build": "docker build -t ai_fiesta .",
     "docker:run": "docker run -p 3000:3000 ai_fiesta",
     "docker:dev": "docker-compose up ai_fiesta_dev",
@@ -37,6 +38,7 @@
     "eslint-config-next": "15.4.6",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.7",
-    "typescript": "^5"
+    "typescript": "^5",
+    "unimported": "^1.31.0"
   }
 }

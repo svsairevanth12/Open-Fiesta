@@ -1,0 +1,38 @@
+name: Deploy Code
+
+on: 
+  push:
+   branches: [main]
+  pull-requests:
+    branches: [main]
+
+jobs:
+  build:
+   runs-on: ubuntu-24.04-arm
+
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: action/setup-node@v4
+      with:
+        node-version: "22"
+        cache: "npm"
+
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build Open fiesta
+      run: npm run build
+  
+  docker: 
+    runs-on: ubuntu-24.04-arm
+    needs: build
+
+    steps: 
+     - name: Checkout repository
+       uses: actions/checkout@v4
+
+     - name: Build Docker image
+       run: npm run docker:build
