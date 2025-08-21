@@ -326,7 +326,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
               role="dialog"
               aria-modal="true"
               aria-label="Theme Settings"
-              className="relative w-full mx-3 sm:mx-6 max-w-2xl lg:max-w-3xl max-h-[88vh] rounded-2xl border border-white/10 bg-zinc-900/95 text-white p-5 md:p-6 lg:p-7 shadow-2xl backdrop-blur-sm z-10 flex flex-col overflow-hidden"
+              className="relative w-full mx-3 sm:mx-6 max-w-2xl lg:max-w-3xl max-h-[88vh] rounded-2xl border border-white/10 bg-zinc-900/95 text-white p-4 md:p-6 lg:p-7 shadow-2xl backdrop-blur-sm z-10 flex flex-col overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
@@ -361,7 +361,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
               </div>
 
               {/* Tab Navigation */}
-              <div className="flex gap-1 mb-4 p-1 rounded-lg bg-white/5 shrink-0">
+              <div className="flex flex-nowrap gap-1 mb-4 p-1 rounded-lg bg-white/5 shrink-0 overflow-x-auto -mx-1 px-1">
                 {[
                   { id: "accent" as const, label: "Colors", icon: Palette },
                   { id: "badges" as const, label: "Badges", icon: Star },
@@ -380,7 +380,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                   <button
                     key={id}
                     onClick={() => handleTabChange(id)}
-                    className={`flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`shrink-0 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                       activeTab === id
                         ? "bg-white/15 text-white border border-white/20"
                         : "text-white/70 hover:text-white hover:bg-white/5"
@@ -560,7 +560,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                 </div>
                 <button
                   onClick={handleClose}
-                  className="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                  className="px-4 py-2 rounded-md text-sm font-medium accent-action-fill accent-action-ring"
                 >
                   Done
                 </button>

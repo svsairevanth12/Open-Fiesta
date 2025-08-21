@@ -176,6 +176,15 @@ export default function Home() {
             mobileSidebarOpen={mobileSidebarOpen}
             onCloseMobile={() => setMobileSidebarOpen(false)}
             onOpenMobile={() => setMobileSidebarOpen(true)}
+            onDeleteThread={(id) => {
+              setThreads((prev) => {
+                const next = prev.filter((t) => t.id !== id);
+                if (activeId === id) {
+                  setActiveId(next[0]?.id ?? null);
+                }
+                return next;
+              });
+            }}
           />
           {/* Main content */}
           <div className="flex-1 min-w-0 flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] overflow-hidden">
@@ -189,7 +198,7 @@ export default function Home() {
               githubOwner="NiladriHazra"
               githubRepo="Open-Fiesta"
               onOpenModelsModal={() => setModelsModalOpen(true)}
-              className=""
+              className="-mr-3 sm:mr-0"
             />
 
             {/* Selected models row + actions */}
@@ -223,10 +232,9 @@ export default function Home() {
               setCopiedAllIdx={setCopiedAllIdx}
               copiedKey={copiedKey}
               setCopiedKey={setCopiedKey}
-              
+
               onEditUser={onEditUser}
             />
-
             <FixedInputBar onSubmit={send} loading={anyLoading} />
           </div>
         </div>

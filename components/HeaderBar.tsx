@@ -32,7 +32,7 @@ export default function HeaderBar({
 }: Props) {
   return (
     <div
-      className={["flex items-center mb-3 gap-2", className || ""].join(" ")}
+      className={["flex items-center mb-3 gap-2 w-full", className || ""].join(" ")}
     >
       {/* Left: author + menu */}
       <div className="flex items-center gap-2 min-w-0">
@@ -75,7 +75,7 @@ export default function HeaderBar({
       </div>
 
       {/* Right cluster order (left→right visual): Change models, Custom models (icon), Theme (icon), Settings (icon), GitHub */}
-      <div className="flex items-center gap-2 z-10">
+      <div className="flex items-center gap-2 z-10 ml-auto">
         <button
           onClick={() => onOpenModelsModal && onOpenModelsModal()}
           className="inline-flex items-center gap-1.5 text-xs h-9 w-9 justify-center rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow accent-focus"

@@ -65,7 +65,7 @@ export default function ChatGrid({
   const [draft, setDraft] = useState<string>("");
 
   return (
-    <div className="rounded-lg border border-white/5 bg-white/5 px-2 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28">
+    <div className="relative rounded-lg border border-white/5 bg-white/5 px-3 lg:px-4 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28 sm:scroll-stable-gutter">
       {selectedModels.length === 0 ? (
         <div className="p-4 text-zinc-400">
           Select up to 5 models to compare.
@@ -74,7 +74,7 @@ export default function ChatGrid({
         <div className="min-w-full space-y-3">
           {/* Header row: model labels */}
           <div
-            className="grid gap-3 items-center overflow-visible mt-0 sticky top-0 z-20 bg-black/40 backdrop-blur-sm border-b border-white/10 -mx-2 px-2 py-1 shadow-[0_1px_0_rgba(0,0,0,0.4)]"
+            className="relative grid min-w-full gap-3 items-center overflow-visible mt-0 sticky top-0 left-0 right-0 z-30 -mx-3 px-3 lg:-mx-4 lg:px-4 py-1 rounded-t-lg shadow-[0_1px_0_rgba(0,0,0,0.4)] bg-transparent border-0 sm:bg-black/40 sm:backdrop-blur-sm sm:border-b sm:border-white/10"
             style={{ gridTemplateColumns: headerCols }}
           >
             {selectedModels.map((m) => {
@@ -83,18 +83,18 @@ export default function ChatGrid({
               return (
                 <div
                   key={m.id}
-                  className={`px-1 py-2 min-h-[40px] border-b flex items-center ${
+                  className={`px-2 py-1 sm:px-1 sm:py-2 min-h-[40px] border-b flex items-center ${
                     isCollapsed ? "justify-center" : "justify-between"
-                  } overflow-visible ${
+                  } overflow-visible bg-black/70 sm:bg-transparent rounded-md sm:rounded-none ${
                     m.good ? "border-amber-300/40" : "border-white/10"
                   }`}
                 >
                   {!isCollapsed && (
                     <div
-                      className={`text-[13px] leading-normal font-medium pr-2 inline-flex items-center gap-1.5 min-w-0 ${
+                      className={`text-[13px] leading-normal font-medium pr-2 inline-flex items-center gap-1.5 min-w-0 drop-shadow-[0_1px_0_rgba(0,0,0,0.35)] sm:drop-shadow-none bg-transparent px-0 py-0 sm:bg-transparent sm:px-0 sm:py-0 sm:rounded-none ${
                         m.good || isFree
-                          ? "opacity-100 text-white"
-                          : "opacity-90"
+                          ? "opacity-100 text-white sm:text-inherit"
+                          : "opacity-100 text-white sm:opacity-90 sm:text-inherit"
                       }`}
                     >
                       {m.good && (
@@ -152,7 +152,8 @@ export default function ChatGrid({
               <div className="relative flex items-start justify-between gap-3 px-3 py-2 rounded-lg ring-1 ring-white/10 chat-prompt-accent">
                 <div className="chat-prompt-side" />
                 <div className="flex items-start gap-2 min-w-0 flex-1">
-                  <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-medium bg-[var(--accent-primary)]/25 text-white ring-1 ring-white/15 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.05)]">
+                  <span className="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[11px] font-semibold text-white bg-black/60 ring-1 ring-white/15 border border-white/15 backdrop-blur-sm shadow-[0_2px_10px_rgba(0,0,0,0.45)] shrink-0">
+                    <span className="h-2 w-2 rounded-full bg-white/90 shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
                     You
                   </span>
                   <div className="min-w-0 flex-1">
@@ -308,7 +309,7 @@ export default function ChatGrid({
                               : "space-y-2"
                           }`}
                         >
-                          {ans && String(ans.content || "").length > 0 ? (
+                          {ans && String(ans.content || "").length > 0 && !["Thinking…","Typing…"].includes(String(ans.content)) ? (
                             <>
                               <div className="max-w-[72ch]">
                                 <MarkdownLite text={sanitizeContent(ans.content)} />
@@ -359,7 +360,7 @@ export default function ChatGrid({
                                 </div>
                               )}
                             </>
-                          ) : loadingIds.includes(m.id) ? (
+                          ) : (loadingIds.includes(m.id) || (ans && ["Thinking…","Typing…"].includes(String(ans.content)))) ? (
                             <div className="w-full self-stretch space-y-3">
                               <div className="inline-flex items-center gap-2 text-[12px] font-medium text-rose-100">
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 ring-1 ring-rose-300/30">

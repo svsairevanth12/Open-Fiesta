@@ -485,6 +485,13 @@
   scrollbar-width: thin;
   scrollbar-color: var(--accent-primary) var(--accent-bg-secondary);
 }
+/* Utility to hide scrollbars when desired */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 body.light * {
   scrollbar-color: var(--accent-secondary) var(--accent-bg-secondary);
 }

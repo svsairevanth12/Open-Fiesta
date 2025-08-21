@@ -92,7 +92,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           }
         } else {
           const placeholderTs = Date.now();
-          const initialText = 'Typing…';
+          const initialText = 'Thinking…';
           const placeholder: ChatMessage = { role: 'assistant', content: initialText, modelId: m.id, ts: placeholderTs };
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
@@ -254,7 +254,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               const msgs = (tt.messages ?? []).map(msg => {
                 if (!(msg.ts === placeholderTs && msg.modelId === m.id)) return msg;
                 const cur = msg.content || '';
-                const next = cur === 'Typing…' ? chunk : cur + chunk;
+                const next = cur === 'Thinking…' ? chunk : cur + chunk;
                 return { ...msg, content: next };
               });
               return { ...tt, messages: msgs };

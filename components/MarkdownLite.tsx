@@ -1,4 +1,42 @@
 "use client";
+
+// Insert table separators and strip leading heading marker before pipe tables
+function normalizeTableLikeMarkdown(lines: string[]): string[] {
+  const out = [...lines];
+
+  // 1) Convert lines like "# | Col1 | Col2 |" to "| Col1 | Col2 |"
+  for (let i = 0; i < out.length; i++) {
+    if (/^\s*#\s*\|/.test(out[i])) {
+      out[i] = out[i].replace(/^(\s*)#\s*/, '$1');
+    }
+  }
+
+  // 2) If a pipe header is followed by rows but missing a separator, insert one
+  const looksLikeSep = (s: string) => {
+    return (/(^\s*\|?\s*(?::?-+\s*\|\s*)*:?-+\s*\|?\s*$)/.test(s)) ||
+           (/^\s*\|?\s*(-+\s*\|\s*)*-+\s*\|?\s*$/.test(s));
+  };
+
+  let i = 0;
+  while (i < out.length - 1) {
+    const cur = out[i];
+    const nxt = out[i + 1];
+    const isPipe = /\|/.test(cur);
+    const nextIsPipe = /\|/.test(nxt);
+    if (isPipe && nextIsPipe && !looksLikeSep(nxt)) {
+      // Synthesize separator based on header column count
+      const cols = splitRow(cur).length || 1;
+      const sep = '| ' + Array(cols).fill('---').join(' | ') + ' |';
+      out.splice(i + 1, 0, sep);
+      i += 2; // skip over inserted separator
+      continue;
+    }
+    i++;
+  }
+
+  return out;
+}
+
 import React from "react";
 
 type Props = { text: string };
@@ -58,7 +96,8 @@ function splitFencedCodeBlocks(input: string): Array<{ type: "text" | "code"; co
 // Renders a text block with support for paragraphs, simple lists, and tables.
 function BlockRenderer({ text }: { text: string }) {
   // Normalize newlines
-  const lines = text.replace(/\r\n?/g, "\n").split("\n");
+  const rawLines = text.replace(/\r\n?/g, "\n").split("\n");
+  const lines = normalizeTableLikeMarkdown(rawLines);
   const nodes: React.ReactNode[] = [];
 
   let i = 0;
@@ -175,6 +214,16 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
   while (i < lines.length) {
     const raw = lines[i];
     if (!raw || raw.trim() === "") break;
+    // Skip any separator-like row inside body (rows made only/mostly of dashes, mdashes, en-dashes, colons, or spaces)
+    const isSepLike = (() => {
+      const core = raw.trim().replace(/^\|/, "").replace(/\|$/, "");
+      const cells = core.split("|").map((s) => s.trim());
+      const sepRe = /^[:\-\s—–]+$/;
+      const sepCount = cells.filter((c) => c === "" || sepRe.test(c)).length;
+      if (cells.length <= 1) return sepCount === 1; // handle lines without pipes
+      return sepCount >= Math.ceil(cells.length / 2); // majority separator-like -> skip
+    })();
+    if (isSepLike) { i++; continue; }
     if (!/\|/.test(raw)) {
       // continuation text for previous row
       if (rows.length > 0) {
@@ -188,21 +237,48 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
     const pipeCount = (raw.match(/\|/g) || []).length;
     if (pipeCount < 2 && rows.length > 0) {
       // Likely a continuation that begins with a single pipe
-      rows[rows.length - 1] = rows[rows.length - 1] + " " + raw.replace(/^\|?\s*/, '').trim();
+      const cont = raw.replace(/^\|?\s*/, '').trim();
+      // If the continuation is only separator characters (dashes/colons/mdashes/en-dashes/spaces), skip it
+      if (/^[:\-\s—–]+$/.test(cont)) { i++; continue; }
+      rows[rows.length - 1] = rows[rows.length - 1] + " " + cont;
     } else {
-      rows.push(raw);
+      // If cells are only separator characters, skip
+      const cells = splitRow(raw);
+      const allSep = cells.length > 0 && cells.every(c => /^[:\-\s—–]+$/.test(c));
+      if (!allSep) rows.push(raw);
     }
     i++;
   }
 
-  const headers = splitRow(headerLine);
+  // Split headers and drop empty/separator-only header columns to avoid blank columns
+  let headers = splitRow(headerLine);
+  const sepOnly = (s: string) => /^[:\-\s—–]*$/.test(s || "");
+  const keepIdx: number[] = [];
+  headers.forEach((h, idx) => { if (h.trim() !== "" && !sepOnly(h)) keepIdx.push(idx); });
+  if (keepIdx.length > 0) {
+    headers = keepIdx.map((i) => headers[i]);
+  } else {
+    // If all were empty, fall back to original to avoid losing data
+    headers = headers.map((h) => (h || "").trim());
+    headers = headers.length ? headers : [""];
+  }
+
+  // Map body rows to kept columns and normalize lengths
   const bodyRaw = rows.map(splitRow);
+  const projectCols = (cols: string[]) => {
+    if (keepIdx.length > 0) {
+      const projected = keepIdx.map((i) => (i < cols.length ? cols[i] : ""));
+      return projected;
+    }
+    return cols;
+  };
   const colCount = headers.length;
   const body = bodyRaw.map((cols) => {
-    if (cols.length === colCount) return cols;
-    if (cols.length < colCount) return cols.concat(Array(colCount - cols.length).fill(""));
+    const proj = projectCols(cols);
+    if (proj.length === colCount) return proj;
+    if (proj.length < colCount) return proj.concat(Array(colCount - proj.length).fill(""));
     // If too many, merge extras into last cell
-    return cols.slice(0, colCount - 1).concat([cols.slice(colCount - 1).join(" | ")]);
+    return proj.slice(0, colCount - 1).concat([proj.slice(colCount - 1).join(" | ")]);
   });
 
   const element = (
