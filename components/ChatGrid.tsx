@@ -63,7 +63,7 @@ export default function ChatGrid({
   );
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [draft, setDraft] = useState<string>("");
-  const scrollRef=useRef<HTMLDivElement>(null)
+  const scrollRef=useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
    if (scrollRef.current) {
