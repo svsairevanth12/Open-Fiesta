@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+
+
 import HeaderBar from "@/components/HeaderBar";
 import SelectedModelsBar from "@/components/SelectedModelsBar";
 import { useLocalStorage } from "@/lib/useLocalStorage";
@@ -15,11 +17,11 @@ import ChatGrid from "@/components/ChatGrid";
 import { useTheme } from "@/lib/themeContext";
 import { BACKGROUND_STYLES } from "@/lib/themes";
 import { safeUUID } from "@/lib/uuid";
-
-// Use shared safeUUID to avoid browser incompatibilities
+import Loading from "@/components/ui/Loading";
 
 export default function Home() {
   const { theme } = useTheme();
+  const [isHydrated, setIsHydrated] = useState(false);
   const backgroundClass = BACKGROUND_STYLES[theme.background].className;
 
   const [selectedIds, setSelectedIds] = useLocalStorage<string[]>(
@@ -47,10 +49,11 @@ export default function Home() {
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [modelsModalOpen, setModelsModalOpen] = useState(false);
+
   const [customModels] = useCustomModels();
   const allModels = useMemo(() => mergeModels(customModels), [customModels]);
-  
-  // Projects hook
+
+  // Projects hook from main
   const {
     projects,
     activeProjectId,
@@ -60,6 +63,7 @@ export default function Home() {
     deleteProject,
     selectProject,
   } = useProjects();
+
   const activeThread = useMemo(
     () => threads.find((t) => t.id === activeId) || null,
     [threads, activeId]
@@ -70,6 +74,7 @@ export default function Home() {
     [threads, activeProjectId]
   );
   const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
+
   const [loadingIds, setLoadingIds] = useState<string[]>([]);
   // Allow collapsing a model column without unselecting it
   const [collapsedIds, setCollapsedIds] = useState<string[]>([]);
@@ -85,6 +90,7 @@ export default function Home() {
     );
     return parts.join(" ");
   }, [selectedModels, collapsedIds]);
+
   const anyLoading = loadingIds.length > 0;
   const [copiedAllIdx, setCopiedAllIdx] = useState<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -110,7 +116,9 @@ export default function Home() {
         ta.select();
         document.execCommand("copy");
         document.body.removeChild(ta);
-      } catch {}
+      } catch {
+        // ignore
+      }
     }
   };
 
@@ -136,9 +144,17 @@ export default function Home() {
         setActiveId,
         setLoadingIds: (updater) => setLoadingIds(updater),
         setLoadingIdsInit: (ids) => setLoadingIds(ids),
-        activeProject, // Add active project for system prompt
+        activeProject, // include project system prompt/context
       }),
-    [selectedModels, keys, threads, activeThread, setThreads, setActiveId, activeProject]
+    [
+      selectedModels,
+      keys,
+      threads,
+      activeThread,
+      setThreads,
+      setActiveId,
+      activeProject,
+    ]
   );
 
   // group assistant messages by turn for simple compare view
@@ -156,10 +172,17 @@ export default function Home() {
     return rows;
   }, [messages]);
 
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Avoid hydration mismatch with background animation etc.
+  if (!isHydrated) {
+    return <Loading backgroundClass={backgroundClass} />;
+  }
+
   return (
-    <div
-      className={`min-h-screen w-full ${backgroundClass} relative text-white`}
-    >
+    <div className={`min-h-screen w-full ${backgroundClass} relative text-white`}>
       <div className="absolute inset-0 z-0 pointer-events-none opacity-95" />
 
       <div className="relative z-10 px-3 lg:px-4 py-4 lg:py-6">
@@ -197,6 +220,7 @@ export default function Home() {
                 return next;
               });
             }}
+            // Projects (from main)
             projects={projects}
             activeProjectId={activeProjectId}
             onSelectProject={selectProject}
@@ -204,6 +228,7 @@ export default function Home() {
             onUpdateProject={updateProject}
             onDeleteProject={deleteProject}
           />
+
           {/* Main content */}
           <div className="flex-1 min-w-0 flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] overflow-hidden">
             {/* Top bar */}
@@ -220,10 +245,7 @@ export default function Home() {
             />
 
             {/* Selected models row + actions */}
-            <SelectedModelsBar
-              selectedModels={selectedModels}
-              onToggle={toggle}
-            />
+            <SelectedModelsBar selectedModels={selectedModels} onToggle={toggle} />
 
             <ModelsModal
               open={modelsModalOpen}
@@ -233,6 +255,7 @@ export default function Home() {
               customModels={customModels}
               onToggle={toggle}
             />
+
             <FirstVisitNote
               open={showFirstVisitNote}
               onClose={() => setFirstNoteDismissed(true)}
@@ -250,9 +273,9 @@ export default function Home() {
               setCopiedAllIdx={setCopiedAllIdx}
               copiedKey={copiedKey}
               setCopiedKey={setCopiedKey}
-
               onEditUser={onEditUser}
             />
+
             <FixedInputBar onSubmit={send} loading={anyLoading} />
           </div>
         </div>
