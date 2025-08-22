@@ -1,6 +1,7 @@
 import { callGemini, callOpenRouter, streamOpenRouter } from './client';
 import { safeUUID } from './uuid';
 import type { AiModel, ApiKeys, ChatMessage, ChatThread } from './types';
+import type { Project } from './projects';
 import { toast } from "react-toastify";
 
 export type ChatDeps = {
@@ -12,6 +13,7 @@ export type ChatDeps = {
   setActiveId: (id: string) => void;
   setLoadingIds: (updater: (prev: string[]) => string[]) => void;
   setLoadingIdsInit: (ids: string[]) => void;
+  activeProject?: Project | null;
 };
 
 type ApiTextResult = {
@@ -32,13 +34,37 @@ function extractText(res: unknown): string {
   return 'No response';
 }
 
-export function createChatActions({ selectedModels, keys, threads, activeThread, setThreads, setActiveId, setLoadingIds, setLoadingIdsInit }: ChatDeps) {
+export function createChatActions({ selectedModels, keys, threads, activeThread, setThreads, setActiveId, setLoadingIds, setLoadingIdsInit, activeProject }: ChatDeps) {
   function ensureThread(): ChatThread {
     if (activeThread) return activeThread;
     const t: ChatThread = { id: safeUUID(), title: 'New Chat', messages: [], createdAt: Date.now() };
     setThreads(prev => [t, ...prev]);
     setActiveId(t.id);
     return t;
+  }
+
+  function prepareMessages(messages: ChatMessage[]): ChatMessage[] {
+    // If there's an active project with a system prompt, inject it at the beginning
+    if (activeProject?.systemPrompt?.trim()) {
+      const systemMsg: ChatMessage = {
+        role: 'system',
+        content: activeProject.systemPrompt.trim(),
+        ts: Date.now() - 1000000, // Ensure it's at the beginning
+      };
+      
+      // Check if there's already a system message at the start
+      const hasSystemMessage = messages.length > 0 && messages[0].role === 'system';
+      
+      if (hasSystemMessage) {
+        // Replace the existing system message
+        return [systemMsg, ...messages.slice(1)];
+      } else {
+        // Add system message at the beginning
+        return [systemMsg, ...messages];
+      }
+    }
+    
+    return messages;
   }
 
   async function send(text: string, imageDataUrl?: string) {
@@ -68,7 +94,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
-          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: nextHistory, imageDataUrl });
+          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(t => {
@@ -120,7 +146,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const isNonImageAttachment = !!imageDataUrl && (!mt || !isImage); // txt/pdf/docx or unknown
 
           if (isNonImageAttachment) {
-            const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl });
+            const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
             const text = extractText(res);
             setThreads(prev => prev.map(t => {
               if (t.id !== thread.id) return t;
@@ -130,7 +156,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             return;
           }
 
-          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl }, {
+          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl }, {
             onToken: (delta) => {
               gotAny = true;
               buffer += delta;
