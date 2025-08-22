@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import HeaderBar from "@/components/HeaderBar";
 import SelectedModelsBar from "@/components/SelectedModelsBar";
 import { useLocalStorage } from "@/lib/useLocalStorage";
@@ -63,6 +63,11 @@ export default function Home() {
   const activeThread = useMemo(
     () => threads.find((t) => t.id === activeId) || null,
     [threads, activeId]
+  );
+  // Only show chats for the active project (or all if none selected)
+  const visibleThreads = useMemo(
+    () => (activeProjectId ? threads.filter((t) => t.projectId === activeProjectId) : threads),
+    [threads, activeProjectId]
   );
   const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
   const [loadingIds, setLoadingIds] = useState<string[]>([]);
@@ -163,7 +168,7 @@ export default function Home() {
           <ThreadSidebar
             sidebarOpen={sidebarOpen}
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            threads={threads}
+            threads={visibleThreads}
             activeId={activeId}
             onSelectThread={(id) => setActiveId(id)}
             onNewChat={() => {
@@ -172,6 +177,7 @@ export default function Home() {
                 title: "New Chat",
                 messages: [],
                 createdAt: Date.now(),
+                projectId: activeProjectId || undefined,
               };
               setThreads((prev) => [t, ...prev]);
               setActiveId(t.id);
@@ -183,7 +189,10 @@ export default function Home() {
               setThreads((prev) => {
                 const next = prev.filter((t) => t.id !== id);
                 if (activeId === id) {
-                  setActiveId(next[0]?.id ?? null);
+                  const nextInScope = (activeProjectId
+                    ? next.find((t) => t.projectId === activeProjectId)
+                    : next[0])?.id ?? null;
+                  setActiveId(nextInScope);
                 }
                 return next;
               });

@@ -28,4 +28,6 @@ export type ChatThread = {
   title: string;
   messages: ChatMessage[];
   createdAt: number;
+  // When set, this chat belongs to a specific project. If undefined, it's a general chat.
+  projectId?: string;
 };
