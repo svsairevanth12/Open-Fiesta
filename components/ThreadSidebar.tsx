@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
 import type { ChatThread } from "@/lib/types";
+import type { Project } from "@/lib/projects";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import ProjectsSection from "@/components/ProjectsSection";
 
 type Props = {
   sidebarOpen: boolean;
@@ -15,6 +17,13 @@ type Props = {
   onCloseMobile: () => void;
   onOpenMobile: () => void;
   onDeleteThread: (id: string) => void;
+  // Projects props
+  projects: Project[];
+  activeProjectId: string | null;
+  onSelectProject: (id: string | null) => void;
+  onCreateProject: (project: Project) => void;
+  onUpdateProject: (project: Project) => void;
+  onDeleteProject: (id: string) => void;
 };
 
 export default function ThreadSidebar({
@@ -27,6 +36,12 @@ export default function ThreadSidebar({
   mobileSidebarOpen,
   onCloseMobile,
   onDeleteThread,
+  projects,
+  activeProjectId,
+  onSelectProject,
+  onCreateProject,
+  onUpdateProject,
+  onDeleteProject,
 }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   return (
@@ -59,6 +74,19 @@ export default function ThreadSidebar({
 
         {sidebarOpen ? (
           <>
+            {/* Projects Section */}
+            <div className="mb-4">
+              <ProjectsSection
+                projects={projects}
+                activeProjectId={activeProjectId}
+                onSelectProject={onSelectProject}
+                onCreateProject={onCreateProject}
+                onUpdateProject={onUpdateProject}
+                onDeleteProject={onDeleteProject}
+                collapsed={false}
+              />
+            </div>
+
             <button
               onClick={onNewChat}
               className="mb-3 text-sm px-3 py-2 rounded-md text-white shadow transition-colors accent-action-fill accent-focus"
@@ -105,6 +133,19 @@ export default function ThreadSidebar({
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center pt-6">
+            {/* Projects Section (Collapsed) */}
+            <div className="mb-4 w-full">
+              <ProjectsSection
+                projects={projects}
+                activeProjectId={activeProjectId}
+                onSelectProject={onSelectProject}
+                onCreateProject={onCreateProject}
+                onUpdateProject={onUpdateProject}
+                onDeleteProject={onDeleteProject}
+                collapsed={true}
+              />
+            </div>
+
             {/* New chat button */}
             <button
               title="New Chat"
@@ -164,6 +205,23 @@ export default function ThreadSidebar({
                 <X size={16} />
               </button>
             </div>
+
+            {/* Projects Section (Mobile) */}
+            <div className="mb-4">
+              <ProjectsSection
+                projects={projects}
+                activeProjectId={activeProjectId}
+                onSelectProject={(id) => {
+                  onSelectProject(id);
+                  // Don't close mobile sidebar for project selection
+                }}
+                onCreateProject={onCreateProject}
+                onUpdateProject={onUpdateProject}
+                onDeleteProject={onDeleteProject}
+                collapsed={false}
+              />
+            </div>
+
             <button
               onClick={() => {
                 onNewChat();

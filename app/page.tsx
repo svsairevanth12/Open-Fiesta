@@ -6,6 +6,7 @@ import { useLocalStorage } from "@/lib/useLocalStorage";
 import { mergeModels, useCustomModels } from "@/lib/customModels";
 import { ChatMessage, ApiKeys, ChatThread } from "@/lib/types";
 import { createChatActions } from "@/lib/chatActions";
+import { useProjects } from "@/lib/useProjects";
 import ModelsModal from "@/components/ModelsModal";
 import FirstVisitNote from "@/components/FirstVisitNote";
 import FixedInputBar from "@/components/FixedInputBar";
@@ -48,6 +49,17 @@ export default function Home() {
   const [modelsModalOpen, setModelsModalOpen] = useState(false);
   const [customModels] = useCustomModels();
   const allModels = useMemo(() => mergeModels(customModels), [customModels]);
+  
+  // Projects hook
+  const {
+    projects,
+    activeProjectId,
+    activeProject,
+    createProject,
+    updateProject,
+    deleteProject,
+    selectProject,
+  } = useProjects();
   const activeThread = useMemo(
     () => threads.find((t) => t.id === activeId) || null,
     [threads, activeId]
@@ -119,8 +131,9 @@ export default function Home() {
         setActiveId,
         setLoadingIds: (updater) => setLoadingIds(updater),
         setLoadingIdsInit: (ids) => setLoadingIds(ids),
+        activeProject, // Add active project for system prompt
       }),
-    [selectedModels, keys, threads, activeThread, setThreads, setActiveId]
+    [selectedModels, keys, threads, activeThread, setThreads, setActiveId, activeProject]
   );
 
   // group assistant messages by turn for simple compare view
@@ -175,6 +188,12 @@ export default function Home() {
                 return next;
               });
             }}
+            projects={projects}
+            activeProjectId={activeProjectId}
+            onSelectProject={selectProject}
+            onCreateProject={createProject}
+            onUpdateProject={updateProject}
+            onDeleteProject={deleteProject}
           />
           {/* Main content */}
           <div className="flex-1 min-w-0 flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] overflow-hidden">
