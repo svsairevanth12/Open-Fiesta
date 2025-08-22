@@ -23,7 +23,7 @@ export default function ComponentErrorBoundary({
           {componentName} Error
         </h3>
         <p className="text-xs text-muted-foreground mb-3">
-          This component encountered an error and couldn't load properly.
+          This component encountered an error and couldn&apos;t load properly.
         </p>
         <button
           onClick={() => window.location.reload()}
