@@ -7,8 +7,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Script from "next/script";
 import { ThemeProvider } from "@/lib/themeContext";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import GlobalErrorHandler from "@/components/GlobalErrorHandler";
+import ErrorBoundary from "@/components/error/ErrorBoundary";
+import GlobalErrorHandler from "@/components/error/GlobalErrorHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

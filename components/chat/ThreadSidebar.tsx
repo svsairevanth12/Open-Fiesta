@@ -3,8 +3,8 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
 import type { ChatThread } from "@/lib/types";
 import type { Project } from "@/lib/projects";
-import ConfirmDialog from "@/components/ConfirmDialog";
-import ProjectsSection from "@/components/ProjectsSection";
+import ConfirmDialog from "@/components/modals/ConfirmDialog";
+import ProjectsSection from "@/components/app/ProjectsSection";
 
 type Props = {
   sidebarOpen: boolean;

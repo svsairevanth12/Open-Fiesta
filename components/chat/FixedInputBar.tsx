@@ -1,5 +1,5 @@
 "use client";
-import { AiInput } from "@/components/AIChatBox";
+import { AiInput } from "@/components/chat/AIChatBox";
 
 type Props = {
   onSubmit: (text: string, imageDataUrl?: string) => void;
