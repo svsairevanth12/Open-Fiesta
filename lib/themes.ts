@@ -69,6 +69,7 @@ export interface BackgroundDefinition {
   className: string;
 }
 
+
 // Accent Color Configurations
 export const ACCENT_COLORS: Record<AccentColor, AccentDefinition> = {
   black: {

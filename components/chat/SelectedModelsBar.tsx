@@ -37,12 +37,12 @@ export default function SelectedModelsBar({ selectedModels, onToggle }: Props) {
             <button
               key={m.id}
               onClick={() => onToggle(m.id)}
-              className={`model-chip text-white ${
+              className={`model-chip text-gray-800 dark:text-white ${
                 m.good
                   ? "model-chip-pro"
                   : isFree
                   ? "model-chip-free"
-                  : "border-white/10"
+                  : "border-gray-600 dark:border-white/10"
               }`}
               data-selected={true}
               data-type={m.good ? "pro" : isFree ? "free" : "other"}

@@ -100,7 +100,8 @@ export default function CustomModels({ compact }: CustomModelsProps) {
         onClick={() => setOpen(true)}
         className={`inline-flex items-center gap-1.5 text-xs h-9 ${
           compact ? "w-9 justify-center px-0" : "px-3 py-2"
-        } rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow accent-focus`}
+        } rounded-md  bg-gray-200 border border-gray-300 text-gray-800 hover:bg-gray-300
+            dark:bg-white/5 dark:border-white/15 dark:text-white dark:hover:bg-white/10 shadow accent-focus`}
         title="Custom models"
         aria-label="Custom models"
       >

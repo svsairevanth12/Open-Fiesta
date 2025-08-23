@@ -107,7 +107,7 @@ export default function ChatGrid({
         <div className="min-w-full space-y-3">
           {/* Header row: model labels */}
           <div
-            className="relative grid min-w-full gap-3 items-center overflow-visible mt-0 sticky top-0 left-0 right-0 z-30 -mx-3 px-3 lg:-mx-4 lg:px-4 py-1 rounded-t-lg shadow-[0_1px_0_rgba(0,0,0,0.4)] bg-transparent border-0 sm:bg-black/40 sm:backdrop-blur-sm sm:border-b sm:border-white/10"
+            className="relative grid min-w-full gap-3 items-center overflow-visible mt-0 top-0 left-0 right-0 z-30 -mx-3 px-3 lg:-mx-4 lg:px-4 py-1 rounded-t-lg shadow-[0_1px_0_rgba(0,0,0,0.4)] bg-transparent border-0 sm:bg-black/40 sm:backdrop-blur-sm sm:border-b sm:border-white/10"
             style={{ gridTemplateColumns: headerCols }}
           >
             {selectedModels.map((m) => {
@@ -193,7 +193,7 @@ export default function ChatGrid({
                     {editingIdx === i ? (
                       <div className="flex items-center gap-2 w-full">
                         <input
-                          className="flex-1 bg-black/40 border border-white/10 rounded px-2 py-1 text-sm text-white"
+                          className="flex-1 bg-black/40 border border-gray-800 dark:border-white/10 rounded px-2 py-1 text-sm text-white"
                           value={draft}
                           onChange={(e) => setDraft(e.target.value)}
                           autoFocus

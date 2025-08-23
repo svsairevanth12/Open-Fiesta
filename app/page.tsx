@@ -283,7 +283,7 @@ export default function Home() {
           />
 
           {/* Main content */}
-          <div className="flex-1 min-w-0 flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] overflow-hidden">
+          <div className="flex-1 min-w-0 flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] overflow-hidden ">
             {/* Top bar */}
             <HeaderBar
               onOpenMenu={() => setMobileSidebarOpen(true)}
