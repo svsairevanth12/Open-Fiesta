@@ -1,4 +1,4 @@
-import type { ChatThread, AiModel } from "./types";
+import type { ChatThread, AiModel, ChatMessage } from "./types";
 
 /**
  * Formats a chat thread for export
@@ -17,8 +17,8 @@ export function formatChatForExport(
   });
 
   // Group messages by conversation pairs
-  const pairs: { user: any; answers: any[] }[] = [];
-  let currentPair: { user: any; answers: any[] } | null = null;
+  const pairs: { user: ChatMessage; answers: ChatMessage[] }[] = [];
+  let currentPair: { user: ChatMessage; answers: ChatMessage[] } | null = null;
 
   for (const msg of thread.messages) {
     if (msg.role === "user") {
@@ -100,7 +100,7 @@ export function downloadTextFile(content: string, filename: string): void {
  */
 function markdownToHtml(markdown: string): string {
   // Simple markdown to HTML conversion with improved formatting
-  let html = markdown
+  const html = markdown
     // Headers
     .replace(/^#### (.*$)/gm, "<h4>$1</h4>")
     .replace(/^### (.*$)/gm, "<h3>$1</h3>")
@@ -152,7 +152,6 @@ export function downloadAsPdf(
   }
 
   const title = thread.title || "Untitled Chat";
-  const filename = `${title.replace(/[^a-z0-9]/gi, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
 
   printWindow.document.write(`
     <!DOCTYPE html>
