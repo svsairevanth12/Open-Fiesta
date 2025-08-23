@@ -38,10 +38,14 @@ export default function GlobalErrorHandler({ children }: GlobalErrorHandlerProps
 
       try {
         if (target instanceof HTMLImageElement) {
-          console.error('Resource loading error: IMG', {
-            src: target.currentSrc || target.src,
-            alt: target.alt,
-          });
+          // Only log if there's actually an error with the image source
+          const src = target.currentSrc || target.src;
+          if (src && src.trim() !== '') {
+            console.error('Resource loading error: IMG', {
+              src: src,
+              alt: target.alt || 'No alt text',
+            });
+          }
           return;
         }
         if (target instanceof HTMLScriptElement) {

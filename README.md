@@ -39,14 +39,33 @@ npm i
 ```
 
 2. Configure environment
-   Create `.env.local` with the keys you plan to use:
+   Copy the example environment file and add your API keys:
 
 ```bash
-# OpenRouter (recommended for most free models)
-OPENROUTER_API_KEY=...
+cp .env.example .env
+```
 
-# Gemini (for Gemini models and image input)
-GOOGLE_GENERATIVE_AI_API_KEY=...
+   Then edit `.env` with your API keys. **For the default models to work, you need:**
+
+```bash
+# REQUIRED: Unstable Provider (GPT-5 Chat, Sonnet 4, Grok 4)
+INFERENCE_API_KEY=kf-aP6qQ7rR8sS9tT0uUv1wX2xC3yZ4b  # Already provided
+
+# REQUIRED: Google Gemini (Gemini 2.5 Pro)
+GEMINI_API_KEY=your_key_from_https://aistudio.google.com/app/apikey
+
+# REQUIRED: Pollinations (Evil Uncensored) - WORKING TOKEN PROVIDED
+OPEN_PROVIDER_API_KEY=tQ14HuL-wtewmt1H  # Already provided
+```
+
+   **Optional providers for additional models:**
+
+```bash
+# OpenRouter (for additional free models)
+OPENROUTER_API_KEY=your_key_from_https://openrouter.ai/keys
+
+# Mistral AI (for Mistral models)
+MISTRAL_API_KEY=your_key_from_https://console.mistral.ai
 ```
 
 3. Run dev server

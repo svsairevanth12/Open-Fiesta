@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
 import type { ChatThread, AiModel } from "@/lib/types";
 import type { Project } from "@/lib/projects";
@@ -47,6 +47,12 @@ export default function ThreadSidebar({
   onDeleteProject,
 }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -100,10 +106,13 @@ export default function ThreadSidebar({
               Chats
             </div>
             <div className="flex-1 overflow-y-auto space-y-1 pr-1">
-              {threads.length === 0 && (
+              {!isHydrated ? (
+                // Show consistent state during SSR
+                <div className="text-xs opacity-60">Loading...</div>
+              ) : threads.length === 0 ? (
                 <div className="text-xs opacity-60">No chats yet</div>
-              )}
-              {threads.map((t) => (
+              ) : null}
+              {isHydrated && threads.map((t) => (
                 <div
                   key={t.id}
                   className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group ${
