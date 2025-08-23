@@ -84,7 +84,7 @@ export default function Home() {
   // Allow collapsing a model column without unselecting it
   const [collapsedIds, setCollapsedIds] = useState<string[]>([]);
   const selectedModels = useMemo(
-    () => allModels.filter((m) => selectedIds.includes(m.id)),
+    () => selectedIds.map(id => allModels.find(m => m.id === id)).filter(Boolean) as AiModel[],
     [selectedIds, allModels]
   );
   // Build grid template: collapsed => fixed narrow, expanded => normal
