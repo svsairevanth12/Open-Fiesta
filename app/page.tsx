@@ -259,7 +259,7 @@ export default function Home() {
             <SelectedModelsBar selectedModels={selectedModels} onToggle={toggle} />
 
             {/* Voice selector for audio models */}
-            {selectedModels.some(m => m.category === 'audio') && (
+            {isHydrated && selectedModels.some(m => m.category === 'audio') && (
               <div className="mb-3 px-4">
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-zinc-400">Voice:</span>

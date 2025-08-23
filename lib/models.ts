@@ -276,15 +276,7 @@ export const MODEL_CATALOG: AiModel[] = [
     good: true,
     category: 'text',
   },
-  {
-    id: 'open-openai-reasoning',
-    label: 'OpenAI o3 (Reasoning)',
-    provider: 'open-provider',
-    model: 'openai-reasoning',
-    free: true,
-    good: true,
-    category: 'text',
-  },
+
   {
     id: 'open-openai-roblox',
     label: 'GPT-4.1 Nano Roblox (Vision)',

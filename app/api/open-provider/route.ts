@@ -69,11 +69,8 @@ export async function POST(req: NextRequest) {
 
     // Handle different model categories
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
-    // Consider models with 'audio', 'voice' or 'tts' in their name as audio models (e.g., GPT-4o Mini Audio/Voice)
-    const isAudioModel = model === 'openai-audio' || /(audio|voice|tts)/i.test(model);
-    const isReasoningModel = ['openai-reasoning', 'deepseek-reasoning'].includes(model);
-    // Some Azure OpenAI hosted models (e.g., GPT-5 nano) only allow default temperature=1
-    const isGpt5Nano = /gpt-5\s*-?\s*nano/i.test(model);
+    const isAudioModel = model === 'openai-audio';
+    const isReasoningModel = ['deepseek-reasoning'].includes(model);
 
     // For audio models, add natural TTS prefix to make it feel more conversational
     if (isAudioModel && prompt) {
@@ -97,11 +94,26 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // For text and audio models, use the correct endpoint based on model type
+    // For audio models, use GET format with chunking for long text
+    // For text models, use POST format
     let textUrl;
+    let useChunking = false;
+
     if (isAudioModel) {
-      // For audio models, use POST to avoid URL length limits for long text
-      textUrl = `https://text.pollinations.ai/openai?token=${encodeURIComponent(apiKey)}`;
+      // Check if text is too long for URL (conservative limit: 800 chars for reliable audio)
+      if (prompt.length > 800) {
+        // For very long text, truncate with a note
+        const truncatedPrompt = prompt.substring(0, 750) + "... [Audio truncated due to length limit]";
+        const encodedPrompt = encodeURIComponent(truncatedPrompt);
+        const selectedVoice = voice || 'alloy';
+        textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=${selectedVoice}&token=${encodeURIComponent(apiKey)}`;
+        useChunking = true;
+      } else {
+        // For shorter text, use full content
+        const encodedPrompt = encodeURIComponent(prompt);
+        const selectedVoice = voice || 'alloy';
+        textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=${selectedVoice}&token=${encodeURIComponent(apiKey)}`;
+      }
     } else {
       // Use OpenAI-compatible endpoint for text models
       const baseUrl = 'https://text.pollinations.ai/openai';
@@ -109,14 +121,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Prepare the request body in OpenAI format for Pollinations API
-    const requestBody = isAudioModel ? {
-      // For audio-capable chat models, send chat-style messages with audio modalities
-      model: model,
-      messages: trimmedMessages.map(msg => ({ role: msg.role, content: msg.content })),
-      audio: { voice: voice || 'alloy', format: 'mp3' },
-      modalities: ['text', 'audio'],
-      stream: false,
-    } : {
+    const requestBody = isAudioModel ? null : {
       // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
         role: msg.role,
@@ -140,14 +145,16 @@ export async function POST(req: NextRequest) {
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
         bodyPreview: isAudioModel ? {
-          model: (requestBody as any).model,
-          messageCount: (requestBody as any).messages?.length || 0,
-          audio: (requestBody as any).audio,
-          modalities: (requestBody as any).modalities,
+          method: 'GET',
+          model: 'openai-audio',
+          voice: voice || 'alloy',
           isAudio: true,
+          originalLength: prompt?.length || 0,
+          truncated: prompt.length > 800,
+          finalLength: prompt.length > 800 ? 750 : prompt.length
         } : {
-          model: requestBody.model,
-          messageCount: 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
+          model: requestBody?.model || model,
+          messageCount: requestBody && 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
           isReasoning: isReasoningModel,
           endpoint: 'openai-compatible'
         }
@@ -167,9 +174,12 @@ export async function POST(req: NextRequest) {
       }
 
       const resp = await fetch(textUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody),
+        method: isAudioModel ? 'GET' : 'POST',
+        headers: isAudioModel ? {
+          'User-Agent': 'Open-Fiesta/1.0',
+          'Authorization': `Bearer ${apiKey}`,
+        } : headers,
+        ...(isAudioModel ? {} : { body: JSON.stringify(requestBody) }),
         signal: aborter.signal,
       });
 
@@ -186,14 +196,10 @@ export async function POST(req: NextRequest) {
 
         const friendlyError = (() => {
           if (resp.status === 401) {
-            return model === 'openai-reasoning'
-              ? 'OpenAI o3 requires seed tier access. Please check your API token permissions.'
-              : 'Authentication failed. The model may require higher tier access.';
+            return 'Authentication failed. The model may require higher tier access.';
           }
           if (resp.status === 403) {
-            return model === 'openai-reasoning'
-              ? 'OpenAI o3 access denied. This model may be in limited beta or require special permissions.'
-              : 'Access denied. This model may require special permissions.';
+            return 'Access denied. This model may require special permissions.';
           }
           if (resp.status === 429) {
             return 'Rate limit exceeded. Please try again in a moment.';
