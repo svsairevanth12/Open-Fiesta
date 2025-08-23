@@ -39,6 +39,7 @@ function normalizeTableLikeMarkdown(lines: string[]): string[] {
 
 import React, { useEffect, useState } from "react";
 import { Download } from "lucide-react";
+import { ACCENT_UTILITY_CLASSES } from "../../lib/accentColors";
 
 type Props = { text: string };
 
@@ -76,6 +77,7 @@ const downloadImage = async (imageUrl: string, filename: string) => {
 const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: string }) => {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   useEffect(() => {
     const createBlobUrl = async () => {
@@ -138,10 +140,34 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
   };
 
   return (
-    <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4 my-2">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-        <span className="text-sm font-medium text-purple-200">Generated Audio</span>
+    <div
+      className="rounded-lg p-4 my-2 border"
+      style={{
+        background: "linear-gradient(90deg, var(--accent-highlight-subtle), transparent)",
+        borderColor: "var(--accent-interactive-primary)",
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-3 h-3 rounded-full animate-pulse"
+            style={{ backgroundColor: "var(--accent-interactive-primary)" }}
+          ></div>
+          <span className="text-sm font-medium text-purple-200">Generated Audio</span>
+        </div>
+        {/* Mini equalizer when playing */}
+        {blobUrl && !error && (
+          <div className="hidden sm:flex items-end gap-0.5 h-4" aria-hidden>
+            <span className={`w-1 rounded-sm ${isPlaying ? 'animate-pulse' : ''}`}
+              style={{ backgroundColor: 'var(--accent-highlight-primary)', height: isPlaying ? '100%' : '40%' }} />
+            <span className={`w-1 rounded-sm ${isPlaying ? 'animate-pulse' : ''}`}
+              style={{ backgroundColor: 'var(--accent-highlight-secondary)', height: isPlaying ? '70%' : '30%' }} />
+            <span className={`w-1 rounded-sm ${isPlaying ? 'animate-pulse' : ''}`}
+              style={{ backgroundColor: 'var(--accent-interactive-primary)', height: isPlaying ? '90%' : '25%' }} />
+            <span className={`w-1 rounded-sm ${isPlaying ? 'animate-pulse' : ''}`}
+              style={{ backgroundColor: 'var(--accent-highlight-secondary)', height: isPlaying ? '60%' : '20%' }} />
+          </div>
+        )}
       </div>
 
       {error ? (
@@ -152,6 +178,9 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
           className="w-full mb-3"
           style={{ filter: 'hue-rotate(280deg)' }}
           preload="metadata"
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
         >
           <source src={blobUrl} type="audio/mpeg" />
           <source src={blobUrl} type="audio/wav" />
@@ -159,12 +188,21 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
           Your browser does not support the audio element.
         </audio>
       ) : (
-        <div className="text-zinc-400 text-sm mb-3">Loading audio...</div>
+        <div className="flex items-center gap-3 text-zinc-300 text-sm mb-3">
+          {/* Distinct loading equalizer (different from image skeleton) */}
+          <div className="flex items-end gap-1 h-6" aria-hidden>
+            <span className="w-1 h-2 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-primary)' }} />
+            <span className="w-1 h-4 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-secondary)' }} />
+            <span className="w-1 h-5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-interactive-primary)' }} />
+            <span className="w-1 h-3 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-secondary)' }} />
+          </div>
+          <span>Preparing audio...</span>
+        </div>
       )}
 
       <button
         onClick={downloadAudio}
-        className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm transition-colors"
+        className={`${ACCENT_UTILITY_CLASSES.button.primary} flex items-center gap-2 px-3 py-2 text-white rounded-md text-sm transition-colors`}
         disabled={!blobUrl}
       >
         <Download size={16} />
@@ -172,7 +210,7 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
       </button>
     </div>
   );
-};
+}
 
 export default function MarkdownLite({ text }: Props) {
   if (!text) return null;

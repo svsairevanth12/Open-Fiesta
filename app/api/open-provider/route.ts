@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Buffer } from 'node:buffer';
 
 // Function to get natural TTS prefix based on content type
 function getTTSPrefix(text: string): string {
@@ -68,8 +69,11 @@ export async function POST(req: NextRequest) {
 
     // Handle different model categories
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
-    const isAudioModel = model === 'openai-audio';
+    // Consider models with 'audio', 'voice' or 'tts' in their name as audio models (e.g., GPT-4o Mini Audio/Voice)
+    const isAudioModel = model === 'openai-audio' || /(audio|voice|tts)/i.test(model);
     const isReasoningModel = ['openai-reasoning', 'deepseek-reasoning'].includes(model);
+    // Some Azure OpenAI hosted models (e.g., GPT-5 nano) only allow default temperature=1
+    const isGpt5Nano = /gpt-5\s*-?\s*nano/i.test(model);
 
     // For audio models, add natural TTS prefix to make it feel more conversational
     if (isAudioModel && prompt) {
@@ -106,11 +110,12 @@ export async function POST(req: NextRequest) {
 
     // Prepare the request body in OpenAI format for Pollinations API
     const requestBody = isAudioModel ? {
-      // For audio models, use simplified OpenAI TTS format (no modalities to avoid errors)
+      // For audio-capable chat models, send chat-style messages with audio modalities
       model: model,
-      input: prompt, // Use the full user message as input for TTS
-      voice: voice || 'alloy', // Use selected voice or default to alloy
-      response_format: 'mp3',
+      messages: trimmedMessages.map(msg => ({ role: msg.role, content: msg.content })),
+      audio: { voice: voice || 'alloy', format: 'mp3' },
+      modalities: ['text', 'audio'],
+      stream: false,
     } : {
       // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
@@ -121,8 +126,8 @@ export async function POST(req: NextRequest) {
       stream: false,
       // Add defaults and reasoning parameters
       ...(isReasoningModel
-        ? { temperature: 0.7, max_tokens: 4000 }
-        : { temperature: 0.7, max_tokens: 2048 })
+        ? { temperature: isGpt5Nano ? 1 : 0.7, max_tokens: 4000 }
+        : { temperature: isGpt5Nano ? 1 : 0.7, max_tokens: 2048 })
     };
 
     // Longer timeout for reasoning models as they take more time
@@ -135,12 +140,11 @@ export async function POST(req: NextRequest) {
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
         bodyPreview: isAudioModel ? {
-          model: requestBody.model,
-          input: requestBody.input,
-          voice: requestBody.voice,
-          response_format: requestBody.response_format,
+          model: (requestBody as any).model,
+          messageCount: (requestBody as any).messages?.length || 0,
+          audio: (requestBody as any).audio,
+          modalities: (requestBody as any).modalities,
           isAudio: true,
-          inputLength: requestBody.input?.length || 0
         } : {
           model: requestBody.model,
           messageCount: 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
@@ -246,10 +250,45 @@ export async function POST(req: NextRequest) {
 
           try {
             data = JSON.parse(responseText);
-            // Check if JSON contains audio URL
+            // 1) Direct fields
             if (data.audio_url || data.url) {
               audioUrl = data.audio_url || data.url;
               console.log('Found audio URL in JSON:', audioUrl);
+            }
+            // 2) OpenAI Responses API style: { output: [ { content: [ { type: 'output_audio', audio: { data, format } } ] } ] }
+            if (!audioUrl && Array.isArray((data as any).output)) {
+              const items = (data as any).output as any[];
+              for (const item of items) {
+                const contents = item?.content;
+                if (Array.isArray(contents)) {
+                  for (const c of contents) {
+                    const audioObj = c?.audio || c?.output_audio || c?.data?.audio;
+                    const type = c?.type;
+                    if ((type === 'output_audio' || type === 'audio' || audioObj) && (audioObj?.data || c?.data)) {
+                      const b64 = audioObj?.data || c?.data;
+                      const fmt = (audioObj?.format || 'mp3').toLowerCase();
+                      const mime = fmt === 'wav' ? 'audio/wav' : fmt === 'm4a' ? 'audio/mp4' : 'audio/mpeg';
+                      audioUrl = `data:${mime};base64,${b64}`;
+                      console.log('Constructed data URL from Responses payload');
+                      break;
+                    }
+                  }
+                }
+                if (audioUrl) break;
+              }
+            }
+            // 3) Choices-style: choices[0].message.audio or .content with audio
+            if (!audioUrl && Array.isArray((data as any).choices)) {
+              const ch0 = (data as any).choices[0];
+              const msg = ch0?.message || {};
+              const audioNode = msg?.audio || msg?.content?.find?.((x: any) => x?.type === 'audio' || x?.type === 'output_audio')?.audio;
+              const b64 = audioNode?.data;
+              const fmt = (audioNode?.format || 'mp3').toLowerCase();
+              if (b64) {
+                const mime = fmt === 'wav' ? 'audio/wav' : fmt === 'm4a' ? 'audio/mp4' : 'audio/mpeg';
+                audioUrl = `data:${mime};base64,${b64}`;
+                console.log('Constructed data URL from choices.message.audio');
+              }
             }
           } catch {
             // If response looks like a URL, use it as audio URL
