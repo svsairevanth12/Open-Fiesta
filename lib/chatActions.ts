@@ -1,4 +1,4 @@
-import { callGemini, callOpenRouter, callOpenProvider, streamOpenRouter } from './client';
+import { callGemini, callOpenRouter, callOpenProvider, callUnstable, streamOpenRouter } from './client';
 import { safeUUID } from './uuid';
 import type { AiModel, ApiKeys, ChatMessage, ChatThread } from './types';
 import type { Project } from './projects';
@@ -136,6 +136,47 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             }));
           } else {
             // typewriter effect for all models (image models already have markdown in the response)
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...t, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(t => {
+                  if (t.id !== thread.id) return t;
+                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...t, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'unstable') {
+          // create placeholder for typing animation
+          const placeholderTs = Date.now();
+          const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
+          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
+
+          const res = await callUnstable({ apiKey: keys['unstable'] || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...t, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for unstable models
             let i = 0;
             const step = Math.max(2, Math.ceil(full.length / 80));
             const timer = window.setInterval(() => {
@@ -324,6 +365,42 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             }));
           } else {
             // typewriter effect for all models (image models already have markdown in the response)
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'unstable') {
+          const res = await callUnstable({ apiKey: keys['unstable'] || undefined, model: m.model, messages: baseHistory });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for unstable models
             let i = 0;
             const step = Math.max(2, Math.ceil(full.length / 80));
             const timer = window.setInterval(() => {

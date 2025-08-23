@@ -28,6 +28,15 @@ export async function callOpenProvider(args: { apiKey?: string; model: string; m
   return res.json();
 }
 
+export async function callUnstable(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }) {
+  const res = await fetch('/api/unstable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  return res.json();
+}
+
 export type ORStreamHandlers = {
   onToken: (chunk: string) => void;
   onMeta?: (meta: { provider?: string; usedKeyType?: 'user' | 'shared' | 'none' }) => void;

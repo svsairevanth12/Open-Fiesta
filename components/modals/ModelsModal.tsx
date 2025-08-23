@@ -300,6 +300,7 @@ export default function ModelsModal({
             { id: 'gemini', label: 'Gemini', count: MODEL_CATALOG.filter(m => m.provider === 'gemini').length },
             { id: 'openrouter', label: 'OpenRouter', count: MODEL_CATALOG.filter(m => m.provider === 'openrouter').length },
             { id: 'open-provider', label: 'Open Provider', count: MODEL_CATALOG.filter(m => m.provider === 'open-provider').length },
+            { id: 'unstable', label: 'Unstable', count: MODEL_CATALOG.filter(m => m.provider === 'unstable').length },
           ].map(provider => (
             <button
               key={provider.id}
