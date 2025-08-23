@@ -45,27 +45,15 @@ npm i
 cp .env.example .env
 ```
 
-   Then edit `.env` with your API keys. **For the default models to work, you need:**
 
-```bash
-# REQUIRED: Unstable Provider (GPT-5 Chat, Sonnet 4, Grok 4)
-INFERENCE_API_KEY=kf-aP6qQ7rR8sS9tT0uUv1wX2xC3yZ4b  # Already provided
 
-# REQUIRED: Google Gemini (Gemini 2.5 Pro)
-GEMINI_API_KEY=your_key_from_https://aistudio.google.com/app/apikey
 
-# REQUIRED: Pollinations (Evil Uncensored) - WORKING TOKEN PROVIDED
-OPEN_PROVIDER_API_KEY=tQ14HuL-wtewmt1H  # Already provided
 ```
 
    **Optional providers for additional models:**
 
 ```bash
-# OpenRouter (for additional free models)
-OPENROUTER_API_KEY=your_key_from_https://openrouter.ai/keys
 
-# Mistral AI (for Mistral models)
-MISTRAL_API_KEY=your_key_from_https://console.mistral.ai
 ```
 
 3. Run dev server
@@ -75,43 +63,10 @@ npm run dev
 # open http://localhost:3000
 ```
 
-### Option 2: Docker Development
 
-1. Build and run with Docker Compose (recommended for development):
-
-```bash
-npm run docker:dev
-# or
-docker-compose up ai_fiesta_dev
-```
-
-2. For production build with Docker:
-
-```bash
-npm run docker:build
-npm run docker:run
-# or
-docker-compose up ai_fiesta
-```
-
-### Option 3: Manual Docker Commands
-
-```bash
-# Build the image
-docker build -t ai_fiesta .
-
-# Run the container
-docker run -p 3000:3000 -e OPENROUTER_API_KEY=your_key_here ai_fiesta
-
-# Run with environment file
-docker run -p 3000:3000 --env-file .env.local ai_fiesta
 ```
 
 ## Environment Variables
-
-- `OPENROUTER_API_KEY`: API key from https://openrouter.ai (required for OpenRouter models)
-- `GOOGLE_GENERATIVE_AI_API_KEY`: API key from Google AI Studio (required for Gemini models)
-
 You can also provide an API key at runtime in the UI's Settings panel.
 
 ## Docker Support
