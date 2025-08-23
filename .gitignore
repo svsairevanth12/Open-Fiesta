@@ -39,3 +39,39 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Development and testing
+__tests__/
+.kiro/
+jest.config.js
+jest.setup.js
+tsconfig.jest.json
+
+# Documentation and specs
+docs/
+monitoring/
+scripts/
+theme_system/
+*.md
+!README.md
+
+# Development Docker files
+docker-compose.prod.yml
+Dockerfile.ci
+Dockerfile.dev
+README.Docker.md
+
+# Environment files (should be created locally)
+.env.docker
+.env.local
+.env.production

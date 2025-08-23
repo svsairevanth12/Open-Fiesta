@@ -18,6 +18,7 @@ import { useTheme } from "@/lib/themeContext";
 import { BACKGROUND_STYLES } from "@/lib/themes";
 import { safeUUID } from "@/lib/uuid";
 import LaunchScreen from "@/components/ui/LaunchScreen";
+import ClientOnly from "@/components/ui/ClientOnly";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -63,6 +64,7 @@ export default function Home() {
     updateProject,
     deleteProject,
     selectProject,
+    isLoaded: projectsLoaded,
   } = useProjects();
 
   const activeThread = useMemo(
@@ -192,46 +194,57 @@ export default function Home() {
       <div className="relative z-10 px-3 lg:px-4 py-4 lg:py-6">
         <div className="flex gap-3 lg:gap-4">
           {/* Sidebar */}
-          <ThreadSidebar
-            sidebarOpen={sidebarOpen}
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            threads={visibleThreads}
-            activeId={activeId}
-            onSelectThread={(id) => setActiveId(id)}
-            onNewChat={() => {
-              const t: ChatThread = {
-                id: safeUUID(),
-                title: "New Chat",
-                messages: [],
-                createdAt: Date.now(),
-                projectId: activeProjectId || undefined,
-              };
-              setThreads((prev) => [t, ...prev]);
-              setActiveId(t.id);
-            }}
-            mobileSidebarOpen={mobileSidebarOpen}
-            onCloseMobile={() => setMobileSidebarOpen(false)}
-            onOpenMobile={() => setMobileSidebarOpen(true)}
-            onDeleteThread={(id) => {
-              setThreads((prev) => {
-                const next = prev.filter((t) => t.id !== id);
-                if (activeId === id) {
-                  const nextInScope = (activeProjectId
-                    ? next.find((t) => t.projectId === activeProjectId)
-                    : next[0])?.id ?? null;
-                  setActiveId(nextInScope);
-                }
-                return next;
-              });
-            }}
-            // Projects (from main)
-            projects={projects}
-            activeProjectId={activeProjectId}
-            onSelectProject={selectProject}
-            onCreateProject={createProject}
-            onUpdateProject={updateProject}
-            onDeleteProject={deleteProject}
-          />
+          <ClientOnly
+            fallback={
+              <aside className={`relative hidden lg:flex shrink-0 h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] rounded-lg border border-white/10 bg-white/5 p-3 flex-col transition-[width] duration-300 ${sidebarOpen ? "w-64" : "w-14"
+                }`}>
+                <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+                  <div className="text-xs opacity-60">Loading...</div>
+                </div>
+              </aside>
+            }
+          >
+            <ThreadSidebar
+              sidebarOpen={sidebarOpen}
+              onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              threads={visibleThreads}
+              activeId={activeId}
+              onSelectThread={(id) => setActiveId(id)}
+              onNewChat={() => {
+                const t: ChatThread = {
+                  id: safeUUID(),
+                  title: "New Chat",
+                  messages: [],
+                  createdAt: Date.now(),
+                  projectId: activeProjectId || undefined,
+                };
+                setThreads((prev) => [t, ...prev]);
+                setActiveId(t.id);
+              }}
+              mobileSidebarOpen={mobileSidebarOpen}
+              onCloseMobile={() => setMobileSidebarOpen(false)}
+              onOpenMobile={() => setMobileSidebarOpen(true)}
+              onDeleteThread={(id) => {
+                setThreads((prev) => {
+                  const next = prev.filter((t) => t.id !== id);
+                  if (activeId === id) {
+                    const nextInScope = (activeProjectId
+                      ? next.find((t) => t.projectId === activeProjectId)
+                      : next[0])?.id ?? null;
+                    setActiveId(nextInScope);
+                  }
+                  return next;
+                });
+              }}
+              // Projects (from main)
+              projects={projects}
+              activeProjectId={activeProjectId}
+              onSelectProject={selectProject}
+              onCreateProject={createProject}
+              onUpdateProject={updateProject}
+              onDeleteProject={deleteProject}
+            />
+          </ClientOnly>
 
           {/* Main content */}
           <div className="flex-1 min-w-0 flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] overflow-hidden">
@@ -260,25 +273,37 @@ export default function Home() {
               onToggle={toggle}
             />
 
-            <FirstVisitNote
-              open={showFirstVisitNote}
-              onClose={() => setFirstNoteDismissed(true)}
-            />
+            <ClientOnly>
+              <FirstVisitNote
+                open={showFirstVisitNote}
+                onClose={() => setFirstNoteDismissed(true)}
+              />
+            </ClientOnly>
 
-            <ChatGrid
-              selectedModels={selectedModels}
-              headerTemplate={headerTemplate}
-              collapsedIds={collapsedIds}
-              setCollapsedIds={setCollapsedIds}
-              loadingIds={loadingIds}
-              pairs={pairs}
-              copyToClipboard={copyToClipboard}
-              copiedAllIdx={copiedAllIdx}
-              setCopiedAllIdx={setCopiedAllIdx}
-              copiedKey={copiedKey}
-              setCopiedKey={setCopiedKey}
-              onEditUser={onEditUser}
-            />
+            <ClientOnly
+              fallback={
+                <div className="relative rounded-lg border border-white/5 bg-white/5 px-3 lg:px-4 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28">
+                  <div className="p-4 text-zinc-400">
+                    Loading chat...
+                  </div>
+                </div>
+              }
+            >
+              <ChatGrid
+                selectedModels={selectedModels}
+                headerTemplate={headerTemplate}
+                collapsedIds={collapsedIds}
+                setCollapsedIds={setCollapsedIds}
+                loadingIds={loadingIds}
+                pairs={pairs}
+                copyToClipboard={copyToClipboard}
+                copiedAllIdx={copiedAllIdx}
+                setCopiedAllIdx={setCopiedAllIdx}
+                copiedKey={copiedKey}
+                setCopiedKey={setCopiedKey}
+                onEditUser={onEditUser}
+              />
+            </ClientOnly>
 
             <FixedInputBar onSubmit={send} loading={anyLoading} />
           </div>

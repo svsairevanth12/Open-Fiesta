@@ -5,6 +5,7 @@ import type { ChatThread } from "@/lib/types";
 import type { Project } from "@/lib/projects";
 import ConfirmDialog from "@/components/modals/ConfirmDialog";
 import ProjectsSection from "@/components/app/ProjectsSection";
+import ShareButton from "@/components/chat/ShareButton";
 
 type Props = {
   sidebarOpen: boolean;
@@ -44,6 +45,13 @@ export default function ThreadSidebar({
   onDeleteProject,
 }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  
+  // Helper function to get project name for a thread
+  const getProjectNameForThread = (thread: ChatThread): string | undefined => {
+    if (!thread.projectId) return undefined;
+    const project = projects.find(p => p.id === thread.projectId);
+    return project?.name;
+  };
   return (
     <>
       {/* Desktop sidebar */}
@@ -116,17 +124,23 @@ export default function ThreadSidebar({
                   >
                     {t.title || "Untitled"}
                   </button>
-                  <button
-                    aria-label="Delete chat"
-                    title="Delete chat"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDeleteId(t.id);
-                    }}
-                    className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <ShareButton 
+                      thread={t} 
+                      projectName={getProjectNameForThread(t)}
+                    />
+                    <button
+                      aria-label="Delete chat"
+                      title="Delete chat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(t.id);
+                      }}
+                      className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -257,17 +271,23 @@ export default function ThreadSidebar({
                   >
                     {t.title || "Untitled"}
                   </button>
-                  <button
-                    aria-label="Delete chat"
-                    title="Delete chat"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDeleteId(t.id);
-                    }}
-                    className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <ShareButton 
+                      thread={t} 
+                      projectName={getProjectNameForThread(t)}
+                    />
+                    <button
+                      aria-label="Delete chat"
+                      title="Delete chat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(t.id);
+                      }}
+                      className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
