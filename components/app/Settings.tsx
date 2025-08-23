@@ -12,13 +12,13 @@ export default function Settings({ compact }: SettingsProps) {
   const [keys, setKeys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
   const [gemini, setGemini] = useState(keys.gemini || "");
   const [openrouter, setOpenrouter] = useState(keys.openrouter || "");
-  const [openProvider, setOpenProvider] = useState(keys['open-provider'] || "");
+  const [mistral, setMistral] = useState(keys['mistral'] || "");
 
   const save = () => {
     const next = {
       gemini: gemini.trim() || undefined,
       openrouter: openrouter.trim() || undefined,
-      'open-provider': openProvider.trim() || undefined,
+      'mistral': mistral.trim() || undefined,
     };
     setKeys(next);
     setOpen(false);
@@ -27,6 +27,13 @@ export default function Settings({ compact }: SettingsProps) {
       window.location.reload();
     }
   };
+
+  // Sync state when keys change
+  useEffect(() => {
+    setGemini(keys.gemini || "");
+    setOpenrouter(keys.openrouter || "");
+    setMistral(keys['mistral'] || "");
+  }, [keys]);
 
   // Allow programmatic open from anywhere (e.g., rate-limit CTA)
   useEffect(() => {
@@ -118,25 +125,25 @@ export default function Settings({ compact }: SettingsProps) {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-sm md:text-base font-medium">
-                      Open Provider API Key
+                      Mistral API Key
                     </label>
                     <a
-                      href="https://pollinations.ai"
+                      href="https://console.mistral.ai"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/15 border border-white/15"
                     >
-                      Get Key <ExternalLink size={12} />
+                      <ExternalLink size={12} /> Get API key
                     </a>
                   </div>
                   <input
-                    value={openProvider}
-                    onChange={(e) => setOpenProvider(e.target.value)}
-                    placeholder="Optional (default token provided)"
+                    value={mistral}
+                    onChange={(e) => setMistral(e.target.value)}
+                    placeholder="..."
                     className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20"
                   />
                   <p className="text-xs text-zinc-400 mt-1">
-                    A default API token is provided. You can override it with your own token from auth.pollinations.ai
+                    Access to Mistral Large, Medium, Small, Codestral, Pixtral, and specialized models
                   </p>
                 </div>
               </div>

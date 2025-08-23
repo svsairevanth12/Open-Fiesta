@@ -61,8 +61,8 @@ export default function ModelsModal({
     return m.provider === 'open-provider' && m.free;
   };
   const isByok = (m: AiModel) => {
-    // OpenRouter and Gemini models require API keys (BYOK)
-    return m.provider === 'openrouter' || m.provider === 'gemini';
+    // OpenRouter, Gemini, and Mistral models require API keys (BYOK)
+    return m.provider === 'openrouter' || m.provider === 'gemini' || m.provider === 'mistral';
   };
   const isUnc = (m: AiModel) =>
     /uncensored/i.test(m.label) || /venice/i.test(m.model) ||
@@ -300,6 +300,8 @@ export default function ModelsModal({
             { id: 'gemini', label: 'Gemini', count: MODEL_CATALOG.filter(m => m.provider === 'gemini').length },
             { id: 'openrouter', label: 'OpenRouter', count: MODEL_CATALOG.filter(m => m.provider === 'openrouter').length },
             { id: 'open-provider', label: 'Open Provider', count: MODEL_CATALOG.filter(m => m.provider === 'open-provider').length },
+            { id: 'unstable', label: 'Unstable', count: MODEL_CATALOG.filter(m => m.provider === 'unstable').length },
+            { id: 'mistral', label: 'Mistral', count: MODEL_CATALOG.filter(m => m.provider === 'mistral').length },
           ].map(provider => (
             <button
               key={provider.id}
