@@ -38,6 +38,7 @@ function normalizeTableLikeMarkdown(lines: string[]): string[] {
 }
 
 import React from "react";
+import { Download } from "lucide-react";
 
 type Props = { text: string };
 
@@ -50,8 +51,85 @@ type Props = { text: string };
 // - fenced code blocks ``` ... ```
 // - simple lists (-, *, 1.)
 // - simple GitHub-style tables
+
+// Download function for images
+const downloadImage = async (imageUrl: string, filename: string) => {
+  try {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Failed to download image:', error);
+    // Fallback: open image in new tab
+    window.open(imageUrl, '_blank');
+  }
+};
+
+// Download function for audio
+const downloadAudio = async (audioUrl: string, filename: string) => {
+  try {
+    const response = await fetch(audioUrl);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Failed to download audio:', error);
+    // Fallback: open audio in new tab
+    window.open(audioUrl, '_blank');
+  }
+};
+
 export default function MarkdownLite({ text }: Props) {
   if (!text) return null;
+
+  // Check for audio content first
+  const audioMatch = text.match(/\[AUDIO:([^\]]+)\]/);
+  if (audioMatch) {
+    const audioUrl = audioMatch[1];
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `openfiesta-audio-${timestamp}.mp3`;
+
+    return (
+      <div className="text-zinc-100 leading-relaxed">
+        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4 my-2">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-purple-200">Generated Audio</span>
+          </div>
+          <audio
+            controls
+            className="w-full mb-3"
+            style={{ filter: 'hue-rotate(280deg)' }}
+          >
+            <source src={audioUrl} type="audio/mpeg" />
+            <source src={audioUrl} type="audio/wav" />
+            <source src={audioUrl} type="audio/mp4" />
+            Your browser does not support the audio element.
+          </audio>
+          <button
+            onClick={() => downloadAudio(audioUrl, filename)}
+            className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm transition-colors"
+          >
+            <Download size={16} />
+            Download Audio
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Split out fenced code blocks first so we don't transform inside them
   const blocks = splitFencedCodeBlocks(text);
@@ -368,46 +446,78 @@ function parseList(lines: string[], idx: number): { element: React.ReactElement;
 }
 
 function renderInline(input: string): React.ReactNode[] {
-  // First split by inline code `...`
-  const segments = input.split(/(`[^`]+`)/g);
+  // First handle images ![alt](url)
+  const imageSegments = input.split(/(!\[[^\]]*\]\([^)]+\))/g);
   const out: React.ReactNode[] = [];
-  segments.forEach((seg, idx) => {
-    if (/^`[^`]+`$/.test(seg)) {
-      const content = seg.slice(1, -1);
+
+  imageSegments.forEach((imgSeg, imgIdx) => {
+    const imageMatch = imgSeg.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imageMatch) {
+      const [, alt, src] = imageMatch;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const filename = `openfiesta-image-${timestamp}.png`;
+
       out.push(
-        <code key={idx} className="rounded bg-black/40 px-1 py-0.5 border border-white/10 text-[0.85em]">
-          {content}
-        </code>
+        <div key={`img-container-${imgIdx}`} className="relative group my-2">
+          <img
+            src={src}
+            alt={alt}
+            className="max-w-full h-auto rounded-lg border border-white/10"
+            style={{ maxHeight: '400px' }}
+          />
+          <button
+            onClick={() => downloadImage(src, filename)}
+            className="absolute top-2 right-2 p-2 bg-black/70 hover:bg-black/90 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1"
+            title="Download image"
+          >
+            <Download size={16} />
+            <span className="text-xs hidden sm:inline">Download</span>
+          </button>
+        </div>
       );
-    } else {
-      // Bold then italics on the remaining text. Keep it simple and safe.
-      // Replace **bold**
-      const withBold = splitAndWrap(seg, /\*\*([^*]+)\*\*/g, (m, i) => (
-        <strong key={`b-${idx}-${i}`} className="font-semibold text-zinc-100">{m}</strong>
-      ));
-      // For each piece, also apply _italic_ or *italic*
-      const withItalics: React.ReactNode[] = [];
-      withBold.forEach((piece, i) => {
-        if (typeof piece !== "string") { withItalics.push(piece); return; }
-        const italics = splitAndWrap(piece, /(?:\*([^*]+)\*|_([^_]+)_)/g, (m2, ii) => (
-          <em key={`i-${idx}-${i}-${ii}`} className="italic text-zinc-100/90">{m2}</em>
-        ));
-        // After italics, highlight standalone word FREE in emerald
-        italics.forEach((part, j) => {
-          if (typeof part !== 'string') { withItalics.push(part); return; }
-          const chunks = part.split(/(\bFREE\b)/gi);
-          chunks.forEach((ch, k) => {
-            if (/^\bFREE\b$/i.test(ch)) {
-              withItalics.push(<span key={`free-${idx}-${i}-${j}-${k}`} className="text-emerald-300 font-semibold">FREE</span>);
-            } else if (ch) {
-              withItalics.push(<React.Fragment key={`t-${idx}-${i}-${j}-${k}`}>{ch}</React.Fragment>);
-            }
-          });
-        });
-      });
-      out.push(<React.Fragment key={`t-${idx}`}>{withItalics}</React.Fragment>);
+      return;
     }
-  });
+
+    // Then split by inline code `...`
+    const segments = imgSeg.split(/(`[^`]+`)/g);
+    segments.forEach((seg, idx) => {
+      if (/^`[^`]+`$/.test(seg)) {
+        const content = seg.slice(1, -1);
+        out.push(
+          <code key={`${imgIdx}-${idx}`} className="rounded bg-black/40 px-1 py-0.5 border border-white/10 text-[0.85em]">
+            {content}
+          </code>
+        );
+        } else {
+          // Bold then italics on the remaining text. Keep it simple and safe.
+          // Replace **bold**
+          const withBold = splitAndWrap(seg, /\*\*([^*]+)\*\*/g, (m, i) => (
+            <strong key={`b-${imgIdx}-${idx}-${i}`} className="font-semibold text-zinc-100">{m}</strong>
+          ));
+          // For each piece, also apply _italic_ or *italic*
+          const withItalics: React.ReactNode[] = [];
+          withBold.forEach((piece, i) => {
+            if (typeof piece !== "string") { withItalics.push(piece); return; }
+            const italics = splitAndWrap(piece, /(?:\*([^*]+)\*|_([^_]+)_)/g, (m2, ii) => (
+              <em key={`i-${imgIdx}-${idx}-${i}-${ii}`} className="italic text-zinc-100/90">{m2}</em>
+            ));
+            // After italics, highlight standalone word FREE in emerald
+            italics.forEach((part, j) => {
+              if (typeof part !== 'string') { withItalics.push(part); return; }
+              const chunks = part.split(/(\bFREE\b)/gi);
+              chunks.forEach((ch, k) => {
+                if (/^\bFREE\b$/i.test(ch)) {
+                  withItalics.push(<span key={`free-${imgIdx}-${idx}-${i}-${j}-${k}`} className="text-emerald-300 font-semibold">FREE</span>);
+                } else if (ch) {
+                  withItalics.push(<React.Fragment key={`t-${imgIdx}-${idx}-${i}-${j}-${k}`}>{ch}</React.Fragment>);
+                }
+              });
+            });
+          });
+          out.push(<React.Fragment key={`t-${imgIdx}-${idx}`}>{withItalics}</React.Fragment>);
+        }
+      });
+    });
   return out;
 }
 

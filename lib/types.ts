@@ -12,15 +12,17 @@ export type ChatMessage = {
 export type AiModel = {
   id: string; // unique key in UI
   label: string; // display name
-  provider: 'gemini' | 'openrouter';
+  provider: 'gemini' | 'openrouter' | 'open-provider';
   model: string; // provider-specific model id
   free?: boolean;
   good?: boolean; // highlight as recommended
+  category?: 'text' | 'image' | 'audio'; // model capability category
 };
 
 export type ApiKeys = {
   gemini?: string;
   openrouter?: string;
+  'open-provider'?: string; // Optional API key for open-provider (currently free)
 };
 
 export type ChatThread = {
