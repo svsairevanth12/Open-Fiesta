@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, ExternalLink, Cog } from "lucide-react";
+import { X, ExternalLink, Cog, Eye, EyeOff } from "lucide-react";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { ApiKeys } from "@/lib/types";
 
@@ -12,6 +12,10 @@ export default function Settings({ compact }: SettingsProps) {
   const [keys, setKeys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
   const [gemini, setGemini] = useState(keys.gemini || "");
   const [openrouter, setOpenrouter] = useState(keys.openrouter || "");
+
+  // hide/show toggle states
+  const [showGemini, setShowGemini] = useState(false);
+  const [showOpenrouter, setShowOpenrouter] = useState(false);
 
   const save = () => {
     const next = {
@@ -71,6 +75,7 @@ export default function Settings({ compact }: SettingsProps) {
                 sent only with your requests. Do not hardcode keys in code.
               </p>
               <div className="space-y-4">
+                {/* Gemini API Key */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-sm md:text-base font-medium">
@@ -85,13 +90,24 @@ export default function Settings({ compact }: SettingsProps) {
                       <ExternalLink size={12} /> Get API key
                     </a>
                   </div>
-                  <input
-                    value={gemini}
-                    onChange={(e) => setGemini(e.target.value)}
-                    placeholder="AIza..."
-                    className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showGemini ? "text" : "password"}
+                      value={gemini}
+                      onChange={(e) => setGemini(e.target.value)}
+                      placeholder="AIza..."
+                      className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGemini(!showGemini)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                    >
+                      {showGemini ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
+                {/* OpenRouter API Key */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-sm md:text-base font-medium">
@@ -106,12 +122,22 @@ export default function Settings({ compact }: SettingsProps) {
                       <ExternalLink size={12} /> Get API key
                     </a>
                   </div>
-                  <input
-                    value={openrouter}
-                    onChange={(e) => setOpenrouter(e.target.value)}
-                    placeholder="sk-or-..."
-                    className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showOpenrouter ? "text" : "password"}
+                      value={openrouter}
+                      onChange={(e) => setOpenrouter(e.target.value)}
+                      placeholder="sk-or-..."
+                      className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOpenrouter(!showOpenrouter)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                    >
+                      {showOpenrouter ? (<EyeOff size={16} />) : (<Eye size={16}/>)}
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-2 justify-end mt-6">
