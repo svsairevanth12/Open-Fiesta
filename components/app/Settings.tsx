@@ -12,6 +12,7 @@ export default function Settings({ compact }: SettingsProps) {
   const [keys, setKeys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
   const [gemini, setGemini] = useState(keys.gemini || "");
   const [openrouter, setOpenrouter] = useState(keys.openrouter || "");
+  const [mistral, setMistral] = useState(keys['mistral'] || "");
 
   // hide/show toggle states
   const [showGemini, setShowGemini] = useState(false);
@@ -21,6 +22,7 @@ export default function Settings({ compact }: SettingsProps) {
     const next = {
       gemini: gemini.trim() || undefined,
       openrouter: openrouter.trim() || undefined,
+      'mistral': mistral.trim() || undefined,
     };
     setKeys(next);
     setOpen(false);
@@ -29,6 +31,13 @@ export default function Settings({ compact }: SettingsProps) {
       window.location.reload();
     }
   };
+
+  // Sync state when keys change
+  useEffect(() => {
+    setGemini(keys.gemini || "");
+    setOpenrouter(keys.openrouter || "");
+    setMistral(keys['mistral'] || "");
+  }, [keys]);
 
   // Allow programmatic open from anywhere (e.g., rate-limit CTA)
   useEffect(() => {
@@ -138,6 +147,30 @@ export default function Settings({ compact }: SettingsProps) {
                       {showOpenrouter ? (<EyeOff size={16} />) : (<Eye size={16}/>)}
                     </button>
                   </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-sm md:text-base font-medium">
+                      Mistral API Key
+                    </label>
+                    <a
+                      href="https://console.mistral.ai"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/15 border border-white/15"
+                    >
+                      <ExternalLink size={12} /> Get API key
+                    </a>
+                  </div>
+                  <input
+                    value={mistral}
+                    onChange={(e) => setMistral(e.target.value)}
+                    placeholder="..."
+                    className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20"
+                  />
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Access to Mistral Large, Medium, Small, Codestral, Pixtral, and specialized models
+                  </p>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-2 justify-end mt-6">

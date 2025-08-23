@@ -21,6 +21,33 @@ export async function callOpenRouter(args: { apiKey?: string; model: string; mes
   return res.json();
 }
 
+export async function callOpenProvider(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string; voice?: string }) {
+  const res = await fetch('/api/open-provider', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  return res.json();
+}
+
+export async function callUnstable(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }) {
+  const res = await fetch('/api/unstable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  return res.json();
+}
+
+export async function callMistral(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }) {
+  const res = await fetch('/api/mistral', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  return res.json();
+}
+
 export type ORStreamHandlers = {
   onToken: (chunk: string) => void;
   onMeta?: (meta: { provider?: string; usedKeyType?: 'user' | 'shared' | 'none' }) => void;

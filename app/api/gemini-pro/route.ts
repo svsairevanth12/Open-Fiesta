@@ -5,6 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, apiKey: apiKeyFromBody, imageDataUrl } = await req.json();
     const apiKey = apiKeyFromBody || process.env.GEMINI_API_KEY;
+    const usedKeyType = apiKeyFromBody ? 'user' : (process.env.GEMINI_API_KEY ? 'shared' : 'none');
     if (!apiKey) return new Response(JSON.stringify({ error: 'Missing Gemini API key' }), { status: 400 });
     const geminiModel = 'gemini-2.5-pro';
 
@@ -65,10 +66,14 @@ export async function POST(req: NextRequest) {
         'X-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents,
+        // Ensure there is at least one user message; Gemini requires user/model roles in contents
+        contents: contents.length > 0 ? contents : [{ role: 'user', parts: [{ text: 'Please respond to the instruction.' }] }],
         ...(systemParts.length > 0 ? { systemInstruction: { parts: systemParts } } : {}),
         generationConfig: {
           response_mime_type: 'text/plain',
+          // Encourage non-empty responses
+          maxOutputTokens: 2048,
+          temperature: 0.7,
         },
       }),
     });
@@ -139,7 +144,32 @@ export async function POST(req: NextRequest) {
       const hint = 'Gemini Pro returned an empty message. This can happen on shared quota. Try again, rephrase, or add your own Gemini API key in Settings.';
       text = compact || hint;
     }
-    return Response.json({ text, raw: data });
+    // Token estimation similar to other providers
+    const estimateTokens = (s: string) => {
+      const t = (s || '').replace(/\s+/g, ' ').trim();
+      return t.length > 0 ? Math.ceil(t.length / 4) : 0;
+    };
+    const inputArray = Array.isArray(messages) ? (messages as Array<{ role?: unknown; content?: unknown }>) : [];
+    const perMessage = inputArray.map((m, idx) => ({
+      index: idx,
+      role: typeof m?.role === 'string' ? String(m.role) : 'user',
+      chars: typeof m?.content === 'string' ? (m.content as string).length : String(m?.content ?? '').length,
+      tokens: estimateTokens(typeof m?.content === 'string' ? (m.content as string) : String(m?.content ?? '')),
+    }));
+    const total = perMessage.reduce((sum, x) => sum + x.tokens, 0);
+
+    return Response.json({
+      text,
+      raw: data,
+      provider: 'gemini',
+      usedKeyType,
+      tokens: {
+        by: 'messages',
+        total,
+        perMessage,
+        model: geminiModel,
+      },
+    });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     return new Response(JSON.stringify({ error: message }), { status: 500 });

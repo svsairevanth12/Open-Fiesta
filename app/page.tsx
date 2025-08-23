@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 
-
 import HeaderBar from "@/components/app/HeaderBar";
 import SelectedModelsBar from "@/components/chat/SelectedModelsBar";
+import VoiceSelector from "@/components/modals/VoiceSelector";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { mergeModels, useCustomModels } from "@/lib/customModels";
-import { ChatMessage, ApiKeys, ChatThread } from "@/lib/types";
+import { ChatMessage, ApiKeys, ChatThread, AiModel } from "@/lib/types";
 import { createChatActions } from "@/lib/chatActions";
 import { useProjects } from "@/lib/useProjects";
 import ModelsModal from "@/components/modals/ModelsModal";
@@ -28,11 +28,11 @@ export default function Home() {
   const [selectedIds, setSelectedIds] = useLocalStorage<string[]>(
     "ai-fiesta:selected-models",
     [
-      "gemini-2.5-flash",
-      "llama-3.3-70b-instruct",
-      "qwen-2.5-72b-instruct",
-      "openai-gpt-oss-20b-free",
-      "glm-4.5-air",
+      "unstable-gpt-5-chat",
+      "unstable-claude-sonnet-4",
+      "gemini-2.5-pro",
+      "unstable-grok-4",
+      "open-evil",
     ]
   );
   const [keys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
@@ -50,6 +50,10 @@ export default function Home() {
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [modelsModalOpen, setModelsModalOpen] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useLocalStorage<string>(
+    "ai-fiesta:selected-voice",
+    "alloy"
+  );
 
   const [customModels] = useCustomModels();
   const allModels = useMemo(() => mergeModels(customModels), [customModels]);
@@ -80,7 +84,7 @@ export default function Home() {
   // Allow collapsing a model column without unselecting it
   const [collapsedIds, setCollapsedIds] = useState<string[]>([]);
   const selectedModels = useMemo(
-    () => allModels.filter((m) => selectedIds.includes(m.id)),
+    () => selectedIds.map(id => allModels.find(m => m.id === id)).filter(Boolean) as AiModel[],
     [selectedIds, allModels]
   );
   // Build grid template: collapsed => fixed narrow, expanded => normal
@@ -99,7 +103,7 @@ export default function Home() {
     "ai-fiesta:first-visit-note-dismissed",
     false
   );
-  const showFirstVisitNote =
+  const showFirstVisitNote = isHydrated &&
     !firstNoteDismissed && (!keys?.openrouter || !keys?.gemini);
 
   // Copy helper with fallback when navigator.clipboard is unavailable
@@ -146,6 +150,7 @@ export default function Home() {
         setLoadingIds: (updater) => setLoadingIds(updater),
         setLoadingIdsInit: (ids) => setLoadingIds(ids),
         activeProject, // include project system prompt/context
+        selectedVoice, // pass voice selection for audio models
       }),
     [
       selectedModels,
@@ -155,6 +160,7 @@ export default function Home() {
       setThreads,
       setActiveId,
       activeProject,
+      selectedVoice,
     ]
   );
 
@@ -173,15 +179,58 @@ export default function Home() {
     return rows;
   }, [messages]);
 
+  // Delete a full user turn (user + all its answers)
+  const onDeleteUser = (turnIndex: number) => {
+    if (!activeThread) return;
+    setThreads((prev) =>
+      prev.map((t) => {
+        if (t.id !== activeThread.id) return t;
+        const msgs = t.messages;
+        const userStarts: number[] = [];
+        for (let i = 0; i < msgs.length; i++) if (msgs[i].role === "user") userStarts.push(i);
+        const start = userStarts[turnIndex];
+        if (start === undefined) return t;
+        const end = userStarts[turnIndex + 1] ?? msgs.length; // exclusive
+        const nextMsgs = msgs.filter((_, idx) => idx < start || idx >= end);
+        return { ...t, messages: nextMsgs };
+      })
+    );
+  };
+
+  // Delete a specific model's answer within a turn
+  const onDeleteAnswer = (turnIndex: number, modelId: string) => {
+    if (!activeThread) return;
+    setThreads((prev) =>
+      prev.map((t) => {
+        if (t.id !== activeThread.id) return t;
+        const msgs = t.messages;
+        const userStarts: number[] = [];
+        for (let i = 0; i < msgs.length; i++) if (msgs[i].role === "user") userStarts.push(i);
+        const start = userStarts[turnIndex];
+        if (start === undefined) return t;
+        const end = userStarts[turnIndex + 1] ?? msgs.length; // exclusive
+        let removed = false;
+        const nextMsgs = msgs.filter((m, idx) => {
+          if (idx <= start || idx >= end) return true;
+          if (!removed && m.role === "assistant" && m.modelId === modelId) {
+            removed = true;
+            return false;
+          }
+          return true;
+        });
+        return { ...t, messages: nextMsgs };
+      })
+    );
+  };
+
   useEffect(() => {
     setIsHydrated(true);
-    const t = setTimeout(() => setShowSplash(false), 350); // fade-out duration match
+    const t = setTimeout(() => setShowSplash(false), 350);
     return () => clearTimeout(t);
   }, []);
 
   return (
     <div className={`min-h-screen w-full ${backgroundClass} relative text-white`}>
-
       {showSplash && (
         <div className="fixed inset-0 z-[9999]">
           <LaunchScreen backgroundClass={backgroundClass} dismissed={isHydrated} />
@@ -251,6 +300,16 @@ export default function Home() {
             {/* Selected models row + actions */}
             <SelectedModelsBar selectedModels={selectedModels} onToggle={toggle} />
 
+            {/* Voice selector for audio models */}
+            {isHydrated && selectedModels.some((m) => m.category === "audio") && (
+              <div className="mb-3 px-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-zinc-400">Voice:</span>
+                  <VoiceSelector selectedVoice={selectedVoice} onVoiceChange={setSelectedVoice} />
+                </div>
+              </div>
+            )}
+
             <ModelsModal
               open={modelsModalOpen}
               onClose={() => setModelsModalOpen(false)}
@@ -260,27 +319,30 @@ export default function Home() {
               onToggle={toggle}
             />
 
-            <FirstVisitNote
-              open={showFirstVisitNote}
-              onClose={() => setFirstNoteDismissed(true)}
-            />
+            {isHydrated && (
+              <FirstVisitNote open={showFirstVisitNote} onClose={() => setFirstNoteDismissed(true)} />
+            )}
 
-            <ChatGrid
-              selectedModels={selectedModels}
-              headerTemplate={headerTemplate}
-              collapsedIds={collapsedIds}
-              setCollapsedIds={setCollapsedIds}
-              loadingIds={loadingIds}
-              pairs={pairs}
-              copyToClipboard={copyToClipboard}
-              copiedAllIdx={copiedAllIdx}
-              setCopiedAllIdx={setCopiedAllIdx}
-              copiedKey={copiedKey}
-              setCopiedKey={setCopiedKey}
-              onEditUser={onEditUser}
-            />
+            {isHydrated && (
+              <ChatGrid
+                selectedModels={selectedModels}
+                headerTemplate={headerTemplate}
+                collapsedIds={collapsedIds}
+                setCollapsedIds={setCollapsedIds}
+                loadingIds={loadingIds}
+                pairs={pairs}
+                copyToClipboard={copyToClipboard}
+                copiedAllIdx={copiedAllIdx}
+                setCopiedAllIdx={setCopiedAllIdx}
+                copiedKey={copiedKey}
+                setCopiedKey={setCopiedKey}
+                onEditUser={onEditUser}
+                onDeleteUser={onDeleteUser}
+                onDeleteAnswer={onDeleteAnswer}
+              />
+            )}
 
-            <FixedInputBar onSubmit={send} loading={anyLoading} />
+            {isHydrated && <FixedInputBar onSubmit={send} loading={anyLoading} />}
           </div>
         </div>
       </div>

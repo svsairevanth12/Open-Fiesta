@@ -1,8 +1,9 @@
 "use client";
-import { useEffect } from "react";
-import { X, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Star, StarOff } from "lucide-react";
 import type { AiModel } from "@/lib/types";
 import { MODEL_CATALOG } from "@/lib/models";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 
 export type ModelsModalProps = {
   open: boolean;
@@ -21,6 +22,15 @@ export default function ModelsModal({
   customModels,
   onToggle,
 }: ModelsModalProps) {
+  const [activeProvider, setActiveProvider] = useState<string>('all');
+  const [favoriteIds, setFavoriteIds] = useLocalStorage<string[]>("ai-fiesta:favorite-models", [
+    "unstable-gpt-5-chat",
+    "unstable-claude-sonnet-4",
+    "gemini-2.5-pro",
+    "unstable-grok-4",
+    "open-evil",
+  ]);
+
   // Lock background scroll while modal is open
   useEffect(() => {
     if (open) {
@@ -37,6 +47,9 @@ export default function ModelsModal({
 
   const buckets: Record<string, AiModel[]> = {
     Favorites: [],
+    'Text Models': [],
+    'Image Models': [],
+    'Audio Models': [],
     Uncensored: [],
     Free: [],
     Good: [],
@@ -44,29 +57,45 @@ export default function ModelsModal({
   };
   const seen = new Set<string>();
   const isFree = (m: AiModel) => {
-    const maybe = m as Partial<{ free: boolean }>;
-    return /(\(|\s)free\)/i.test(m.label) || !!maybe.free;
+    // Only Open Provider models are truly free
+    return m.provider === 'open-provider' && m.free;
+  };
+  const isByok = (m: AiModel) => {
+    // OpenRouter, Gemini, and Mistral models require API keys (BYOK)
+    return m.provider === 'openrouter' || m.provider === 'gemini' || m.provider === 'mistral';
   };
   const isUnc = (m: AiModel) =>
-    /uncensored/i.test(m.label) || /venice/i.test(m.model);
-  const staticFavIds = new Set<string>([
-    "llama-3.3-70b-instruct",
-    "gemini-2.5-pro",
-    "openai-gpt-oss-20b-free",
-    "glm-4.5-air",
-    "moonshot-kimi-k2",
-  ]);
+    /uncensored/i.test(m.label) || /venice/i.test(m.model) ||
+    m.model === 'evil' || m.model === 'unity';
   const isFav = (m: AiModel) =>
-    selectedIds.includes(m.id) || staticFavIds.has(m.id);
+    favoriteIds.includes(m.id);
+
+  const toggleFavorite = (modelId: string) => {
+    setFavoriteIds(prev =>
+      prev.includes(modelId)
+        ? prev.filter(id => id !== modelId)
+        : [...prev, modelId]
+    );
+  };
   const pick = (m: AiModel) => {
     if (isFav(m)) return "Favorites";
+    if (m.category === 'image') return "Image Models";
+    if (m.category === 'audio') return "Audio Models";
+    if (m.category === 'text' || m.provider === 'open-provider') return "Text Models";
     if (isUnc(m)) return "Uncensored";
     if (isFree(m)) return "Free";
     if (m.good) return "Good";
     return "Others";
   };
 
-  MODEL_CATALOG.forEach((m) => {
+  // Filter models by provider if a specific provider is selected
+  const filteredModels = activeProvider === 'all'
+    ? MODEL_CATALOG
+    : activeProvider === 'pro'
+    ? MODEL_CATALOG.filter(m => m.provider === 'unstable' || m.provider === 'mistral')
+    : MODEL_CATALOG.filter(m => m.provider === activeProvider);
+
+  filteredModels.forEach((m) => {
     const key = pick(m as AiModel);
     if (!seen.has(m.id)) {
       buckets[key].push(m as AiModel);
@@ -90,13 +119,13 @@ export default function ModelsModal({
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
         {models.map((m) => {
           const free = isFree(m);
+          const byok = isByok(m);
           const unc = isUnc(m);
           const selected = selectedIds.includes(m.id);
           const disabled = !selected && selectedModels.length >= 5;
           return (
-            <button
+            <div
               key={m.id}
-              onClick={() => !disabled && onToggle(m.id)}
               className={`model-chip flex items-center justify-between gap-2 w-full h-10 sm:h-9 md:h-9 px-3 sm:px-3 md:px-3 text-xs sm:text-[11px] md:text-sm ${
                 disabled ? "opacity-60 cursor-not-allowed text-zinc-500" : ""
               } ${
@@ -105,25 +134,33 @@ export default function ModelsModal({
                     ? "model-chip-pro"
                     : free
                     ? "model-chip-free"
+                    : byok
+                    ? "border-blue-400/30 bg-blue-500/10"
                     : "border-white/20 bg-white/10"
                   : m.good
                   ? "model-chip-pro"
                   : free
                   ? "model-chip-free"
+                  : byok
+                  ? "border-blue-400/20 bg-blue-500/5 hover:bg-blue-500/10"
                   : "border-white/10 bg-white/5 hover:bg-white/10"
               }`}
               data-selected={selected || undefined}
-              data-type={m.good ? "pro" : free ? "free" : unc ? "unc" : "other"}
-              {...(disabled ? { "aria-disabled": "true" } : {})}
-              title={
-                selected
-                  ? "Click to unselect"
-                  : disabled
-                  ? "Limit reached"
-                  : "Click to select"
-              }
+              data-type={m.good ? "pro" : free ? "free" : byok ? "byok" : unc ? "unc" : "other"}
             >
-              <span className="pr-1 inline-flex items-center gap-1.5 min-w-0">
+              {/* Model content - clickable area for selection */}
+              <button
+                onClick={() => !disabled && onToggle(m.id)}
+                className="flex-1 flex items-center gap-1.5 min-w-0 text-left h-full"
+                disabled={disabled}
+                title={
+                  selected
+                    ? "Click to unselect"
+                    : disabled
+                    ? "Limit reached"
+                    : "Click to select"
+                }
+              >
                 {showBadges && m.good && (
                   <span className="badge-base badge-pro inline-flex items-center gap-1 px-1.5 py-0.5">
                     <Star size={12} className="shrink-0" />
@@ -136,24 +173,72 @@ export default function ModelsModal({
                     <span className="hidden sm:inline">Free</span>
                   </span>
                 )}
+                {showBadges && byok && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-200 ring-1 ring-blue-300/30">
+                    <span className="h-2 w-2 rounded-full bg-blue-200" />
+                    <span className="hidden sm:inline">BYOK</span>
+                  </span>
+                )}
                 {showBadges && unc && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-200 ring-1 ring-rose-300/30">
                     <span className="h-2 w-2 rounded-full bg-rose-200" />
                     <span className="hidden sm:inline">Uncensored</span>
                   </span>
                 )}
+                {showBadges && m.category === 'image' && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-200 ring-1 ring-purple-300/30">
+                    <span className="h-2 w-2 rounded-full bg-purple-200" />
+                    <span className="hidden sm:inline">Image</span>
+                  </span>
+                )}
+                {showBadges && m.category === 'audio' && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-200 ring-1 ring-orange-300/30">
+                    <span className="h-2 w-2 rounded-full bg-orange-200" />
+                    <span className="hidden sm:inline">Audio</span>
+                  </span>
+                )}
                 <span className="truncate max-w-full">
                   {m.label}
                 </span>
-              </span>
-              <span
-                className="model-toggle-pill"
-                data-type={m.good ? "pro" : free ? "free" : "other"}
-                data-active={selected || undefined}
-              >
-                <span className="model-toggle-thumb" />
-              </span>
-            </button>
+              </button>
+
+              {/* Action buttons - separate from selection */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Favorite toggle button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(m.id);
+                  }}
+                  className={`p-1 rounded-md transition-colors ${
+                    isFav(m)
+                      ? 'text-yellow-400 hover:text-yellow-300 bg-yellow-400/10 hover:bg-yellow-400/20'
+                      : 'text-zinc-400 hover:text-zinc-300 hover:bg-white/10'
+                  }`}
+                  title={isFav(m) ? "Remove from favorites" : "Add to favorites"}
+                >
+                  {isFav(m) ? <Star size={14} fill="currentColor" /> : <StarOff size={14} />}
+                </button>
+
+                {/* Model selection toggle */}
+                <button
+                  onClick={() => !disabled && onToggle(m.id)}
+                  className="model-toggle-pill"
+                  data-type={m.good ? "pro" : free ? "free" : byok ? "byok" : "other"}
+                  data-active={selected || undefined}
+                  disabled={disabled}
+                  title={
+                    selected
+                      ? "Click to unselect"
+                      : disabled
+                      ? "Limit reached"
+                      : "Click to select"
+                  }
+                >
+                  <span className="model-toggle-thumb" />
+                </button>
+              </div>
+            </div>
           );
         })}
       </div>
@@ -162,6 +247,9 @@ export default function ModelsModal({
 
   const order: Array<keyof typeof buckets> = [
     "Favorites",
+    "Text Models",
+    "Image Models",
+    "Audio Models",
     "Uncensored",
     "Free",
     "Good",
@@ -206,6 +294,32 @@ export default function ModelsModal({
         <div className="text-xs md:text-sm text-zinc-300 mb-4">
           Selected: {selectedModels.length}/5
         </div>
+
+        {/* Provider Filter Tabs */}
+        <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-white/10">
+          {[
+            { id: 'all', label: 'All Models', count: MODEL_CATALOG.length },
+            { id: 'pro', label: 'Pro Models', count: MODEL_CATALOG.filter(m => m.provider === 'unstable' || m.provider === 'mistral').length },
+            { id: 'gemini', label: 'Gemini', count: MODEL_CATALOG.filter(m => m.provider === 'gemini').length },
+            { id: 'openrouter', label: 'OpenRouter', count: MODEL_CATALOG.filter(m => m.provider === 'openrouter').length },
+            { id: 'open-provider', label: 'Open Provider', count: MODEL_CATALOG.filter(m => m.provider === 'open-provider').length },
+            { id: 'unstable', label: 'Unstable', count: MODEL_CATALOG.filter(m => m.provider === 'unstable').length },
+            { id: 'mistral', label: 'Mistral', count: MODEL_CATALOG.filter(m => m.provider === 'mistral').length },
+          ].map(provider => (
+            <button
+              key={provider.id}
+              onClick={() => setActiveProvider(provider.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                activeProvider === provider.id
+                  ? 'bg-white/20 text-white border border-white/30'
+                  : 'bg-white/5 text-zinc-300 hover:bg-white/10 border border-white/10'
+              }`}
+            >
+              {provider.label} {provider.count}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-4 flex-1 overflow-y-auto pr-1 scroll-touch safe-inset">
           {customSection}
           {builtInSections}
