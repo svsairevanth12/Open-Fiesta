@@ -96,8 +96,10 @@ export async function POST(req: NextRequest) {
     // For text and audio models, use the correct endpoint based on model type
     let textUrl;
     if (isAudioModel) {
-      // For audio models, use POST to avoid URL length limits for long text
-      textUrl = `https://text.pollinations.ai/openai?token=${encodeURIComponent(apiKey)}`;
+      // For audio models, use GET format as per Pollinations documentation
+      const encodedPrompt = encodeURIComponent(prompt);
+      const selectedVoice = voice || 'alloy';
+      textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=${selectedVoice}&token=${encodeURIComponent(apiKey)}`;
     } else {
       // Use OpenAI-compatible endpoint for text models
       const baseUrl = 'https://text.pollinations.ai/openai';
@@ -106,10 +108,11 @@ export async function POST(req: NextRequest) {
 
     // Prepare the request body in OpenAI format for Pollinations API
     const requestBody = isAudioModel ? {
-      // For audio models, use simplified OpenAI TTS format (removed response_format to avoid errors)
+      // For audio models, use OpenAI TTS format with audio output modality
       model: model,
       input: prompt, // Use the full user message as input for TTS
       voice: voice || 'alloy', // Use selected voice or default to alloy
+      modalities: ["text", "audio"], // Specify both text and audio modalities as supported
     } : {
       // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
@@ -134,11 +137,11 @@ export async function POST(req: NextRequest) {
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
         bodyPreview: isAudioModel ? {
-          model: requestBody.model,
-          input: requestBody.input,
-          voice: requestBody.voice,
+          method: 'GET',
+          prompt: prompt,
+          voice: voice || 'alloy',
           isAudio: true,
-          inputLength: requestBody.input?.length || 0
+          inputLength: prompt?.length || 0
         } : {
           model: requestBody.model,
           messageCount: 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
@@ -161,9 +164,12 @@ export async function POST(req: NextRequest) {
       }
 
       const resp = await fetch(textUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody),
+        method: isAudioModel ? 'GET' : 'POST',
+        headers: isAudioModel ? {
+          'User-Agent': 'Open-Fiesta/1.0',
+          'Authorization': `Bearer ${apiKey}`,
+        } : headers,
+        ...(isAudioModel ? {} : { body: JSON.stringify(requestBody) }),
         signal: aborter.signal,
       });
 
