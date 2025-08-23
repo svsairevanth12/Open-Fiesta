@@ -53,9 +53,16 @@ export async function POST(req: NextRequest) {
     }
 
     // For text and audio models, use the correct endpoint based on model type
-    // Use OpenAI-compatible endpoint for better compatibility
-    const baseUrl = 'https://text.pollinations.ai/openai';
-    const textUrl = `${baseUrl}?token=${encodeURIComponent(apiKey)}`;
+    let textUrl;
+    if (isAudioModel) {
+      // For audio models, use GET format with voice parameter
+      const encodedPrompt = encodeURIComponent(prompt);
+      textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=alloy&token=${encodeURIComponent(apiKey)}`;
+    } else {
+      // Use OpenAI-compatible endpoint for text models
+      const baseUrl = 'https://text.pollinations.ai/openai';
+      textUrl = `${baseUrl}?token=${encodeURIComponent(apiKey)}`;
+    }
 
     // Prepare the request body in OpenAI format for Pollinations API
     const requestBody = isAudioModel ? {
@@ -64,7 +71,7 @@ export async function POST(req: NextRequest) {
       input: prompt, // Use the last user message as input for TTS
       voice: 'alloy', // Default voice
       response_format: 'mp3',
-      modalities: ['audio'], // Specify audio output modality
+      modalities: ['text', 'audio'], // Specify both text and audio modalities
     } : {
       // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
@@ -116,9 +123,12 @@ export async function POST(req: NextRequest) {
       }
 
       const resp = await fetch(textUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody),
+        method: isAudioModel ? 'GET' : 'POST',
+        headers: isAudioModel ? {
+          'User-Agent': 'Open-Fiesta/1.0',
+          'Authorization': `Bearer ${apiKey}`,
+        } : headers,
+        ...(isAudioModel ? {} : { body: JSON.stringify(requestBody) }),
         signal: aborter.signal,
       });
 
