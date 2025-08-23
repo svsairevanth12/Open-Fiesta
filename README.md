@@ -39,20 +39,22 @@ npm i
 ```
 
 2. Configure environment
-   Copy the example environment file and add your API keys:
+   Copy the example environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-
-
-
-```
-
-   **Optional providers for additional models:**
+Then set the environment variables you plan to use. You can also enter keys at runtime in the app's Settings.
 
 ```bash
+# OpenRouter (wide catalog of community models)
+OPENROUTER_API_KEY=your_openrouter_key
+
+# Google Gemini (Gemini 2.5 Flash/Pro)
+GEMINI_API_KEY=your_gemini_key
+
+# Unstable Inference endpoint (custom provider)
 
 ```
 
@@ -64,10 +66,13 @@ npm run dev
 ```
 
 
-```
-
 ## Environment Variables
-You can also provide an API key at runtime in the UI's Settings panel.
+
+Set only those you need; others can be provided per-request from the UI:
+
+- `OPENROUTER_API_KEY` — required for OpenRouter models.
+- `GEMINI_API_KEY` — required for Gemini models with images/web.
+- 
 
 ## Docker Support
 
