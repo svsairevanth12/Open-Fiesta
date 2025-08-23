@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
     const isAudioModel = model === 'openai-audio';
     const isReasoningModel = ['deepseek-reasoning'].includes(model);
+    const isGpt5Nano = model === 'gpt-5-nano';
 
     // For audio models, add natural TTS prefix to make it feel more conversational
     if (isAudioModel && prompt) {
