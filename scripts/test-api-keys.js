@@ -71,11 +71,13 @@ async function testGeminiKey() {
 }
 
 async function testPollinationsKey() {
-  const key = process.env.OPEN_PROVIDER_API_KEY;
+  const key = process.env.OPEN_PROVIDER_API_KEY || 'EKfz9oU-FsP-Kz4w';
   if (!key) {
     log('❌ OPEN_PROVIDER_API_KEY not found in .env', 'red');
     return false;
   }
+
+  log(`🔑 Testing Pollinations token: ${key.substring(0, 8)}...`, 'blue');
 
   try {
     const url = `https://text.pollinations.ai/openai?token=${encodeURIComponent(key)}`;
@@ -181,7 +183,7 @@ async function main() {
   
   log('\n🔗 Get API keys from:', 'blue');
   log('   • Gemini: https://aistudio.google.com/app/apikey', 'yellow');
-  log('   • Pollinations: https://auth.pollinations.ai/', 'yellow');
+  log('   • Pollinations: Working token provided (or get your own from https://auth.pollinations.ai/)', 'yellow');
   log('   • Unstable: Already provided in .env.example', 'yellow');
 }
 
