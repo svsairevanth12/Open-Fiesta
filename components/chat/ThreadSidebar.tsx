@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
-import type { ChatThread } from "@/lib/types";
+import type { ChatThread, AiModel } from "@/lib/types";
 import type { Project } from "@/lib/projects";
 import ConfirmDialog from "@/components/modals/ConfirmDialog";
 import ProjectsSection from "@/components/app/ProjectsSection";
+import DownloadMenu from "./DownloadMenu";
 
 type Props = {
   sidebarOpen: boolean;
@@ -17,6 +18,7 @@ type Props = {
   onCloseMobile: () => void;
   onOpenMobile: () => void;
   onDeleteThread: (id: string) => void;
+  selectedModels: AiModel[];
   // Projects props
   projects: Project[];
   activeProjectId: string | null;
@@ -36,6 +38,7 @@ export default function ThreadSidebar({
   mobileSidebarOpen,
   onCloseMobile,
   onDeleteThread,
+  selectedModels,
   projects,
   activeProjectId,
   onSelectProject,
@@ -116,17 +119,23 @@ export default function ThreadSidebar({
                   >
                     {t.title || "Untitled"}
                   </button>
-                  <button
-                    aria-label="Delete chat"
-                    title="Delete chat"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDeleteId(t.id);
-                    }}
-                    className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <DownloadMenu 
+                      thread={t} 
+                      selectedModels={selectedModels} 
+                    />
+                    <button
+                      aria-label="Delete chat"
+                      title="Delete chat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(t.id);
+                      }}
+                      className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -257,17 +266,23 @@ export default function ThreadSidebar({
                   >
                     {t.title || "Untitled"}
                   </button>
-                  <button
-                    aria-label="Delete chat"
-                    title="Delete chat"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDeleteId(t.id);
-                    }}
-                    className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <DownloadMenu 
+                      thread={t} 
+                      selectedModels={selectedModels} 
+                    />
+                    <button
+                      aria-label="Delete chat"
+                      title="Delete chat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(t.id);
+                      }}
+                      className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

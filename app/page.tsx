@@ -224,6 +224,7 @@ export default function Home() {
                 return next;
               });
             }}
+            selectedModels={selectedModels}
             // Projects (from main)
             projects={projects}
             activeProjectId={activeProjectId}
