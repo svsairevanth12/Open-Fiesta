@@ -37,7 +37,7 @@ function normalizeTableLikeMarkdown(lines: string[]): string[] {
   return out;
 }
 
-import React from "react";
+import React, { useState } from "react";
 import { Download } from "lucide-react";
 
 type Props = { text: string };
@@ -169,6 +169,50 @@ function splitFencedCodeBlocks(input: string): Array<{ type: "text" | "code"; co
     parts.push({ type: "text", content: input.slice(lastIndex) });
   }
   return parts;
+}
+
+// Image component that shows a skeleton placeholder until the image loads
+function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; filename: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className="relative group my-2">
+      {/* Skeleton while loading */}
+      {!loaded && !failed && (
+        <div className="w-full rounded-lg border border-white/10 overflow-hidden" style={{ aspectRatio: "3 / 2" }}>
+          <div className="h-full w-full animate-pulse bg-white/10" />
+        </div>
+      )}
+
+      {/* Actual image */}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+        className={`max-w-full h-auto rounded-lg border border-white/10 ${loaded ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}
+        style={{ maxHeight: "400px" }}
+      />
+
+      {/* Error state */}
+      {failed && (
+        <div className="mt-2 text-xs text-rose-200">Failed to load image.</div>
+      )}
+
+      {/* Download button after load */}
+      {loaded && !failed && (
+        <button
+          onClick={() => downloadImage(src, filename)}
+          className="absolute top-2 right-2 p-2 bg-black/70 hover:bg-black/90 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1"
+          title="Download image"
+        >
+          <Download size={16} />
+          <span className="text-xs hidden sm:inline">Download</span>
+        </button>
+      )}
+    </div>
+  );
 }
 
 // Renders a text block with support for paragraphs, simple lists, and tables.
@@ -458,22 +502,7 @@ function renderInline(input: string): React.ReactNode[] {
       const filename = `openfiesta-image-${timestamp}.png`;
 
       out.push(
-        <div key={`img-container-${imgIdx}`} className="relative group my-2">
-          <img
-            src={src}
-            alt={alt}
-            className="max-w-full h-auto rounded-lg border border-white/10"
-            style={{ maxHeight: '400px' }}
-          />
-          <button
-            onClick={() => downloadImage(src, filename)}
-            className="absolute top-2 right-2 p-2 bg-black/70 hover:bg-black/90 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1"
-            title="Download image"
-          >
-            <Download size={16} />
-            <span className="text-xs hidden sm:inline">Download</span>
-          </button>
-        </div>
+        <ImageWithSkeleton key={`img-container-${imgIdx}`} src={src} alt={alt} filename={filename} />
       );
       return;
     }

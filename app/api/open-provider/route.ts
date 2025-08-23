@@ -80,11 +80,10 @@ export async function POST(req: NextRequest) {
       })),
       model: model,
       stream: false,
-      // Add reasoning parameters for reasoning models
-      ...(isReasoningModel ? {
-        temperature: 0.7,
-        max_tokens: 4000
-      } : {})
+      // Add defaults and reasoning parameters
+      ...(isReasoningModel
+        ? { temperature: 0.7, max_tokens: 4000 }
+        : { temperature: 0.7, max_tokens: 2048 })
     };
 
     // Longer timeout for reasoning models as they take more time
@@ -93,6 +92,7 @@ export async function POST(req: NextRequest) {
     const timeoutId = setTimeout(() => aborter.abort(), timeoutMs);
 
     try {
+      const messageCount = !isAudioModel && (requestBody as any)?.messages ? ((requestBody as any).messages.length || 0) : 0;
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
         bodyPreview: isAudioModel ? {
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
           isAudio: true
         } : {
           model: requestBody.model,
-          messageCount: requestBody.messages?.length || 0,
+          messageCount,
           isReasoning: isReasoningModel,
           endpoint: 'openai-compatible'
         }
@@ -241,15 +241,19 @@ export async function POST(req: NextRequest) {
           text = 'Audio generation failed. Please try again.';
         }
       } else {
-        // For text models, extract text as before
+        // For text models, extract text and aggregate all choices if present
         if (typeof data === 'string') {
           text = data;
-        } else if (data && typeof data.text === 'string') {
-          text = data.text;
-        } else if (data && typeof data.content === 'string') {
-          text = data.content;
-        } else if (data && data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
-          text = data.choices[0].message.content;
+        } else if (data && typeof (data as any).text === 'string') {
+          text = (data as any).text;
+        } else if (data && typeof (data as any).content === 'string') {
+          text = (data as any).content;
+        } else if (data && Array.isArray((data as any).choices)) {
+          const choices = (data as any).choices as Array<{ message?: { content?: string } | { role?: string; content?: string } }>;
+          const all = choices
+            .map(c => (typeof c?.message?.content === 'string' ? c.message!.content : ''))
+            .filter(Boolean);
+          text = all.join('\n\n') || '';
         } else {
           text = 'No response generated. Please try again with a different prompt.';
         }

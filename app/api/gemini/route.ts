@@ -69,10 +69,14 @@ export async function POST(req: NextRequest) {
         'X-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents,
+        // Ensure there is at least one user message; Gemini requires user/model roles in contents
+        contents: contents.length > 0 ? contents : [{ role: 'user', parts: [{ text: 'Please respond to the instruction.' }] }],
         ...(systemParts.length > 0 ? { systemInstruction: { parts: systemParts } } : {}),
         generationConfig: {
           response_mime_type: 'text/plain',
+          // Encourage non-empty responses
+          maxOutputTokens: 2048,
+          temperature: 0.7,
         },
       }),
     });
@@ -114,7 +118,37 @@ export async function POST(req: NextRequest) {
         .filter(Boolean);
       return texts.join('\n');
     };
-    const text = extractText(data) ?? '';
+    let text = extractText(data) ?? '';
+    if (!text) {
+      const cand = (data as { candidates?: unknown[] } | null)?.candidates?.[0] as
+        | { content?: { parts?: unknown[] }; finishReason?: unknown; safetyRatings?: unknown[] }
+        | undefined;
+      const parts = (cand?.content as { parts?: unknown[] } | undefined)?.parts ?? [];
+      if (Array.isArray(parts) && parts.length) {
+        const collected = parts
+          .map((p) => (typeof (p as { text?: unknown })?.text === 'string' ? String((p as { text?: unknown }).text) : ''))
+          .filter(Boolean);
+        text = collected.join('\n');
+      }
+    }
+    if (!text) {
+      const cand = (data as { candidates?: unknown[] } | null)?.candidates?.[0] as
+        | { finishReason?: unknown; safetyRatings?: unknown[] }
+        | undefined;
+      const finish = (cand as { finishReason?: unknown } | undefined)?.finishReason || (data as { finishReason?: unknown } | undefined)?.finishReason;
+      const blockReason = (data as { promptFeedback?: { blockReason?: unknown } } | undefined)?.promptFeedback?.blockReason ||
+        (Array.isArray((cand as { safetyRatings?: Array<{ category?: unknown }> } | undefined)?.safetyRatings)
+          ? (cand as { safetyRatings?: Array<{ category?: unknown }> }).safetyRatings?.[0]?.category
+          : undefined);
+      const blocked = finish && String(finish).toLowerCase().includes('safety');
+      if (blocked || blockReason) {
+        text = `Gemini blocked the content due to safety settings${blockReason ? ` (reason: ${blockReason})` : ''}. Try rephrasing your prompt.`;
+      }
+    }
+    if (!text) {
+      const hint = 'Gemini returned an empty message. This can happen on shared quota. Try again, rephrase, or add your own Gemini API key in Settings.';
+      text = hint;
+    }
     return Response.json({ text, raw: data });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error';

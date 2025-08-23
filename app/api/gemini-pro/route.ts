@@ -65,10 +65,14 @@ export async function POST(req: NextRequest) {
         'X-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents,
+        // Ensure there is at least one user message; Gemini requires user/model roles in contents
+        contents: contents.length > 0 ? contents : [{ role: 'user', parts: [{ text: 'Please respond to the instruction.' }] }],
         ...(systemParts.length > 0 ? { systemInstruction: { parts: systemParts } } : {}),
         generationConfig: {
           response_mime_type: 'text/plain',
+          // Encourage non-empty responses
+          maxOutputTokens: 2048,
+          temperature: 0.7,
         },
       }),
     });
