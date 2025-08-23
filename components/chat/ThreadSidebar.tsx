@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
-import type { ChatThread } from "@/lib/types";
+import type { ChatThread, AiModel } from "@/lib/types";
 import type { Project } from "@/lib/projects";
 import ConfirmDialog from "@/components/modals/ConfirmDialog";
 import ProjectsSection from "@/components/app/ProjectsSection";
 import { useTheme } from "@/lib/themeContext";
 import { ACCENT_COLORS } from "@/lib/themes";
+import DownloadMenu from "./DownloadMenu";
 
 type Props = {
   sidebarOpen: boolean;
@@ -19,6 +20,7 @@ type Props = {
   onCloseMobile: () => void;
   onOpenMobile: () => void;
   onDeleteThread: (id: string) => void;
+  selectedModels: AiModel[];
   // Projects props
   projects: Project[];
   activeProjectId: string | null;
@@ -38,6 +40,7 @@ export default function ThreadSidebar({
   mobileSidebarOpen,
   onCloseMobile,
   onDeleteThread,
+  selectedModels,
   projects,
   activeProjectId,
   onSelectProject,
@@ -120,25 +123,28 @@ export default function ThreadSidebar({
               ) : threads.length === 0 ? (
                 <div className="text-xs opacity-60">No chats yet</div>
               ) : null}
-
-              {isHydrated &&
-                threads.map((t) => (
-                  <div
-                    key={t.id}
-                    className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group
-                      ${
-                        t.id === activeId
-                          ? "bg-gray-200 border-gray-300 dark:bg-white/15 dark:border-white/20"
-                          : "bg-gray-50 border-gray-300 hover:bg-gray-100 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10"
-                      }`}
+              
+              {isHydrated && threads.map((t) => (
+                <div
+                  key={t.id}
+                  className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group ${
+                    t.id === activeId
+                      ? "bg-gray-200 border-gray-300 dark:bg-white/15 dark:border-white/20"
+                      : "bg-gray-50 border-gray-300 hover:bg-gray-100 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10"
+                  }`}
+                >
+                  <button
+                    onClick={() => onSelectThread(t.id)}
+                    className="min-w-0 text-left flex-1 truncate"
+                    title={t.title || "Untitled"}
                   >
-                    <button
-                      onClick={() => onSelectThread(t.id)}
-                      className="min-w-0 text-left flex-1 truncate"
-                      title={t.title || "Untitled"}
-                    >
-                      {t.title || "Untitled"}
-                    </button>
+                    {t.title || "Untitled"}
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <DownloadMenu 
+                      thread={t} 
+                      selectedModels={selectedModels} 
+                    />
                     <button
                       aria-label="Delete chat"
                       title="Delete chat"
@@ -153,7 +159,8 @@ export default function ThreadSidebar({
                       <Trash2 size={14} />
                     </button>
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           </>
         ) : (
@@ -287,19 +294,25 @@ export default function ThreadSidebar({
                   >
                     {t.title || "Untitled"}
                   </button>
-                  <button
-                    aria-label="Delete chat"
-                    title="Delete chat"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDeleteId(t.id);
-                    }}
-                    className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md
+                  <div className="flex items-center gap-1">
+                    <DownloadMenu 
+                      thread={t} 
+                      selectedModels={selectedModels} 
+                    />
+                    <button
+                      aria-label="Delete chat"
+                      title="Delete chat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(t.id);
+                      }}
+                      className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md
                       bg-gray-200 border border-gray-300 text-gray-700 hover:bg-rose-500/20 hover:border-rose-300/30
                       dark:bg-white/5 dark:border-white/10 dark:text-zinc-300 dark:hover:text-rose-100"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
