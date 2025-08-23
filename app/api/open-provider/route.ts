@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     // Handle different model categories
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
     const isAudioModel = model === 'openai-audio';
-    const isReasoningModel = ['openai-reasoning', 'deepseek-reasoning'].includes(model);
+    const isReasoningModel = ['deepseek-reasoning'].includes(model);
 
     // For audio models, add natural TTS prefix to make it feel more conversational
     if (isAudioModel && prompt) {
@@ -195,14 +195,10 @@ export async function POST(req: NextRequest) {
 
         const friendlyError = (() => {
           if (resp.status === 401) {
-            return model === 'openai-reasoning'
-              ? 'OpenAI o3 requires seed tier access. Please check your API token permissions.'
-              : 'Authentication failed. The model may require higher tier access.';
+            return 'Authentication failed. The model may require higher tier access.';
           }
           if (resp.status === 403) {
-            return model === 'openai-reasoning'
-              ? 'OpenAI o3 access denied. This model may be in limited beta or require special permissions.'
-              : 'Access denied. This model may require special permissions.';
+            return 'Access denied. This model may require special permissions.';
           }
           if (resp.status === 429) {
             return 'Rate limit exceeded. Please try again in a moment.';
