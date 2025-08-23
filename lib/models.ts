@@ -40,7 +40,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'llama-3.3-70b-instruct',
-    label: 'Llama 3.3 70B Instruct (free)',
+    label: 'Llama 3.3 70B Instruct',
     provider: 'openrouter',
     model: 'meta-llama/llama-3.3-70b-instruct:free',
     good: true,
@@ -169,7 +169,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Open Provider Text Models - Official Models
   {
     id: 'open-deepseek-reasoning',
-    label: 'DeepSeek R1 (Reasoning)',
+    label: 'DeepSeek R1 Reasoning',
     provider: 'open-provider',
     model: 'deepseek-reasoning',
     free: true,
@@ -186,7 +186,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-gpt-5-nano',
-    label: 'GPT-5 Nano (Vision)',
+    label: 'GPT-5 Nano',
     provider: 'open-provider',
     model: 'gpt-5-nano',
     free: true,
@@ -195,7 +195,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-llama-fast-roblox',
-    label: 'Llama 3.2 1B (Vision)',
+    label: 'Llama 3.2 1B',
     provider: 'open-provider',
     model: 'llama-fast-roblox',
     free: true,
@@ -236,7 +236,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-mistral-roblox',
-    label: 'Mistral Small 3.1 24B (Vision)',
+    label: 'Mistral Small 3.1 24B',
     provider: 'open-provider',
     model: 'mistral-roblox',
     free: true,
@@ -252,7 +252,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-openai',
-    label: 'GPT-4.1 Nano (Vision)',
+    label: 'GPT-4.1 Nano',
     provider: 'open-provider',
     model: 'openai',
     free: true,
@@ -261,7 +261,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-openai-fast',
-    label: 'GPT-4.1 Nano Fast (Vision)',
+    label: 'GPT-4.1 Nano Fast',
     provider: 'open-provider',
     model: 'openai-fast',
     free: true,
@@ -269,7 +269,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-openai-large',
-    label: 'GPT-4.1 Large (Vision)',
+    label: 'GPT-4.1 Large',
     provider: 'open-provider',
     model: 'openai-large',
     free: true,
@@ -279,7 +279,7 @@ export const MODEL_CATALOG: AiModel[] = [
 
   {
     id: 'open-openai-roblox',
-    label: 'GPT-4.1 Nano Roblox (Vision)',
+    label: 'GPT-4.1 Nano Roblox',
     provider: 'open-provider',
     model: 'openai-roblox',
     free: true,
@@ -305,7 +305,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Open Provider Community Models
   {
     id: 'open-bidara',
-    label: 'BIDARA (NASA Biomimetic Designer)',
+    label: 'BIDARA NASA Biomimetic Designer',
     provider: 'open-provider',
     model: 'bidara',
     free: true,
@@ -321,7 +321,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-evil',
-    label: 'Evil (Uncensored)',
+    label: 'Evil Uncensored',
     provider: 'open-provider',
     model: 'evil',
     free: true,
@@ -361,7 +361,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-unity',
-    label: 'Unity Unrestricted Agent (Uncensored)',
+    label: 'Unity Unrestricted Agent Uncensored',
     provider: 'open-provider',
     model: 'unity',
     free: true,
@@ -371,7 +371,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Open Provider Audio Models
   {
     id: 'open-openai-audio',
-    label: 'GPT-4o Mini Audio (Voice)',
+    label: 'GPT-4o Mini Audio Voice',
     provider: 'open-provider',
     model: 'openai-audio',
     free: true,
@@ -382,7 +382,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Open Provider Image Models
   {
     id: 'open-flux',
-    label: 'FLUX Image Generator (Open Provider)',
+    label: 'FLUX Image Generator',
     provider: 'open-provider',
     model: 'flux',
     free: true,
@@ -391,7 +391,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-kontext',
-    label: 'Kontext Image Generator (Open Provider)',
+    label: 'Kontext Image Generator',
     provider: 'open-provider',
     model: 'kontext',
     free: true,
@@ -399,7 +399,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'open-turbo',
-    label: 'Turbo Image Generator (Open Provider)',
+    label: 'Turbo Image Generator',
     provider: 'open-provider',
     model: 'turbo',
     free: true,
@@ -409,7 +409,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Unstable Provider Models - GPT Series
   {
     id: 'unstable-gpt-5-high',
-    label: 'GPT-5 High (Unstable)',
+    label: 'GPT-5 High',
     provider: 'unstable',
     model: 'gpt-5-high',
     good: true,
@@ -417,36 +417,30 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'unstable-gpt-5-chat',
-    label: 'GPT-5 Chat (Unstable)',
+    label: 'GPT-5 Chat',
     provider: 'unstable',
     model: 'gpt-5-chat',
     good: true,
     category: 'text',
   },
-  {
-    id: 'unstable-gpt-5-search',
-    label: 'GPT-5 Search (Unstable)',
-    provider: 'unstable',
-    model: 'gpt-5-search',
-    category: 'text',
-  },
+
   {
     id: 'unstable-gpt-5-mini-high',
-    label: 'GPT-5 Mini High (Unstable)',
+    label: 'GPT-5 Mini High',
     provider: 'unstable',
     model: 'gpt-5-mini-high',
     category: 'text',
   },
   {
     id: 'unstable-gpt-5-nano-high',
-    label: 'GPT-5 Nano High (Unstable)',
+    label: 'GPT-5 Nano High',
     provider: 'unstable',
     model: 'gpt-5-nano-high',
     category: 'text',
   },
   {
     id: 'unstable-gpt-4o',
-    label: 'GPT-4o (Unstable)',
+    label: 'GPT-4o',
     provider: 'unstable',
     model: 'gpt-4o',
     good: true,
@@ -454,21 +448,21 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'unstable-gpt-4-1',
-    label: 'GPT-4.1 (Unstable)',
+    label: 'GPT-4.1',
     provider: 'unstable',
     model: 'gpt-4.1',
     category: 'text',
   },
   {
     id: 'unstable-gpt-4-1-mini',
-    label: 'GPT-4.1 Mini (Unstable)',
+    label: 'GPT-4.1 Mini',
     provider: 'unstable',
     model: 'gpt-4.1-mini',
     category: 'text',
   },
   {
     id: 'unstable-o3',
-    label: 'O3 (Unstable)',
+    label: 'O3',
     provider: 'unstable',
     model: 'o3',
     good: true,
@@ -476,21 +470,15 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'unstable-o3-mini',
-    label: 'O3 Mini (Unstable)',
+    label: 'O3 Mini',
     provider: 'unstable',
     model: 'o3-mini',
     category: 'text',
   },
-  {
-    id: 'unstable-o3-search',
-    label: 'O3 Search (Unstable)',
-    provider: 'unstable',
-    model: 'o3-search',
-    category: 'text',
-  },
+
   {
     id: 'unstable-o4-mini',
-    label: 'O4 Mini (Unstable)',
+    label: 'O4 Mini',
     provider: 'unstable',
     model: 'o4-mini',
     category: 'text',
@@ -499,7 +487,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Unstable Provider Models - Gemini Series
   {
     id: 'unstable-gemini-2-5-pro',
-    label: 'Gemini 2.5 Pro (Unstable)',
+    label: 'Gemini 2.5 Pro',
     provider: 'unstable',
     model: 'gemini-2.5-pro',
     good: true,
@@ -507,7 +495,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'unstable-gemini-2-5-flash',
-    label: 'Gemini 2.5 Flash (Unstable)',
+    label: 'Gemini 2.5 Flash',
     provider: 'unstable',
     model: 'gemini-2.5-flash',
     category: 'text',
@@ -516,7 +504,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Unstable Provider Models - Claude Series
   {
     id: 'unstable-claude-opus-4-1',
-    label: 'Claude Opus 4.1 (Unstable)',
+    label: 'Claude Opus 4.1',
     provider: 'unstable',
     model: 'claude-opus-4-1',
     good: true,
@@ -524,37 +512,25 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'unstable-claude-opus-4-1-thinking',
-    label: 'Claude Opus 4.1 Thinking (Unstable)',
+    label: 'Claude Opus 4.1 Thinking',
     provider: 'unstable',
     model: 'claude-opus-4-1-thinking',
     good: true,
     category: 'text',
   },
-  {
-    id: 'unstable-claude-opus-4-1-search',
-    label: 'Claude Opus 4.1 Search (Unstable)',
-    provider: 'unstable',
-    model: 'claude-opus-4-1-search',
-    category: 'text',
-  },
+
   {
     id: 'unstable-claude-opus-4',
-    label: 'Claude Opus 4 (Unstable)',
+    label: 'Claude Opus 4',
     provider: 'unstable',
     model: 'claude-opus-4',
     good: true,
     category: 'text',
   },
-  {
-    id: 'unstable-claude-opus-4-search',
-    label: 'Claude Opus 4 Search (Unstable)',
-    provider: 'unstable',
-    model: 'claude-opus-4-search',
-    category: 'text',
-  },
+
   {
     id: 'unstable-claude-sonnet-4',
-    label: 'Claude Sonnet 4 (Unstable)',
+    label: 'Claude Sonnet 4',
     provider: 'unstable',
     model: 'claude-sonnet-4',
     good: true,
@@ -562,7 +538,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'unstable-claude-sonnet-4-thinking',
-    label: 'Claude Sonnet 4 Thinking (Unstable)',
+    label: 'Claude Sonnet 4 Thinking',
     provider: 'unstable',
     model: 'claude-sonnet-4-thinking',
     good: true,
@@ -572,22 +548,16 @@ export const MODEL_CATALOG: AiModel[] = [
   // Unstable Provider Models - Grok Series
   {
     id: 'unstable-grok-4',
-    label: 'Grok 4 (Unstable)',
+    label: 'Grok 4',
     provider: 'unstable',
     model: 'grok-4',
     good: true,
     category: 'text',
   },
-  {
-    id: 'unstable-grok-4-search',
-    label: 'Grok 4 Search (Unstable)',
-    provider: 'unstable',
-    model: 'grok-4-search',
-    category: 'text',
-  },
+
   {
     id: 'unstable-grok-3-mini-high',
-    label: 'Grok 3 Mini High (Unstable)',
+    label: 'Grok 3 Mini High',
     provider: 'unstable',
     model: 'grok-3-mini-high',
     category: 'text',
@@ -619,7 +589,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'magistral-medium-latest',
-    label: 'Magistral Medium 1.1 (Reasoning)',
+    label: 'Magistral Medium 1.1 Reasoning',
     provider: 'mistral',
     model: 'magistral-medium-latest',
     good: true,
@@ -627,7 +597,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'magistral-small-latest',
-    label: 'Magistral Small 1.1 (Reasoning)',
+    label: 'Magistral Small 1.1 Reasoning',
     provider: 'mistral',
     model: 'magistral-small-latest',
     category: 'text',
@@ -636,7 +606,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Mistral Provider Models - Coding Specialists
   {
     id: 'codestral-latest',
-    label: 'Codestral 2508 (Coding)',
+    label: 'Codestral 2508 Coding',
     provider: 'mistral',
     model: 'codestral-latest',
     good: true,
@@ -644,14 +614,14 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'devstral-medium-latest',
-    label: 'Devstral Medium (Enterprise Coding)',
+    label: 'Devstral Medium Enterprise Coding',
     provider: 'mistral',
     model: 'devstral-medium-latest',
     category: 'text',
   },
   {
     id: 'devstral-small-latest',
-    label: 'Devstral Small (Open Source Coding)',
+    label: 'Devstral Small Open Source Coding',
     provider: 'mistral',
     model: 'devstral-small-latest',
     free: true,
@@ -661,7 +631,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Mistral Provider Models - Multimodal
   {
     id: 'pixtral-large-latest',
-    label: 'Pixtral Large (Vision)',
+    label: 'Pixtral Large Vision',
     provider: 'mistral',
     model: 'pixtral-large-latest',
     good: true,
@@ -669,7 +639,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'pixtral-12b',
-    label: 'Pixtral 12B (Open Vision)',
+    label: 'Pixtral 12B Open Vision',
     provider: 'mistral',
     model: 'pixtral-12b',
     free: true,
@@ -679,14 +649,14 @@ export const MODEL_CATALOG: AiModel[] = [
   // Mistral Provider Models - Edge Models
   {
     id: 'ministral-8b-latest',
-    label: 'Ministral 8B (Edge)',
+    label: 'Ministral 8B Edge',
     provider: 'mistral',
     model: 'ministral-8b-latest',
     category: 'text',
   },
   {
     id: 'ministral-3b-latest',
-    label: 'Ministral 3B (Efficient Edge)',
+    label: 'Ministral 3B Efficient Edge',
     provider: 'mistral',
     model: 'ministral-3b-latest',
     category: 'text',
@@ -695,7 +665,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Mistral Provider Models - Audio
   {
     id: 'voxtral-small-latest',
-    label: 'Voxtral Small (Audio Input)',
+    label: 'Voxtral Small Audio Input',
     provider: 'mistral',
     model: 'voxtral-small-latest',
     free: true,
@@ -703,7 +673,7 @@ export const MODEL_CATALOG: AiModel[] = [
   },
   {
     id: 'voxtral-mini-latest',
-    label: 'Voxtral Mini (Audio Input)',
+    label: 'Voxtral Mini Audio Input',
     provider: 'mistral',
     model: 'voxtral-mini-latest',
     free: true,
@@ -713,7 +683,7 @@ export const MODEL_CATALOG: AiModel[] = [
   // Mistral Provider Models - Specialized
   {
     id: 'open-mistral-nemo',
-    label: 'Mistral Nemo 12B (Multilingual)',
+    label: 'Mistral Nemo 12B Multilingual',
     provider: 'mistral',
     model: 'open-mistral-nemo',
     free: true,

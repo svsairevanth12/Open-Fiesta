@@ -91,6 +91,8 @@ export default function ModelsModal({
   // Filter models by provider if a specific provider is selected
   const filteredModels = activeProvider === 'all'
     ? MODEL_CATALOG
+    : activeProvider === 'pro'
+    ? MODEL_CATALOG.filter(m => m.provider === 'unstable' || m.provider === 'mistral')
     : MODEL_CATALOG.filter(m => m.provider === activeProvider);
 
   filteredModels.forEach((m) => {
@@ -296,7 +298,8 @@ export default function ModelsModal({
         {/* Provider Filter Tabs */}
         <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-white/10">
           {[
-            { id: 'all', label: 'All Providers', count: MODEL_CATALOG.length },
+            { id: 'all', label: 'All Models', count: MODEL_CATALOG.length },
+            { id: 'pro', label: 'Pro Models', count: MODEL_CATALOG.filter(m => m.provider === 'unstable' || m.provider === 'mistral').length },
             { id: 'gemini', label: 'Gemini', count: MODEL_CATALOG.filter(m => m.provider === 'gemini').length },
             { id: 'openrouter', label: 'OpenRouter', count: MODEL_CATALOG.filter(m => m.provider === 'openrouter').length },
             { id: 'open-provider', label: 'Open Provider', count: MODEL_CATALOG.filter(m => m.provider === 'open-provider').length },
@@ -312,7 +315,7 @@ export default function ModelsModal({
                   : 'bg-white/5 text-zinc-300 hover:bg-white/10 border border-white/10'
               }`}
             >
-              {provider.label} ({provider.count})
+              {provider.label} {provider.count}
             </button>
           ))}
         </div>
