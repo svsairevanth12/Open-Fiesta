@@ -1,5 +1,39 @@
 import { NextRequest } from 'next/server';
 
+// Function to get natural TTS prefix based on content type
+function getTTSPrefix(text: string): string {
+  const lowerText = text.toLowerCase().trim();
+
+  // For questions
+  if (lowerText.includes('?') || lowerText.startsWith('what') || lowerText.startsWith('how') ||
+      lowerText.startsWith('why') || lowerText.startsWith('when') || lowerText.startsWith('where') ||
+      lowerText.startsWith('who') || lowerText.startsWith('which') || lowerText.startsWith('can you')) {
+    return 'Here\'s what you asked:';
+  }
+
+  // For greetings
+  if (lowerText.includes('hello') || lowerText.includes('hi ') || lowerText.includes('hey') ||
+      lowerText.startsWith('good morning') || lowerText.startsWith('good afternoon') ||
+      lowerText.startsWith('good evening')) {
+    return 'You said:';
+  }
+
+  // For commands or requests
+  if (lowerText.startsWith('please') || lowerText.startsWith('can you') ||
+      lowerText.startsWith('could you') || lowerText.startsWith('tell me') ||
+      lowerText.startsWith('explain') || lowerText.startsWith('describe')) {
+    return 'Your request was:';
+  }
+
+  // For statements or stories
+  if (lowerText.length > 50) {
+    return 'Here\'s your text:';
+  }
+
+  // Default for short phrases
+  return 'Repeating:';
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { messages, model, apiKey: apiKeyFromBody, imageDataUrl, voice } = await req.json();
@@ -30,12 +64,18 @@ export async function POST(req: NextRequest) {
 
     // Extract the last user message as the prompt for image generation
     const lastUserMessage = trimmedMessages.filter(msg => msg.role === 'user').pop();
-    const prompt = lastUserMessage ? lastUserMessage.content : 'A beautiful image';
+    let prompt = lastUserMessage ? lastUserMessage.content : 'A beautiful image';
 
     // Handle different model categories
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
     const isAudioModel = model === 'openai-audio';
     const isReasoningModel = ['openai-reasoning', 'deepseek-reasoning'].includes(model);
+
+    // For audio models, add natural TTS prefix to make it feel more conversational
+    if (isAudioModel && prompt) {
+      const ttsPrefix = getTTSPrefix(prompt);
+      prompt = `${ttsPrefix} ${prompt}`;
+    }
 
     if (isImageModel) {
       // For image models, use the image generation endpoint with token authentication
@@ -104,7 +144,7 @@ export async function POST(req: NextRequest) {
           isAudio: true
         } : {
           model: requestBody.model,
-          messageCount: requestBody.messages?.length || 0,
+          messageCount: 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
           isReasoning: isReasoningModel,
           endpoint: 'openai-compatible'
         }
