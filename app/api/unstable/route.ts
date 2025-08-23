@@ -14,7 +14,10 @@ export async function POST(req: NextRequest) {
     const usedKeyType = apiKeyFromBody ? 'user' : (process.env.INFERENCE_API_KEY ? 'shared' : 'none');
     
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'Missing Unstable API key' }), { status: 400 });
+      return new Response(
+        JSON.stringify({ error: 'Missing Unstable API key', provider: 'unstable', usedKeyType }),
+        { status: 400 }
+      );
     }
     
     if (!model) {
@@ -95,7 +98,9 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ 
         error: `Unstable API error: ${response.status} ${response.statusText}`,
         details: errorText,
-        code: response.status
+        code: response.status,
+        provider: 'unstable',
+        usedKeyType,
       }), { status: response.status });
     }
 

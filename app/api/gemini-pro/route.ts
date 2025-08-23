@@ -137,12 +137,9 @@ export async function POST(req: NextRequest) {
       }
     }
     if (!text) {
-      // Final fallback: compact stringify of candidate to avoid empty response
-      const compact = (() => {
-        try { return JSON.stringify(cand); } catch { return ''; }
-      })();
+      // Final fallback: return a clear hint instead of raw candidate JSON
       const hint = 'Gemini Pro returned an empty message. This can happen on shared quota. Try again, rephrase, or add your own Gemini API key in Settings.';
-      text = compact || hint;
+      text = hint;
     }
     // Token estimation similar to other providers
     const estimateTokens = (s: string) => {

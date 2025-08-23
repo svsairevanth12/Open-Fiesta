@@ -200,6 +200,17 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
           const res = await callUnstable({ apiKey: keys['unstable'] || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+          if (res && typeof (res as any)?.error === 'string') {
+            const errText = String((res as any).error).trim();
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: errText, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, code: (res as any)?.code } as ChatMessage
+                : msg);
+              return { ...t, messages: msgs };
+            }));
+            return;
+          }
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(t => {
@@ -470,6 +481,17 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           }
         } else if (m.provider === 'unstable') {
           const res = await callUnstable({ apiKey: keys['unstable'] || undefined, model: m.model, messages: baseHistory });
+          if (res && typeof (res as any)?.error === 'string') {
+            const errText = String((res as any).error).trim();
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: errText, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, code: (res as any)?.code } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+            return;
+          }
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(tt => {
