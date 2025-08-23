@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     // Handle different model categories
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
     const isAudioModel = model === 'openai-audio';
+    const isReasoningModel = ['openai-reasoning', 'deepseek-reasoning'].includes(model);
 
     if (isImageModel) {
       // For image models, use the image generation endpoint with token authentication
@@ -51,10 +52,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // For text and audio models, use the text generation endpoint with token
-    const textUrl = `https://text.pollinations.ai/?token=${encodeURIComponent(apiKey)}`;
+    // For text and audio models, use the correct endpoint based on model type
+    // Use OpenAI-compatible endpoint for better compatibility
+    const baseUrl = 'https://text.pollinations.ai/openai';
+    const textUrl = `${baseUrl}?token=${encodeURIComponent(apiKey)}`;
 
-    // Prepare the request body for Pollinations API
+    // Prepare the request body in OpenAI format for Pollinations API
     const requestBody = {
       messages: trimmedMessages.map(msg => ({
         role: msg.role,
@@ -63,21 +66,47 @@ export async function POST(req: NextRequest) {
       model: model,
       stream: false,
       // Add voice parameter for audio models
-      ...(isAudioModel ? { voice: 'alloy' } : {})
+      ...(isAudioModel ? { voice: 'alloy' } : {}),
+      // Add reasoning parameters for reasoning models
+      ...(isReasoningModel ? {
+        temperature: 0.7,
+        max_tokens: 4000
+      } : {})
     };
 
-    const timeoutMs = 120000; // 120s timeout
+    // Longer timeout for reasoning models as they take more time
+    const timeoutMs = isReasoningModel ? 180000 : 120000; // 180s for reasoning, 120s for others
     const aborter = new AbortController();
     const timeoutId = setTimeout(() => aborter.abort(), timeoutMs);
 
     try {
+      console.log(`Making request to Pollinations API for model: ${model}`, {
+        url: textUrl,
+        bodyPreview: {
+          model: requestBody.model,
+          messageCount: requestBody.messages.length,
+          hasVoice: !!requestBody.voice,
+          isReasoning: isReasoningModel,
+          endpoint: 'openai-compatible'
+        }
+      });
+
+      // For reasoning models, try both token methods
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Open-Fiesta/1.0',
+        'Authorization': `Bearer ${apiKey}`,
+      };
+
+      // Add additional headers for reasoning models
+      if (isReasoningModel) {
+        headers['X-API-Key'] = apiKey;
+        headers['X-Model-Type'] = 'reasoning';
+      }
+
       const resp = await fetch(textUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Open-Fiesta/1.0',
-          'Authorization': `Bearer ${apiKey}`,
-        },
+        headers,
         body: JSON.stringify(requestBody),
         signal: aborter.signal,
       });
@@ -86,7 +115,24 @@ export async function POST(req: NextRequest) {
 
       if (!resp.ok) {
         const errorText = await resp.text().catch(() => 'Unknown error');
+        console.error(`Pollinations API Error for model ${model}:`, {
+          status: resp.status,
+          statusText: resp.statusText,
+          errorText,
+          headers: Object.fromEntries(resp.headers.entries())
+        });
+
         const friendlyError = (() => {
+          if (resp.status === 401) {
+            return model === 'openai-reasoning'
+              ? 'OpenAI o3 requires seed tier access. Please check your API token permissions.'
+              : 'Authentication failed. The model may require higher tier access.';
+          }
+          if (resp.status === 403) {
+            return model === 'openai-reasoning'
+              ? 'OpenAI o3 access denied. This model may be in limited beta or require special permissions.'
+              : 'Access denied. This model may require special permissions.';
+          }
           if (resp.status === 429) {
             return 'Rate limit exceeded. Please try again in a moment.';
           }
@@ -96,7 +142,7 @@ export async function POST(req: NextRequest) {
           if (resp.status >= 500) {
             return 'Server error occurred. Please try again later.';
           }
-          return `Provider returned error [status ${resp.status}]`;
+          return `Provider returned error [status ${resp.status}]: ${errorText}`;
         })();
 
         if (resp.status === 429) {
