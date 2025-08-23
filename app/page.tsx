@@ -67,6 +67,17 @@ export default function Home() {
     isLoaded: projectsLoaded,
   } = useProjects();
 
+  // Show loading state until projects are loaded to avoid flicker
+  if (!projectsLoaded) {
+    return (
+      <div className={`min-h-screen w-full ${backgroundClass} relative text-white`}>
+        <div className="relative z-10 px-3 lg:px-4 py-4 lg:py-6">
+          <div className="text-white/60">Loading projects…</div>
+        </div>
+      </div>
+    );
+  }
+
   const activeThread = useMemo(
     () => threads.find((t) => t.id === activeId) || null,
     [threads, activeId]
@@ -109,18 +120,22 @@ export default function Home() {
     try {
       await navigator.clipboard.writeText(text);
     } catch {
+      // Fallback for older browsers or insecure contexts
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      ta.style.top = "-9999px";
+      ta.setAttribute('readonly', '');
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, 99999);
       try {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.left = "-9999px";
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
         document.execCommand("copy");
-        document.body.removeChild(ta);
       } catch {
-        // ignore
+        // Silent fail - user will need to copy manually
+      } finally {
+        document.body.removeChild(ta);
       }
     }
   };
@@ -196,10 +211,13 @@ export default function Home() {
           {/* Sidebar */}
           <ClientOnly
             fallback={
-              <aside className={`relative hidden lg:flex shrink-0 h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] rounded-lg border border-white/10 bg-white/5 p-3 flex-col transition-[width] duration-300 ${sidebarOpen ? "w-64" : "w-14"
-                }`}>
+              <aside
+                aria-busy="true"
+                aria-label="Loading sidebar"
+                className={`relative hidden lg:flex shrink-0 h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] rounded-lg border border-white/10 bg-white/5 p-3 flex-col transition-[width] duration-300 ${sidebarOpen ? "w-64" : "w-14"
+                  }`}>
                 <div className="flex-1 overflow-y-auto space-y-1 pr-1">
-                  <div className="text-xs opacity-60">Loading...</div>
+                  <div className="text-xs opacity-60">Loading…</div>
                 </div>
               </aside>
             }
@@ -273,36 +291,40 @@ export default function Home() {
               onToggle={toggle}
             />
 
-            <ClientOnly>
-              <FirstVisitNote
-                open={showFirstVisitNote}
-                onClose={() => setFirstNoteDismissed(true)}
-              />
-            </ClientOnly>
-
             <ClientOnly
               fallback={
-                <div className="relative rounded-lg border border-white/5 bg-white/5 px-3 lg:px-4 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28">
+                <div
+                  role="status"
+                  aria-busy="true"
+                  className="relative rounded-lg border border-white/5 bg-white/5 px-3 lg:px-4 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28">
                   <div className="p-4 text-zinc-400">
-                    Loading chat...
+                    Loading chat…
                   </div>
                 </div>
               }
             >
-              <ChatGrid
-                selectedModels={selectedModels}
-                headerTemplate={headerTemplate}
-                collapsedIds={collapsedIds}
-                setCollapsedIds={setCollapsedIds}
-                loadingIds={loadingIds}
-                pairs={pairs}
-                copyToClipboard={copyToClipboard}
-                copiedAllIdx={copiedAllIdx}
-                setCopiedAllIdx={setCopiedAllIdx}
-                copiedKey={copiedKey}
-                setCopiedKey={setCopiedKey}
-                onEditUser={onEditUser}
-              />
+              {isHydrated && (
+                <FirstVisitNote
+                  open={showFirstVisitNote}
+                  onClose={() => setFirstNoteDismissed(true)}
+                />
+              )}
+              {isHydrated && (
+                <ChatGrid
+                  selectedModels={selectedModels}
+                  headerTemplate={headerTemplate}
+                  collapsedIds={collapsedIds}
+                  setCollapsedIds={setCollapsedIds}
+                  loadingIds={loadingIds}
+                  pairs={pairs}
+                  copyToClipboard={copyToClipboard}
+                  copiedAllIdx={copiedAllIdx}
+                  setCopiedAllIdx={setCopiedAllIdx}
+                  copiedKey={copiedKey}
+                  setCopiedKey={setCopiedKey}
+                  onEditUser={onEditUser}
+                />
+              )}
             </ClientOnly>
 
             <FixedInputBar onSubmit={send} loading={anyLoading} />

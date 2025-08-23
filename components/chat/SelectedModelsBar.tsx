@@ -1,5 +1,6 @@
 "use client";
 import { Star } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { AiModel } from "@/lib/types";
 
 type Props = {
@@ -8,6 +9,22 @@ type Props = {
 };
 
 export default function SelectedModelsBar({ selectedModels, onToggle }: Props) {
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  // Prevent hydration mismatch by showing a consistent state until hydrated
+  if (!isHydrated) {
+    return (
+      <div className="mb-3 flex items-start gap-3 min-w-0">
+        <div className="hidden sm:flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pr-1 pb-2 min-w-0 scroll-stable-gutter">
+          {/* Show nothing during SSR to prevent hydration mismatch */}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-3 flex items-start gap-3 min-w-0">
       {/* Chips: no wrap, horizontal scroll */}

@@ -69,10 +69,14 @@ export async function POST(req: NextRequest) {
         'X-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents,
+        // Ensure there is at least one user message; Gemini requires user/model roles in contents
+        contents: contents.length > 0 ? contents : [{ role: 'user', parts: [{ text: 'Please respond to the instruction.' }] }],
         ...(systemParts.length > 0 ? { systemInstruction: { parts: systemParts } } : {}),
         generationConfig: {
           response_mime_type: 'text/plain',
+          // Encourage non-empty responses
+          maxOutputTokens: 2048,
+          temperature: 0.7,
         },
       }),
     });
@@ -114,8 +118,64 @@ export async function POST(req: NextRequest) {
         .filter(Boolean);
       return texts.join('\n');
     };
-    const text = extractText(data) ?? '';
-    return Response.json({ text, raw: data });
+    let text = extractText(data) ?? '';
+    if (!text) {
+      const cand = (data as { candidates?: unknown[] } | null)?.candidates?.[0] as
+        | { content?: { parts?: unknown[] }; finishReason?: unknown; safetyRatings?: unknown[] }
+        | undefined;
+      const parts = (cand?.content as { parts?: unknown[] } | undefined)?.parts ?? [];
+      if (Array.isArray(parts) && parts.length) {
+        const collected = parts
+          .map((p) => (typeof (p as { text?: unknown })?.text === 'string' ? String((p as { text?: unknown }).text) : ''))
+          .filter(Boolean);
+        text = collected.join('\n');
+      }
+    }
+    if (!text) {
+      const cand = (data as { candidates?: unknown[] } | null)?.candidates?.[0] as
+        | { finishReason?: unknown; safetyRatings?: unknown[] }
+        | undefined;
+      const finish = (cand as { finishReason?: unknown } | undefined)?.finishReason || (data as { finishReason?: unknown } | undefined)?.finishReason;
+      const blockReason = (data as { promptFeedback?: { blockReason?: unknown } } | undefined)?.promptFeedback?.blockReason ||
+        (Array.isArray((cand as { safetyRatings?: Array<{ category?: unknown }> } | undefined)?.safetyRatings)
+          ? (cand as { safetyRatings?: Array<{ category?: unknown }> }).safetyRatings?.[0]?.category
+          : undefined);
+      const blocked = finish && String(finish).toLowerCase().includes('safety');
+      if (blocked || blockReason) {
+        text = `Gemini blocked the content due to safety settings${blockReason ? ` (reason: ${blockReason})` : ''}. Try rephrasing your prompt.`;
+      }
+    }
+    if (!text) {
+      const hint = 'Gemini returned an empty message. This can happen on shared quota. Try again, rephrase, or add your own Gemini API key in Settings.';
+      text = hint;
+    }
+    // Token estimation similar to open-provider: ~4 chars per token
+    const estimateTokens = (s: string) => {
+      const t = (s || '').replace(/\s+/g, ' ').trim();
+      return t.length > 0 ? Math.ceil(t.length / 4) : 0;
+    };
+    // messages may contain non-strings; coerce and sum
+    const inputArray = Array.isArray(messages) ? (messages as Array<{ role?: unknown; content?: unknown }>) : [];
+    const perMessage = inputArray.map((m, idx) => ({
+      index: idx,
+      role: typeof m?.role === 'string' ? String(m.role) : 'user',
+      chars: typeof m?.content === 'string' ? (m.content as string).length : String(m?.content ?? '').length,
+      tokens: estimateTokens(typeof m?.content === 'string' ? (m.content as string) : String(m?.content ?? '')),
+    }));
+    const total = perMessage.reduce((sum, x) => sum + x.tokens, 0);
+
+    return Response.json({
+      text,
+      raw: data,
+      provider: 'gemini',
+      usedKeyType,
+      tokens: {
+        by: 'messages',
+        total,
+        perMessage,
+        model: geminiModel,
+      },
+    });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     return new Response(JSON.stringify({ error: message }), { status: 500 });

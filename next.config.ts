@@ -3,13 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Needed for Docker multi-stage build that runs `server.js` from `.next/standalone`
   output: 'standalone',
-  // Skip linting during build for Docker
+  // Skip linting during build for Docker (only when explicitly disabled)
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: process.env.DISABLE_BUILD_CHECKS === 'true',
   },
-  // Skip type checking during build for Docker (optional)
+  // Skip type checking during build for Docker (only when explicitly disabled)
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: process.env.DISABLE_BUILD_CHECKS === 'true',
   },
   
   // Production optimizations
@@ -18,8 +18,8 @@ const nextConfig: NextConfig = {
   
   // Environment-specific configuration for shared URLs
   env: {
-    NEXT_PUBLIC_APP_URL: process.env.APP_URL || 'https://localhost:3000',
-    NEXT_PUBLIC_SHARE_URL_BASE: process.env.SHARE_URL_BASE || process.env.APP_URL || 'https://localhost:3000',
+    NEXT_PUBLIC_APP_URL: process.env.APP_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_SHARE_URL_BASE: process.env.SHARE_URL_BASE || process.env.APP_URL || 'http://localhost:3000',
   },
   
   // Security headers and CORS configuration for production
@@ -64,7 +64,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
+            value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
           }
         ]
       });

@@ -7,20 +7,36 @@ export type ChatMessage = {
   code?: number; // HTTP-like status from backend (e.g., 503)
   provider?: string; // e.g., 'openrouter', 'gemini'
   usedKeyType?: 'user' | 'shared' | 'none';
+  // Optional token usage metadata (when provided by backend)
+  tokens?: {
+    by?: 'prompt' | 'messages';
+    total: number;
+    model?: string;
+    perMessage?: Array<{
+      index: number;
+      role: string;
+      chars: number;
+      tokens: number;
+    }>;
+  };
 };
 
 export type AiModel = {
   id: string; // unique key in UI
   label: string; // display name
-  provider: 'gemini' | 'openrouter';
+  provider: 'gemini' | 'openrouter' | 'open-provider' | 'unstable' | 'mistral';
   model: string; // provider-specific model id
   free?: boolean;
   good?: boolean; // highlight as recommended
+  category?: 'text' | 'image' | 'audio'; // model capability category
 };
 
 export type ApiKeys = {
   gemini?: string;
   openrouter?: string;
+  'open-provider'?: string; // Optional API key for open-provider (currently free)
+  'unstable'?: string; // API key for unstable provider (inference.quran.lat)
+  'mistral'?: string; // API key for Mistral AI (api.mistral.ai)
 };
 
 export type ChatThread = {

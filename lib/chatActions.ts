@@ -1,8 +1,23 @@
-import { callGemini, callOpenRouter, streamOpenRouter } from './client';
+import { callGemini, callOpenRouter, callOpenProvider, callUnstable, callMistral, streamOpenRouter } from './client';
 import { safeUUID } from './uuid';
 import type { AiModel, ApiKeys, ChatMessage, ChatThread } from './types';
 import type { Project } from './projects';
 import { toast } from "react-toastify";
+
+const abortControllers: Record<string, AbortController> = {};
+
+function abortAll() {
+  Object.values(abortControllers).forEach(controller => {
+    try {
+      controller.abort();
+    } catch (e) {
+      // ignore
+    }
+  });
+  for (const key in abortControllers) {
+    delete abortControllers[key];
+  }
+}
 
 export type ChatDeps = {
   selectedModels: AiModel[];
@@ -14,6 +29,7 @@ export type ChatDeps = {
   setLoadingIds: (updater: (prev: string[]) => string[]) => void;
   setLoadingIdsInit: (ids: string[]) => void;
   activeProject?: Project | null;
+  selectedVoice?: string;
 };
 
 type ApiTextResult = {
@@ -34,7 +50,7 @@ function extractText(res: unknown): string {
   return 'No response';
 }
 
-export function createChatActions({ selectedModels, keys, threads, activeThread, setThreads, setActiveId, setLoadingIds, setLoadingIdsInit, activeProject }: ChatDeps) {
+export function createChatActions({ selectedModels, keys, threads, activeThread, setThreads, setActiveId, setLoadingIds, setLoadingIdsInit, activeProject, selectedVoice }: ChatDeps) {
   function ensureThread(): ChatThread {
     if (activeThread) return activeThread;
     const t: ChatThread = { id: safeUUID(), title: 'New Chat', messages: [], createdAt: Date.now() };
@@ -71,14 +87,16 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
     const prompt = text.trim();
     if (!prompt) return;
 
-  if (selectedModels.length === 0) { 
-  toast.warn("Select at least one model.", {
-    style: {
-    background: "#ff4d4f",
-    color: "#fff",
-          },
-         }); 
-     }
+    abortAll();
+
+    if (selectedModels.length === 0) { 
+      toast.warn("Select at least one model.", {
+        style: {
+          background: "#ff4d4f",
+          color: "#fff",
+        },
+      }); 
+    }
     
     const userMsg: ChatMessage = { role: 'user', content: prompt, ts: Date.now() };
     const thread = ensureThread();
@@ -87,6 +105,8 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
 
     setLoadingIdsInit(selectedModels.map(m => m.id));
     await Promise.allSettled(selectedModels.map(async (m) => {
+      const controller = new AbortController();
+      abortControllers[m.id] = controller;
       try {
         if (m.provider === 'gemini') {
           // create placeholder for typing animation
@@ -94,7 +114,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
-          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl, signal: controller.signal });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(t => {
@@ -115,6 +135,155 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
                 return { ...t, messages: msgs };
               }));
               if (i >= full.length) window.clearInterval(timer);
+            }, 24);
+          }
+        } else if (m.provider === 'open-provider') {
+          // create placeholder for typing animation
+          const placeholderTs = Date.now();
+          const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
+          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
+
+          const res = await callOpenProvider({ apiKey: keys['open-provider'] || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl, voice: selectedVoice });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...t, messages: msgs };
+            }));
+          } else {
+            // Check if this is image or audio generation - skip typewriter effect for these
+            const isImageGeneration = full.startsWith('![') && full.includes('](');
+            const isAudioGeneration = full.startsWith('[AUDIO:') && full.endsWith(']');
+
+            if (isImageGeneration || isAudioGeneration) {
+              // Show image/audio content immediately without typewriter effect
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                  ? { ...msg, content: full, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                  : msg);
+                return { ...t, messages: msgs };
+              }));
+            } else {
+              // typewriter effect for text models
+              let i = 0;
+              const step = Math.max(2, Math.ceil(full.length / 80));
+              const timer = window.setInterval(() => {
+                i = Math.min(full.length, i + step);
+                const chunk = full.slice(0, i);
+                setThreads(prev => prev.map(t => {
+                  if (t.id !== thread.id) return t;
+                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                  return { ...t, messages: msgs };
+                }));
+                if (i >= full.length) {
+                  window.clearInterval(timer);
+                  // attach provider meta and token info once complete
+                  setThreads(prev => prev.map(t => {
+                    if (t.id !== thread.id) return t;
+                    const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                      ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                      : msg);
+                    return { ...t, messages: msgs };
+                  }));
+                }
+              }, 24);
+            }
+          }
+        } else if (m.provider === 'unstable') {
+          // create placeholder for typing animation
+          const placeholderTs = Date.now();
+          const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
+          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
+
+          const res = await callUnstable({ apiKey: keys['unstable'] || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+          if (res && typeof (res as any)?.error === 'string') {
+            const errText = String((res as any).error).trim();
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: errText, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, code: (res as any)?.code } as ChatMessage
+                : msg);
+              return { ...t, messages: msgs };
+            }));
+            return;
+          }
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...t, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for unstable models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...t, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(t => {
+                  if (t.id !== thread.id) return t;
+                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...t, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'mistral') {
+          // create placeholder for typing animation
+          const placeholderTs = Date.now();
+          const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
+          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
+
+          const res = await callMistral({ apiKey: keys['mistral'] || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...t, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for mistral models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...t, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(t => {
+                  if (t.id !== thread.id) return t;
+                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...t, messages: msgs };
+                }));
+              }
             }, 24);
           }
         } else {
@@ -146,7 +315,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const isNonImageAttachment = !!imageDataUrl && (!mt || !isImage); // txt/pdf/docx or unknown
 
           if (isNonImageAttachment) {
-            const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+            const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl, signal: controller.signal });
             const text = extractText(res);
             setThreads(prev => prev.map(t => {
               if (t.id !== thread.id) return t;
@@ -156,7 +325,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             return;
           }
 
-          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl }, {
+          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl, signal: controller.signal }, {
             onToken: (delta) => {
               gotAny = true;
               buffer += delta;
@@ -183,7 +352,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               flush();
               if (!gotAny) {
                 try {
-                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl });
+                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl, signal: controller.signal });
                   const text = extractText(res);
                   setThreads(prev => prev.map(t => {
                     if (t.id !== thread.id) return t;
@@ -196,6 +365,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           });
         }
       } finally {
+        delete abortControllers[m.id];
         setLoadingIds(prev => prev.filter(x => x !== m.id));
       }
     }));
@@ -206,6 +376,8 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
     const t = threads.find(tt => tt.id === activeThread.id);
     if (!t) return;
     const original = [...(t.messages ?? [])];
+
+    abortAll();
 
     let userCount = -1;
     let userIdx = -1;
@@ -241,12 +413,14 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
 
     setLoadingIdsInit(selectedModels.map(m => m.id));
     Promise.allSettled(selectedModels.map(async (m) => {
+      const controller = new AbortController();
+      abortControllers[m.id] = controller;
       const ph = placeholders.find(p => p.model.id === m.id);
       if (!ph) { setLoadingIds(prev => prev.filter(x => x !== m.id)); return; }
       const placeholderTs = ph.ts;
       try {
         if (m.provider === 'gemini') {
-          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: baseHistory });
+          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: baseHistory, signal: controller.signal });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(tt => {
@@ -269,6 +443,125 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               if (i >= full.length) window.clearInterval(timer);
             }, 24);
           }
+        } else if (m.provider === 'open-provider') {
+          const res = await callOpenProvider({ apiKey: keys['open-provider'] || undefined, model: m.model, messages: baseHistory, voice: selectedVoice });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for all models (image models already have markdown in the response)
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'unstable') {
+          const res = await callUnstable({ apiKey: keys['unstable'] || undefined, model: m.model, messages: baseHistory });
+          if (res && typeof (res as any)?.error === 'string') {
+            const errText = String((res as any).error).trim();
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: errText, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, code: (res as any)?.code } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+            return;
+          }
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for unstable models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'mistral') {
+          const res = await callMistral({ apiKey: keys['mistral'] || undefined, model: m.model, messages: baseHistory });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for mistral models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
         } else {
           let buffer = '';
           let flushTimer: number | null = null;
@@ -287,7 +580,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               return { ...tt, messages: msgs };
             }));
           };
-          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory }, {
+          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory, signal: controller.signal }, {
             onToken: (delta) => {
               gotAny = true;
               buffer += delta;
@@ -314,7 +607,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               flush();
               if (!gotAny) {
                 try {
-                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory });
+                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory, signal: controller.signal });
                   const text = extractText(res);
                   setThreads(prev => prev.map(tt => {
                     if (tt.id !== t.id) return tt;
@@ -327,6 +620,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           });
         }
       } finally {
+        delete abortControllers[m.id];
         setLoadingIds(prev => prev.filter(x => x !== m.id));
       }
     }));
