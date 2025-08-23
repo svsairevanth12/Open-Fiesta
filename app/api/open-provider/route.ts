@@ -196,11 +196,13 @@ export async function POST(req: NextRequest) {
         console.log('Audio response content-type:', contentType);
 
         if (contentType?.includes('audio/') || contentType?.includes('application/octet-stream')) {
-          // Binary audio response - get as blob and create URL
-          const audioBlob = await resp.blob();
-          audioUrl = URL.createObjectURL(audioBlob);
+          // Binary audio response - convert to base64 for client-side blob creation
+          const audioBuffer = await resp.arrayBuffer();
+          const audioBase64 = Buffer.from(audioBuffer).toString('base64');
+          const mimeType = contentType || 'audio/mpeg';
+          audioUrl = `data:${mimeType};base64,${audioBase64}`;
           data = { audio_url: audioUrl };
-          console.log('Created blob URL for audio:', audioUrl);
+          console.log('Created data URL for audio, size:', audioBuffer.byteLength, 'bytes');
         } else {
           // Try to parse as JSON first, then as text
           const responseText = await resp.text();

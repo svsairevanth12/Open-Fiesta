@@ -37,7 +37,7 @@ function normalizeTableLikeMarkdown(lines: string[]): string[] {
   return out;
 }
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 
 type Props = { text: string };
@@ -72,24 +72,106 @@ const downloadImage = async (imageUrl: string, filename: string) => {
   }
 };
 
-// Download function for audio
-const downloadAudio = async (audioUrl: string, filename: string) => {
-  try {
-    const response = await fetch(audioUrl);
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Failed to download audio:', error);
-    // Fallback: open audio in new tab
-    window.open(audioUrl, '_blank');
-  }
+// Audio Player Component
+const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: string }) => {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const createBlobUrl = async () => {
+      try {
+        if (audioUrl.startsWith('data:')) {
+          // Convert data URL to blob URL for better performance
+          const response = await fetch(audioUrl);
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setBlobUrl(url);
+        } else {
+          // Use the URL directly if it's already a valid URL
+          setBlobUrl(audioUrl);
+        }
+      } catch (err) {
+        console.error('Failed to create blob URL:', err);
+        setError('Failed to load audio');
+        // Fallback to original URL
+        setBlobUrl(audioUrl);
+      }
+    };
+
+    createBlobUrl();
+
+    // Cleanup blob URL on unmount
+    return () => {
+      if (blobUrl && blobUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [audioUrl]);
+
+  const downloadAudio = async () => {
+    try {
+      let blob: Blob;
+
+      if (audioUrl.startsWith('data:')) {
+        // Convert data URL to blob
+        const response = await fetch(audioUrl);
+        blob = await response.blob();
+      } else {
+        // Fetch from URL
+        const response = await fetch(audioUrl);
+        blob = await response.blob();
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download audio:', error);
+      // Fallback: open audio in new tab
+      window.open(audioUrl, '_blank');
+    }
+  };
+
+  return (
+    <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4 my-2">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+        <span className="text-sm font-medium text-purple-200">Generated Audio</span>
+      </div>
+
+      {error ? (
+        <div className="text-red-400 text-sm mb-3">{error}</div>
+      ) : blobUrl ? (
+        <audio
+          controls
+          className="w-full mb-3"
+          style={{ filter: 'hue-rotate(280deg)' }}
+          preload="metadata"
+        >
+          <source src={blobUrl} type="audio/mpeg" />
+          <source src={blobUrl} type="audio/wav" />
+          <source src={blobUrl} type="audio/mp4" />
+          Your browser does not support the audio element.
+        </audio>
+      ) : (
+        <div className="text-zinc-400 text-sm mb-3">Loading audio...</div>
+      )}
+
+      <button
+        onClick={downloadAudio}
+        className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm transition-colors"
+        disabled={!blobUrl}
+      >
+        <Download size={16} />
+        Download Audio
+      </button>
+    </div>
+  );
 };
 
 export default function MarkdownLite({ text }: Props) {
@@ -104,29 +186,7 @@ export default function MarkdownLite({ text }: Props) {
 
     return (
       <div className="text-zinc-100 leading-relaxed">
-        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4 my-2">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-purple-200">Generated Audio</span>
-          </div>
-          <audio
-            controls
-            className="w-full mb-3"
-            style={{ filter: 'hue-rotate(280deg)' }}
-          >
-            <source src={audioUrl} type="audio/mpeg" />
-            <source src={audioUrl} type="audio/wav" />
-            <source src={audioUrl} type="audio/mp4" />
-            Your browser does not support the audio element.
-          </audio>
-          <button
-            onClick={() => downloadAudio(audioUrl, filename)}
-            className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm transition-colors"
-          >
-            <Download size={16} />
-            Download Audio
-          </button>
-        </div>
+        <AudioPlayer audioUrl={audioUrl} filename={filename} />
       </div>
     );
   }
