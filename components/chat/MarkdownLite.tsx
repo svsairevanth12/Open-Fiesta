@@ -399,6 +399,8 @@ export default function MarkdownLite({ text }: Props) {
 
     return (
       <div className="text-zinc-100 leading-relaxed">
+        {/* Keep the original marker in DOM but hide it from UI */}
+        <span aria-hidden style={{ display: 'none' }}>{text}</span>
         <AudioPlayer audioUrl={audioUrl} filename={filename} />
       </div>
     );
@@ -948,6 +950,17 @@ function renderInline(input: string): React.ReactNode[] {
   const out: React.ReactNode[] = [];
 
   imageSegments.forEach((imgSeg, imgIdx) => {
+    const isHiddenNoise = (txt: string) => {
+      const t = (txt || '').trim();
+      if (!t) return false;
+      if (/^\{\{?\s*Generated\s+Image\s*\}?\}$/i.test(t)) return true;
+      if (/^\[\s*Generated\s+Image\s*\]$/i.test(t)) return true;
+      if (/^Generated\s+Image$/i.test(t)) return true;
+      if (/^!\($/.test(t) || /^\)$/.test(t)) return true;
+      if (/(https?:\/\/(?:image\.)?pollinations\.ai[^\s)\]\}>"']+)/i.test(t)) return true;
+      return false;
+    };
+
     const imageMatch = imgSeg.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
     if (imageMatch) {
       const [, alt, src] = imageMatch;
@@ -960,9 +973,21 @@ function renderInline(input: string): React.ReactNode[] {
       return;
     }
 
+    // If this segment is known noise (provider labels, stray md, bare pollinations URL), keep it in DOM but hide
+    if (isHiddenNoise(imgSeg)) {
+      out.push(
+        <span key={`hidden-${imgIdx}`} aria-hidden style={{ display: 'none' }}>{imgSeg}</span>
+      );
+      return;
+    }
+
     // Then split by inline code `...`
     const segments = imgSeg.split(/(`[^`]+`)/g);
     segments.forEach((seg, idx) => {
+      if (isHiddenNoise(seg)) {
+        out.push(<span key={`hidden-${imgIdx}-${idx}`} aria-hidden style={{ display: 'none' }}>{seg}</span>);
+        return;
+      }
       if (/^`[^`]+`$/.test(seg)) {
         const content = seg.slice(1, -1);
         out.push(
