@@ -106,11 +106,10 @@ export async function POST(req: NextRequest) {
 
     // Prepare the request body in OpenAI format for Pollinations API
     const requestBody = isAudioModel ? {
-      // For audio models, use simplified OpenAI TTS format (no modalities to avoid errors)
+      // For audio models, use simplified OpenAI TTS format (removed response_format to avoid errors)
       model: model,
       input: prompt, // Use the full user message as input for TTS
       voice: voice || 'alloy', // Use selected voice or default to alloy
-      response_format: 'mp3',
     } : {
       // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
@@ -138,7 +137,6 @@ export async function POST(req: NextRequest) {
           model: requestBody.model,
           input: requestBody.input,
           voice: requestBody.voice,
-          response_format: requestBody.response_format,
           isAudio: true,
           inputLength: requestBody.input?.length || 0
         } : {
