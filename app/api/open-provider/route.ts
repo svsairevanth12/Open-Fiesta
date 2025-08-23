@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server';
 import { Buffer } from 'node:buffer';
 
+// Simple token estimator (approximate): ~4 characters per token
+function estimateTokens(text: string): number {
+  const t = (text || '').replace(/\s+/g, ' ').trim();
+  return t.length > 0 ? Math.ceil(t.length / 4) : 0;
+}
+
 // Function to get natural TTS prefix based on content type
 function getTTSPrefix(text: string): string {
   const lowerText = text.toLowerCase().trim();
@@ -71,9 +77,9 @@ export async function POST(req: NextRequest) {
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
     const isAudioModel = model === 'openai-audio';
     const isReasoningModel = ['deepseek-reasoning'].includes(model);
-    // Special-case detection for Azure GPT-5 Nano (Vision) model which only supports default temperature (1)
-    const modelId = String(model || '').toLowerCase();
-    const isGpt5NanoVision = modelId.includes('gpt-5') && modelId.includes('nano') && modelId.includes('vision');
+
+    const isGpt5Nano = model === 'gpt-5-nano';
+
 
     // For audio models, add natural TTS prefix to make it feel more conversational
     if (isAudioModel && prompt) {
@@ -89,11 +95,17 @@ export async function POST(req: NextRequest) {
       // For image generation, we don't need to fetch the image, just return the URL
       // The image will be displayed directly in the chat using the markdown image syntax
       const text = `![Generated Image](${imageUrl})`;
+      const promptTokensEstimate = estimateTokens(prompt);
       return Response.json({
         text,
         imageUrl,
         provider: 'open-provider',
-        usedKeyType
+        usedKeyType,
+        tokens: {
+          by: 'prompt',
+          total: promptTokensEstimate,
+          model
+        }
       });
     }
 
@@ -124,6 +136,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Prepare the request body in OpenAI format for Pollinations API
+    // Compute token estimates
+    const messageTokenDetails = trimmedMessages.map((m, idx) => ({
+      index: idx,
+      role: m.role,
+      chars: m.content.length,
+      tokens: estimateTokens(m.content)
+    }));
+    const totalTokensEstimate = messageTokenDetails.reduce((sum, x) => sum + x.tokens, 0);
     const requestBody = isAudioModel ? null : {
       // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
@@ -160,7 +180,8 @@ export async function POST(req: NextRequest) {
           model: requestBody?.model || model,
           messageCount: requestBody && 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
           isReasoning: isReasoningModel,
-          endpoint: 'openai-compatible'
+          endpoint: 'openai-compatible',
+          tokensEstimate: totalTokensEstimate
         }
       });
 
@@ -365,12 +386,18 @@ export async function POST(req: NextRequest) {
         text = 'No response generated. Please try again with a different prompt.';
       }
 
+      // Token reporting for response
+      const tokensPayload = isAudioModel
+        ? { by: 'prompt', total: estimateTokens(prompt), model }
+        : { by: 'messages', total: totalTokensEstimate, perMessage: messageTokenDetails, model };
+
       return Response.json({
         text: text.trim(),
         audioUrl,
         raw: data,
         provider: 'open-provider',
-        usedKeyType
+        usedKeyType,
+        tokens: tokensPayload
       });
 
     } catch (error) {

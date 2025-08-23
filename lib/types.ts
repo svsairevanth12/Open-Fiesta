@@ -7,6 +7,18 @@ export type ChatMessage = {
   code?: number; // HTTP-like status from backend (e.g., 503)
   provider?: string; // e.g., 'openrouter', 'gemini'
   usedKeyType?: 'user' | 'shared' | 'none';
+  // Optional token usage metadata (when provided by backend)
+  tokens?: {
+    by?: 'prompt' | 'messages';
+    total: number;
+    model?: string;
+    perMessage?: Array<{
+      index: number;
+      role: string;
+      chars: number;
+      tokens: number;
+    }>;
+  };
 };
 
 export type AiModel = {

@@ -331,6 +331,17 @@ export default function ChatGrid({
                               <div className="max-w-[72ch]">
                                 <MarkdownLite text={sanitizeContent(ans.content)} />
                               </div>
+                              {/* Token usage footer */}
+                              {ans.tokens && !isCollapsed && (
+                                <div className="mt-2 text-[11px] text-zinc-300/80">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-white/10 bg-white/5">
+                                    <span className="opacity-80">Tokens:</span>
+                                    <span className="font-medium">{ans.tokens.total}</span>
+                                    {ans.tokens.by && <span className="opacity-70">• {ans.tokens.by}</span>}
+                                    {ans.tokens.model && <span className="opacity-70">• {ans.tokens.model}</span>}
+                                  </span>
+                                </div>
+                              )}
                               {ans.code === 503 &&
                                 ans.provider === "openrouter" && (
                                   <div className="mt-2 inline-flex items-center gap-2 text-xs text-amber-200/90 bg-amber-500/15 ring-1 ring-amber-300/30 px-2.5 py-1.5 rounded">

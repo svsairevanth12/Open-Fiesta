@@ -129,7 +129,9 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           if (!full) {
             setThreads(prev => prev.map(t => {
               if (t.id !== thread.id) return t;
-              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: 'No response' } : msg);
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
               return { ...t, messages: msgs };
             }));
           } else {
@@ -144,7 +146,17 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
                 const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
                 return { ...t, messages: msgs };
               }));
-              if (i >= full.length) window.clearInterval(timer);
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(t => {
+                  if (t.id !== thread.id) return t;
+                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...t, messages: msgs };
+                }));
+              }
             }, 24);
           }
         } else {
@@ -305,7 +317,9 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           if (!full) {
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
-              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: 'No response' } : msg);
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
               return { ...tt, messages: msgs };
             }));
           } else {
@@ -320,7 +334,17 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
                 const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
                 return { ...tt, messages: msgs };
               }));
-              if (i >= full.length) window.clearInterval(timer);
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
             }, 24);
           }
         } else {
