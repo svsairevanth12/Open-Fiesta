@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 
-
 import HeaderBar from "@/components/app/HeaderBar";
 import SelectedModelsBar from "@/components/chat/SelectedModelsBar";
 import VoiceSelector from "@/components/modals/VoiceSelector";
@@ -180,15 +179,58 @@ export default function Home() {
     return rows;
   }, [messages]);
 
+  // Delete a full user turn (user + all its answers)
+  const onDeleteUser = (turnIndex: number) => {
+    if (!activeThread) return;
+    setThreads((prev) =>
+      prev.map((t) => {
+        if (t.id !== activeThread.id) return t;
+        const msgs = t.messages;
+        const userStarts: number[] = [];
+        for (let i = 0; i < msgs.length; i++) if (msgs[i].role === "user") userStarts.push(i);
+        const start = userStarts[turnIndex];
+        if (start === undefined) return t;
+        const end = userStarts[turnIndex + 1] ?? msgs.length; // exclusive
+        const nextMsgs = msgs.filter((_, idx) => idx < start || idx >= end);
+        return { ...t, messages: nextMsgs };
+      })
+    );
+  };
+
+  // Delete a specific model's answer within a turn
+  const onDeleteAnswer = (turnIndex: number, modelId: string) => {
+    if (!activeThread) return;
+    setThreads((prev) =>
+      prev.map((t) => {
+        if (t.id !== activeThread.id) return t;
+        const msgs = t.messages;
+        const userStarts: number[] = [];
+        for (let i = 0; i < msgs.length; i++) if (msgs[i].role === "user") userStarts.push(i);
+        const start = userStarts[turnIndex];
+        if (start === undefined) return t;
+        const end = userStarts[turnIndex + 1] ?? msgs.length; // exclusive
+        let removed = false;
+        const nextMsgs = msgs.filter((m, idx) => {
+          if (idx <= start || idx >= end) return true;
+          if (!removed && m.role === "assistant" && m.modelId === modelId) {
+            removed = true;
+            return false;
+          }
+          return true;
+        });
+        return { ...t, messages: nextMsgs };
+      })
+    );
+  };
+
   useEffect(() => {
     setIsHydrated(true);
-    const t = setTimeout(() => setShowSplash(false), 350); // fade-out duration match
+    const t = setTimeout(() => setShowSplash(false), 350);
     return () => clearTimeout(t);
   }, []);
 
   return (
     <div className={`min-h-screen w-full ${backgroundClass} relative text-white`}>
-
       {showSplash && (
         <div className="fixed inset-0 z-[9999]">
           <LaunchScreen backgroundClass={backgroundClass} dismissed={isHydrated} />
@@ -259,14 +301,11 @@ export default function Home() {
             <SelectedModelsBar selectedModels={selectedModels} onToggle={toggle} />
 
             {/* Voice selector for audio models */}
-            {isHydrated && selectedModels.some(m => m.category === 'audio') && (
+            {isHydrated && selectedModels.some((m) => m.category === "audio") && (
               <div className="mb-3 px-4">
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-zinc-400">Voice:</span>
-                  <VoiceSelector
-                    selectedVoice={selectedVoice}
-                    onVoiceChange={setSelectedVoice}
-                  />
+                  <VoiceSelector selectedVoice={selectedVoice} onVoiceChange={setSelectedVoice} />
                 </div>
               </div>
             )}
@@ -280,10 +319,7 @@ export default function Home() {
               onToggle={toggle}
             />
 
-            <FirstVisitNote
-              open={showFirstVisitNote}
-              onClose={() => setFirstNoteDismissed(true)}
-            />
+            <FirstVisitNote open={showFirstVisitNote} onClose={() => setFirstNoteDismissed(true)} />
 
             {isHydrated && (
               <ChatGrid
@@ -299,12 +335,12 @@ export default function Home() {
                 copiedKey={copiedKey}
                 setCopiedKey={setCopiedKey}
                 onEditUser={onEditUser}
+                onDeleteUser={onDeleteUser}
+                onDeleteAnswer={onDeleteAnswer}
               />
             )}
 
-            {isHydrated && (
-              <FixedInputBar onSubmit={send} loading={anyLoading} />
-            )}
+            {isHydrated && <FixedInputBar onSubmit={send} loading={anyLoading} />}
           </div>
         </div>
       </div>

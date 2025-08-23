@@ -10,8 +10,10 @@ import {
   Save,
   X,
   Star,
+  Trash,
 } from "lucide-react";
 import MarkdownLite from "./MarkdownLite";
+import ConfirmDialog from "@/components/modals/ConfirmDialog";
 import type { AiModel, ChatMessage } from "@/lib/types";
 
 export type ChatGridProps = {
@@ -29,6 +31,8 @@ export type ChatGridProps = {
     v: string | null | ((prev: string | null) => string | null)
   ) => void;
   onEditUser: (turnIndex: number, newText: string) => void;
+  onDeleteUser: (turnIndex: number) => void;
+  onDeleteAnswer: (turnIndex: number, modelId: string) => void;
 };
 
 export default function ChatGrid({
@@ -44,7 +48,14 @@ export default function ChatGrid({
   copiedKey,
   setCopiedKey,
   onEditUser,
+  onDeleteUser,
+  onDeleteAnswer,
 }: ChatGridProps) {
+  const [pendingDelete, setPendingDelete] = useState<
+    | { type: "turn"; turnIndex: number }
+    | { type: "answer"; turnIndex: number; modelId: string }
+    | null
+  >(null);
   // Sanitize certain provider-specific XML-ish wrappers (e.g., <answer>, <think>)
   const sanitizeContent = (s: string): string => {
     try {
@@ -54,6 +65,15 @@ export default function ChatGrid({
       return t.trim();
     } catch {
       return s;
+    }
+  };
+  // Approximate token estimator (~4 chars/token), for display only
+  const estimateTokens = (text: string): number => {
+    try {
+      const t = (text || "").replace(/\s+/g, " ").trim();
+      return t.length > 0 ? Math.ceil(t.length / 4) : 0;
+    } catch {
+      return 0;
     }
   };
   const headerCols = useMemo(
@@ -75,6 +95,7 @@ export default function ChatGrid({
   }, [pairs])
 
   return (
+    <>
     <div
      ref={scrollRef} 
      className="relative rounded-lg border border-white/5 bg-white/5 px-3 lg:px-4 pt-2 overflow-x-auto flex-1 overflow-y-auto pb-28 sm:scroll-stable-gutter">
@@ -225,6 +246,15 @@ export default function ChatGrid({
                     </button>
                   )}
                   <button
+                    onClick={() =>
+                      setPendingDelete({ type: "turn", turnIndex: i })
+                    }
+                    className="icon-btn h-7 w-7 accent-focus"
+                    title="Delete this turn"
+                  >
+                    <Trash size={12} />
+                  </button>
+                  <button
                     onClick={() => {
                       const all = selectedModels
                         .filter((m) => !collapsedIds.includes(m.id))
@@ -281,38 +311,55 @@ export default function ChatGrid({
                       >
                         {/* decorative overlay removed for cleaner look */}
                         {ans && String(ans.content || "").length > 0 && (
-                          <button
-                            onClick={() => {
-                              copyToClipboard(sanitizeContent(ans.content));
-                              const key = `${i}:${m.id}`;
-                              setCopiedKey(key);
-                              window.setTimeout(
-                                () =>
-                                  setCopiedKey((prev) =>
-                                    typeof prev === "string" && prev === key
-                                      ? null
-                                      : prev
-                                  ),
-                                1200
-                              );
-                            }}
-                            className={`absolute top-2 right-2 z-10 icon-btn h-7 w-7 ${
+                          <div
+                            className={`absolute top-2 right-2 z-10 flex gap-2 ${
                               isCollapsed
                                 ? "opacity-0 pointer-events-none"
                                 : "opacity-0 group-hover:opacity-100"
-                            } transition-all ${
-                              copiedKey === `${i}:${m.id}`
-                                ? "bg-emerald-500/15 border-emerald-300/30 text-emerald-100"
-                                : ""
-                            } accent-focus`}
-                            title={`Copy ${m.label} response`}
+                            }`}
                           >
-                            {copiedKey === `${i}:${m.id}` ? (
-                              <Check size={12} />
-                            ) : (
-                              <CopyIcon size={12} />
-                            )}
-                          </button>
+                            <button
+                              onClick={() =>
+                                setPendingDelete({
+                                  type: "answer",
+                                  turnIndex: i,
+                                  modelId: m.id,
+                                })
+                              }
+                              className="icon-btn h-7 w-7 accent-focus"
+                              title={`Delete ${m.label} response`}
+                            >
+                              <Trash size={12} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                copyToClipboard(sanitizeContent(ans.content));
+                                const key = `${i}:${m.id}`;
+                                setCopiedKey(key);
+                                window.setTimeout(
+                                  () =>
+                                    setCopiedKey((prev) =>
+                                      typeof prev === "string" && prev === key
+                                        ? null
+                                        : prev
+                                    ),
+                                  1200
+                                );
+                              }}
+                              className={`icon-btn h-7 w-7 ${
+                                copiedKey === `${i}:${m.id}`
+                                  ? "bg-emerald-500/15 border-emerald-300/30 text-emerald-100"
+                                  : ""
+                              } accent-focus`}
+                              title={`Copy ${m.label} response`}
+                            >
+                              {copiedKey === `${i}:${m.id}` ? (
+                                <Check size={12} />
+                              ) : (
+                                <CopyIcon size={12} />
+                              )}
+                            </button>
+                          </div>
                         )}
                         <div
                           className={`text-sm leading-relaxed w-full pr-8 ${
@@ -333,14 +380,30 @@ export default function ChatGrid({
                               </div>
                               {/* Token usage footer */}
                               {ans.tokens && !isCollapsed && (
-                                <div className="mt-2 text-[11px] text-zinc-300/80">
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-white/10 bg-white/5">
-                                    <span className="opacity-80">Tokens:</span>
-                                    <span className="font-medium">{ans.tokens.total}</span>
-                                    {ans.tokens.by && <span className="opacity-70">• {ans.tokens.by}</span>}
-                                    {ans.tokens.model && <span className="opacity-70">• {ans.tokens.model}</span>}
-                                  </span>
-                                </div>
+                                (() => {
+                                  const by = ans.tokens?.by;
+                                  const model = ans.tokens?.model;
+                                  const inTokens = Array.isArray(ans.tokens?.perMessage)
+                                    ? ans.tokens!.perMessage!.reduce((sum, x) => sum + (Number(x?.tokens) || 0), 0)
+                                    : ans.tokens?.total ?? undefined;
+                                  const outTokens = estimateTokens(String(ans.content || ""));
+                                  return (
+                                    <div className="mt-2 text-[11px] text-zinc-300/80">
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-white/10 bg-white/5">
+                                        {typeof inTokens === 'number' && (
+                                          <span className="opacity-80">In:</span>
+                                        )}
+                                        {typeof inTokens === 'number' && (
+                                          <span className="font-medium">{inTokens}</span>
+                                        )}
+                                        <span className="opacity-80">Out:</span>
+                                        <span className="font-medium">{outTokens}</span>
+                                        {by && <span className="opacity-70">• {by}</span>}
+                                        {model && <span className="opacity-70">• {model}</span>}
+                                      </span>
+                                    </div>
+                                  );
+                                })()
                               )}
                               {ans.code === 503 &&
                                 ans.provider === "openrouter" && (
@@ -426,5 +489,32 @@ export default function ChatGrid({
         </div>
       )}
     </div>
+    {/* Delete confirmation dialog */}
+    <ConfirmDialog
+      open={pendingDelete !== null}
+      title={
+        pendingDelete?.type === "turn"
+          ? "Delete this turn?"
+          : "Delete model answer?"
+      }
+      message={
+        pendingDelete?.type === "turn"
+          ? "This will remove your prompt and all model answers for this turn."
+          : "This will remove the selected model's response for this turn."
+      }
+      confirmText="Delete"
+      cancelText="Cancel"
+      onCancel={() => setPendingDelete(null)}
+      onConfirm={() => {
+        if (!pendingDelete) return;
+        if (pendingDelete.type === "turn") {
+          onDeleteUser(pendingDelete.turnIndex);
+        } else {
+          onDeleteAnswer(pendingDelete.turnIndex, pendingDelete.modelId);
+        }
+        setPendingDelete(null);
+      }}
+    />
+    </>
   );
 }

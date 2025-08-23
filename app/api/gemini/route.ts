@@ -149,7 +149,33 @@ export async function POST(req: NextRequest) {
       const hint = 'Gemini returned an empty message. This can happen on shared quota. Try again, rephrase, or add your own Gemini API key in Settings.';
       text = hint;
     }
-    return Response.json({ text, raw: data });
+    // Token estimation similar to open-provider: ~4 chars per token
+    const estimateTokens = (s: string) => {
+      const t = (s || '').replace(/\s+/g, ' ').trim();
+      return t.length > 0 ? Math.ceil(t.length / 4) : 0;
+    };
+    // messages may contain non-strings; coerce and sum
+    const inputArray = Array.isArray(messages) ? (messages as Array<{ role?: unknown; content?: unknown }>) : [];
+    const perMessage = inputArray.map((m, idx) => ({
+      index: idx,
+      role: typeof m?.role === 'string' ? String(m.role) : 'user',
+      chars: typeof m?.content === 'string' ? (m.content as string).length : String(m?.content ?? '').length,
+      tokens: estimateTokens(typeof m?.content === 'string' ? (m.content as string) : String(m?.content ?? '')),
+    }));
+    const total = perMessage.reduce((sum, x) => sum + x.tokens, 0);
+
+    return Response.json({
+      text,
+      raw: data,
+      provider: 'gemini',
+      usedKeyType,
+      tokens: {
+        by: 'messages',
+        total,
+        perMessage,
+        model: geminiModel,
+      },
+    });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     return new Response(JSON.stringify({ error: message }), { status: 500 });

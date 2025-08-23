@@ -38,6 +38,7 @@ function normalizeTableLikeMarkdown(lines: string[]): string[] {
 }
 
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Download } from "lucide-react";
 import { ACCENT_UTILITY_CLASSES } from "../../lib/accentColors";
 
@@ -448,8 +449,27 @@ function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; f
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [dimensions, setDimensions] = useState<{ w: number; h: number } | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightboxOpen]);
+
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [lightboxOpen]);
 
   return (
+    <>
     <div
       className="my-3 rounded-2xl overflow-hidden border relative"
       style={{
@@ -577,11 +597,12 @@ function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; f
                 setDimensions({ w: el.naturalWidth, h: el.naturalHeight });
               }}
               onError={() => setFailed(true)}
-              className={`w-full h-auto rounded-lg ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 shadow-[0_8px_22px_rgba(0,0,0,0.28)]`}
+              className={`w-full h-auto rounded-lg ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 shadow-[0_8px_22px_rgba(0,0,0,0.28)] cursor-zoom-in`}
               style={{
                 display: failed ? 'none' as const : 'block',
                 border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)'
               }}
+              onClick={() => loaded && !failed && setLightboxOpen(true)}
             />
 
             {/* Status pill removed per request */}
@@ -596,7 +617,7 @@ function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; f
         {/* Download button after load */}
         {loaded && !failed && (
           <button
-            onClick={() => downloadImage(src, filename)}
+            onClick={(e) => { e.stopPropagation(); downloadImage(src, filename); }}
             className="absolute top-4 right-4 px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
             style={{
               color: '#fff',
@@ -611,6 +632,39 @@ function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; f
         )}
       </div>
     </div>
+    {/* Lightbox overlay via Portal to body */}
+    {lightboxOpen && !failed && createPortal(
+      <div
+        className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+        onClick={() => setLightboxOpen(false)}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Image preview"
+      >
+        {/* Close button */}
+        <button
+          aria-label="Close image preview"
+          title="Close"
+          onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+          className="absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center text-white/90 bg-white/10 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 border border-white/20 shadow-lg"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        <div className="relative max-w-[95vw] max-h-[95vh]" onClick={(e) => e.stopPropagation()}>
+          <img
+            src={src}
+            alt={alt}
+            className="max-w-[95vw] max-h-[95vh] w-auto h-auto rounded-lg shadow-2xl"
+          />
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 }
 
