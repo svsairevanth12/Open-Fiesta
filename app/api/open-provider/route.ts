@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, model, apiKey: apiKeyFromBody, imageDataUrl, voice } = await req.json();
     // Use the provided token or fallback to environment variable
-    const apiKey = apiKeyFromBody || process.env.OPEN_PROVIDER_API_KEY || 'tQ14HuL-wtewmt1H';
+    const apiKey = apiKeyFromBody || process.env.OPEN_PROVIDER_API_KEY || 'EKfz9oU-FsP-Kz4w';
     const usedKeyType = apiKeyFromBody ? 'user' : (process.env.OPEN_PROVIDER_API_KEY ? 'shared' : 'default');
     
     if (!model) return new Response(JSON.stringify({ error: 'Missing model id' }), { status: 400 });

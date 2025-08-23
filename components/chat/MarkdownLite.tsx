@@ -37,7 +37,7 @@ function normalizeTableLikeMarkdown(lines: string[]): string[] {
   return out;
 }
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { ACCENT_UTILITY_CLASSES } from "../../lib/accentColors";
 
@@ -74,10 +74,99 @@ const downloadImage = async (imageUrl: string, filename: string) => {
 };
 
 // Audio Player Component
+function ProgressBar({
+  value,
+  max,
+  onScrub,
+}: {
+  value: number;
+  max: number;
+  onScrub: (next: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const pct = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let dragging = false;
+
+    const getPos = (e: MouseEvent | TouchEvent) => {
+      const rect = el.getBoundingClientRect();
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const rel = Math.min(rect.right, Math.max(rect.left, clientX)) - rect.left;
+      const ratio = rect.width > 0 ? rel / rect.width : 0;
+      return ratio * max;
+    };
+
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      if (!dragging) return;
+      e.preventDefault();
+      onScrub(getPos(e));
+    };
+    const onUp = () => { dragging = false; };
+
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      dragging = true;
+      onScrub(getPos(e));
+    };
+
+    el.addEventListener('mousedown', onDown as any);
+    el.addEventListener('touchstart', onDown as any, { passive: false });
+    window.addEventListener('mousemove', onMove as any, { passive: false });
+    window.addEventListener('touchmove', onMove as any, { passive: false });
+    window.addEventListener('mouseup', onUp as any);
+    window.addEventListener('touchend', onUp as any);
+    return () => {
+      el.removeEventListener('mousedown', onDown as any);
+      el.removeEventListener('touchstart', onDown as any);
+      window.removeEventListener('mousemove', onMove as any);
+      window.removeEventListener('touchmove', onMove as any);
+      window.removeEventListener('mouseup', onUp as any);
+      window.removeEventListener('touchend', onUp as any);
+    };
+  }, [max, onScrub]);
+
+  return (
+    <div
+      ref={ref}
+      className="group relative h-2 w-full rounded-full cursor-pointer"
+      role="slider"
+      aria-valuenow={Math.floor(value)}
+      aria-valuemin={0}
+      aria-valuemax={Math.floor(max)}
+      style={{ background: 'color-mix(in srgb, var(--accent-highlight-subtle) 35%, transparent)' }}
+    >
+      <div
+        className="absolute left-0 top-0 h-full rounded-full"
+        style={{ width: `${pct}%`, background: 'var(--accent-interactive-primary)' }}
+      />
+      <div
+        className="absolute -top-1 h-4 w-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{
+          left: `calc(${pct}% - 8px)`,
+          background: 'color-mix(in srgb, white 85%, transparent)',
+          border: '1px solid color-mix(in srgb, white 35%, transparent)',
+          boxShadow: '0 0 8px color-mix(in srgb, var(--accent-interactive-primary) 40%, transparent)'
+        }}
+      />
+    </div>
+  );
+}
+
 const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: string }) => {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     const createBlobUrl = async () => {
@@ -141,10 +230,13 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
 
   return (
     <div
-      className="rounded-lg p-4 my-2 border"
+      className="rounded-2xl p-4 sm:p-5 my-4 border bg-transparent transition-transform duration-200 hover:-translate-y-0.5"
       style={{
-        background: "linear-gradient(90deg, var(--accent-highlight-subtle), transparent)",
-        borderColor: "var(--accent-interactive-primary)",
+        borderColor: 'color-mix(in srgb, var(--accent-interactive-primary) 35%, transparent)',
+        boxShadow:
+          '0 10px 30px rgba(0,0,0,0.35), 0 6px 10px rgba(0,0,0,0.25), inset 0 1px 0 color-mix(in srgb, var(--accent-highlight-subtle) 14%, transparent)',
+        background:
+          'radial-gradient(120% 100% at 10% 0%, color-mix(in srgb, var(--accent-highlight-subtle) 14%, transparent), transparent 40%), radial-gradient(140% 120% at 100% 100%, color-mix(in srgb, var(--accent-highlight-subtle) 50%, transparent), transparent 60%)',
       }}
     >
       <div className="flex items-center justify-between mb-3">
@@ -153,42 +245,107 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
             className="w-3 h-3 rounded-full animate-pulse"
             style={{ backgroundColor: "var(--accent-interactive-primary)" }}
           ></div>
-          <span className="text-sm font-medium text-purple-200">Generated Audio</span>
+          <span
+            className="text-sm font-medium tracking-wide text-zinc-200 dark:text-zinc-100"
+          >
+            Generated Audio
+          </span>
         </div>
-        {/* Mini equalizer when playing */}
         {blobUrl && !error && (
-          <div className="hidden sm:flex items-end gap-0.5 h-4" aria-hidden>
-            <span className={`w-1 rounded-sm ${isPlaying ? 'animate-pulse' : ''}`}
-              style={{ backgroundColor: 'var(--accent-highlight-primary)', height: isPlaying ? '100%' : '40%' }} />
-            <span className={`w-1 rounded-sm ${isPlaying ? 'animate-pulse' : ''}`}
-              style={{ backgroundColor: 'var(--accent-highlight-secondary)', height: isPlaying ? '70%' : '30%' }} />
-            <span className={`w-1 rounded-sm ${isPlaying ? 'animate-pulse' : ''}`}
-              style={{ backgroundColor: 'var(--accent-interactive-primary)', height: isPlaying ? '90%' : '25%' }} />
-            <span className={`w-1 rounded-sm ${isPlaying ? 'animate-pulse' : ''}`}
-              style={{ backgroundColor: 'var(--accent-highlight-secondary)', height: isPlaying ? '60%' : '20%' }} />
+          <div className="hidden sm:flex items-center gap-2" aria-hidden>
+            {isPlaying && (
+              <div className="flex items-end gap-0.5 h-4">
+                <span className="w-0.5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-primary)', height: '100%', boxShadow: '0 0 8px var(--accent-highlight-primary)' }} />
+                <span className="w-0.5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-secondary)', height: '70%', boxShadow: '0 0 8px var(--accent-highlight-secondary)' }} />
+                <span className="w-0.5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-interactive-primary)', height: '90%', boxShadow: '0 0 10px var(--accent-interactive-primary)' }} />
+                <span className="w-0.5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-secondary)', height: '60%', boxShadow: '0 0 8px var(--accent-highlight-secondary)' }} />
+              </div>
+            )}
+            {duration !== null && (
+              <span className="text-xs text-zinc-400 tabular-nums">{formatTime(duration)}</span>
+            )}
           </div>
         )}
       </div>
 
       {error ? (
-        <div className="text-red-400 text-sm mb-3">{error}</div>
+        <div className="text-sm mb-3" style={{ color: 'var(--accent-error)' }}>{error}</div>
       ) : blobUrl ? (
-        <audio
-          controls
-          className="w-full mb-3"
-          style={{ filter: 'hue-rotate(280deg)' }}
-          preload="metadata"
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
-        >
-          <source src={blobUrl} type="audio/mpeg" />
-          <source src={blobUrl} type="audio/wav" />
-          <source src={blobUrl} type="audio/mp4" />
-          Your browser does not support the audio element.
-        </audio>
+        <div className="mb-4">
+          {/* Hidden audio element */}
+          <audio
+            ref={audioRef}
+            src={blobUrl || undefined}
+            onLoadedMetadata={(e) => {
+              const el = e.currentTarget;
+              if (!isNaN(el.duration) && isFinite(el.duration)) {
+                setDuration(el.duration);
+              }
+            }}
+            onTimeUpdate={(e) => {
+              setCurrentTime(e.currentTarget.currentTime || 0);
+            }}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            className="hidden"
+          />
+
+          {/* Custom controls */}
+          <div
+            className="w-full rounded-xl px-3.5 py-2.5 flex items-center gap-3"
+            style={{
+              background: 'linear-gradient(180deg, color-mix(in srgb, var(--accent-highlight-subtle) 16%, transparent), color-mix(in srgb, var(--accent-highlight-subtle) 6%, transparent))',
+              border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)',
+              boxShadow: '0 10px 20px color-mix(in srgb, black 22%, transparent), inset 0 1px 0 color-mix(in srgb, var(--accent-highlight-subtle) 18%, transparent)'
+            }}
+          >
+            {/* Play/Pause */}
+            <button
+              onClick={() => {
+                const el = audioRef.current;
+                if (!el) return;
+                if (el.paused) { el.play(); } else { el.pause(); }
+              }}
+              className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white transition-transform duration-150 active:scale-95`}
+              style={{
+                background: 'radial-gradient(80% 80% at 30% 20%, color-mix(in srgb, white 35%, transparent), transparent 40%), var(--accent-interactive-primary)',
+                boxShadow: '0 8px 18px color-mix(in srgb, var(--accent-interactive-primary) 45%, transparent), inset 0 1px 0 color-mix(in srgb, white 35%, transparent)'
+              }}
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white">
+                {isPlaying ? (
+                  <g>
+                    <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+                    <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+                  </g>
+                ) : (
+                  <path d="M8 5v14l11-7z"></path>
+                )}
+              </svg>
+            </button>
+
+            {/* Progress */}
+            <div className="flex-1 flex items-center gap-2">
+              <span className="text-xs tabular-nums text-zinc-400 w-10 text-right">
+                {formatTime(currentTime)}
+              </span>
+              <ProgressBar
+                value={Math.min(currentTime, duration ?? 0)}
+                max={duration ?? 0}
+                onScrub={(next) => {
+                  setCurrentTime(next);
+                  if (audioRef.current) audioRef.current.currentTime = next;
+                }}
+              />
+              <span className="text-xs tabular-nums text-zinc-400 w-10">
+                {duration !== null ? formatTime(duration) : '--:--'}
+              </span>
+            </div>
+          </div>
+        </div>
       ) : (
-        <div className="flex items-center gap-3 text-zinc-300 text-sm mb-3">
+        <div className="flex items-center gap-3 text-sm mb-4 text-zinc-600 dark:text-zinc-300">
           {/* Distinct loading equalizer (different from image skeleton) */}
           <div className="flex items-end gap-1 h-6" aria-hidden>
             <span className="w-1 h-2 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-primary)' }} />
@@ -200,14 +357,31 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
         </div>
       )}
 
-      <button
-        onClick={downloadAudio}
-        className={`${ACCENT_UTILITY_CLASSES.button.primary} flex items-center gap-2 px-3 py-2 text-white rounded-md text-sm transition-colors`}
-        disabled={!blobUrl}
-      >
-        <Download size={16} />
-        Download Audio
-      </button>
+      {/* Divider */}
+      <div
+        className="h-px my-2"
+        style={{ background: 'color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)' }}
+      />
+
+      {/* Footer actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 justify-between">
+        {/* Context (filename) */}
+        <div className="text-xs text-zinc-600 dark:text-zinc-400 truncate" title={filename}>
+          {filename}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            aria-label="Download audio"
+            onClick={downloadAudio}
+            className={`${ACCENT_UTILITY_CLASSES.button.secondary} flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors`}
+            disabled={!blobUrl}
+          >
+            <Download size={16} />
+            Download
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -273,42 +447,169 @@ function splitFencedCodeBlocks(input: string): Array<{ type: "text" | "code"; co
 function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; filename: string }) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [dimensions, setDimensions] = useState<{ w: number; h: number } | null>(null);
 
   return (
-    <div className="relative group my-2">
-      {/* Skeleton while loading */}
-      {!loaded && !failed && (
-        <div className="w-full rounded-lg border border-white/10 overflow-hidden" style={{ aspectRatio: "3 / 2" }}>
-          <div className="h-full w-full animate-pulse bg-white/10" />
-        </div>
-      )}
-
-      {/* Actual image */}
-      <img
-        src={src}
-        alt={alt}
-        onLoad={() => setLoaded(true)}
-        onError={() => setFailed(true)}
-        className={`max-w-full h-auto rounded-lg border border-white/10 ${loaded ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}
-        style={{ maxHeight: "400px" }}
+    <div
+      className="my-3 rounded-2xl overflow-hidden border relative"
+      style={{
+        borderColor: 'color-mix(in srgb, var(--accent-interactive-primary) 22%, transparent)',
+        boxShadow: '0 8px 22px color-mix(in srgb, black 28%, transparent), inset 0 1px 0 color-mix(in srgb, var(--accent-highlight-subtle) 10%, transparent)'
+      }}
+    >
+      {/* Accent stripe */}
+      <div
+        className="absolute left-0 top-0 h-full w-[3px]"
+        style={{
+          background: 'linear-gradient(180deg, var(--accent-interactive-primary), color-mix(in srgb, var(--accent-interactive-primary) 50%, transparent))',
+          boxShadow: '0 0 8px color-mix(in srgb, var(--accent-interactive-primary) 35%, transparent)'
+        }}
       />
 
-      {/* Error state */}
-      {failed && (
-        <div className="mt-2 text-xs text-rose-200">Failed to load image.</div>
-      )}
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2 pl-6 border-b"
+        style={{
+          borderColor: 'color-mix(in srgb, var(--accent-highlight-subtle) 18%, transparent)',
+          background: 'linear-gradient(180deg, color-mix(in srgb, var(--accent-highlight-subtle) 12%, transparent), color-mix(in srgb, var(--accent-highlight-subtle) 4%, transparent))'
+        }}>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-interactive-primary)', boxShadow: '0 0 8px var(--accent-interactive-primary)' }} />
+          <span className="text-sm font-medium text-zinc-100">Generated Image</span>
+        </div>
+        {dimensions && (
+          <span className="text-[11px] text-zinc-400 tabular-nums">{dimensions.w}×{dimensions.h}px</span>
+        )}
+      </div>
 
-      {/* Download button after load */}
-      {loaded && !failed && (
-        <button
-          onClick={() => downloadImage(src, filename)}
-          className="absolute top-2 right-2 p-2 bg-black/70 hover:bg-black/90 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1"
-          title="Download image"
+      {/* Stage background */}
+      <div
+        className="relative p-3"
+        style={{
+          background: `
+            linear-gradient(180deg, color-mix(in srgb, var(--accent-highlight-subtle) 5%, transparent), transparent),
+            radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, black 14%, transparent), transparent 40%),
+            linear-gradient(135deg,
+              color-mix(in srgb, var(--accent-highlight-subtle) 4%, transparent) 25%,
+              transparent 25%, transparent 50%,
+              color-mix(in srgb, var(--accent-highlight-subtle) 4%, transparent) 50%,
+              color-mix(in srgb, var(--accent-highlight-subtle) 4%, transparent) 75%,
+              transparent 75%, transparent
+            )`,
+          backgroundSize: 'auto, auto, 24px 24px'
+        }}
+      >
+        {/* Inner frame */}
+        <div
+          className="rounded-xl p-1.5"
+          style={{
+            border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 20%, transparent)',
+            boxShadow: 'inset 0 1px 0 color-mix(in srgb, white 8%, transparent), inset 0 0 0 9999px color-mix(in srgb, black 4%, transparent)'
+          }}
         >
-          <Download size={16} />
-          <span className="text-xs hidden sm:inline">Download</span>
-        </button>
-      )}
+          {/* Unified image container */}
+          <div
+            className="relative w-full rounded-lg overflow-hidden"
+            style={{
+              border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 20%, transparent)',
+              aspectRatio: !loaded && !failed ? '3 / 2' : undefined
+            }}
+          >
+            {/* Skeleton layers only while loading */}
+            {!loaded && !failed && (
+              <div className="absolute inset-0">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `
+                      radial-gradient(85% 120% at 50% 30%, color-mix(in srgb, var(--accent-highlight-subtle) 12%, transparent), transparent 65%),
+                      linear-gradient(135deg,
+                        color-mix(in srgb, var(--accent-highlight-subtle) 2.5%, transparent) 25%,
+                        transparent 25%, transparent 50%,
+                        color-mix(in srgb, var(--accent-highlight-subtle) 2.5%, transparent) 50%,
+                        color-mix(in srgb, var(--accent-highlight-subtle) 2.5%, transparent) 75%,
+                        transparent 75%, transparent
+                      )
+                    `
+                  }}
+                />
+                <div
+                  className="absolute inset-y-0 -left-1/3 w-1/3 img-sweep"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, color-mix(in srgb, white 10%, transparent) 40%, color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent) 50%, transparent 80%)',
+                    filter: 'blur(6px)'
+                  }}
+                />
+                <div
+                  className="absolute inset-0 rounded-[0.5rem] pointer-events-none img-breathe-strong"
+                  style={{
+                    boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--accent-highlight-subtle) 28%, transparent), inset 0 0 30px color-mix(in srgb, var(--accent-interactive-primary) 10%, transparent)'
+                  }}
+                />
+                {/* center ripple */}
+                <div
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full img-ripple"
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    background: 'radial-gradient(closest-side, color-mix(in srgb, var(--accent-interactive-primary) 22%, transparent), transparent 70%)',
+                    filter: 'blur(8px)',
+                    opacity: 0.6
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="opacity-70 animate-pulse">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-zinc-400">
+                      <path d="M4 7h3l2-2h6l2 2h3v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" strokeWidth="1.2"/>
+                      <circle cx="12" cy="13" r="3.5" strokeWidth="1.2"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actual image */}
+            <img
+              src={src}
+              alt={alt}
+              onLoad={(e) => {
+                setLoaded(true);
+                const el = e.currentTarget as HTMLImageElement;
+                setDimensions({ w: el.naturalWidth, h: el.naturalHeight });
+              }}
+              onError={() => setFailed(true)}
+              className={`w-full h-auto rounded-lg ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 shadow-[0_8px_22px_rgba(0,0,0,0.28)]`}
+              style={{
+                display: failed ? 'none' as const : 'block',
+                border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)'
+              }}
+            />
+
+            {/* Status pill removed per request */}
+          </div>
+        </div>
+
+        {/* Error state */}
+        {failed && (
+          <div className="mt-2 text-xs" style={{ color: 'var(--accent-error)' }}>Failed to load image.</div>
+        )}
+
+        {/* Download button after load */}
+        {loaded && !failed && (
+          <button
+            onClick={() => downloadImage(src, filename)}
+            className="absolute top-4 right-4 px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+            style={{
+              color: '#fff',
+              background: 'radial-gradient(80% 80% at 30% 20%, rgba(255,255,255,0.25), rgba(255,255,255,0) 40%), var(--accent-interactive-primary)',
+              boxShadow: '0 8px 18px color-mix(in srgb, var(--accent-interactive-primary) 40%, transparent)'
+            }}
+            title="Download image"
+          >
+            <Download size={14} />
+            Download
+          </button>
+        )}
+      </div>
     </div>
   );
 }
