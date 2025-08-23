@@ -2,26 +2,27 @@
 import { useEffect, useMemo, useState } from "react";
 
 
-import HeaderBar from "@/components/HeaderBar";
-import SelectedModelsBar from "@/components/SelectedModelsBar";
+import HeaderBar from "@/components/app/HeaderBar";
+import SelectedModelsBar from "@/components/chat/SelectedModelsBar";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { mergeModels, useCustomModels } from "@/lib/customModels";
 import { ChatMessage, ApiKeys, ChatThread } from "@/lib/types";
 import { createChatActions } from "@/lib/chatActions";
 import { useProjects } from "@/lib/useProjects";
-import ModelsModal from "@/components/ModelsModal";
-import FirstVisitNote from "@/components/FirstVisitNote";
-import FixedInputBar from "@/components/FixedInputBar";
-import ThreadSidebar from "@/components/ThreadSidebar";
-import ChatGrid from "@/components/ChatGrid";
+import ModelsModal from "@/components/modals/ModelsModal";
+import FirstVisitNote from "@/components/app/FirstVisitNote";
+import FixedInputBar from "@/components/chat/FixedInputBar";
+import ThreadSidebar from "@/components/chat/ThreadSidebar";
+import ChatGrid from "@/components/chat/ChatGrid";
 import { useTheme } from "@/lib/themeContext";
 import { BACKGROUND_STYLES } from "@/lib/themes";
 import { safeUUID } from "@/lib/uuid";
-import Loading from "@/components/ui/Loading";
+import LaunchScreen from "@/components/ui/LaunchScreen";
 
 export default function Home() {
   const { theme } = useTheme();
   const [isHydrated, setIsHydrated] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const backgroundClass = BACKGROUND_STYLES[theme.background].className;
 
   const [selectedIds, setSelectedIds] = useLocalStorage<string[]>(
@@ -174,15 +175,18 @@ export default function Home() {
 
   useEffect(() => {
     setIsHydrated(true);
+    const t = setTimeout(() => setShowSplash(false), 350); // fade-out duration match
+    return () => clearTimeout(t);
   }, []);
-
-  // Avoid hydration mismatch with background animation etc.
-  if (!isHydrated) {
-    return <Loading backgroundClass={backgroundClass} />;
-  }
 
   return (
     <div className={`min-h-screen w-full ${backgroundClass} relative text-white`}>
+
+      {showSplash && (
+        <div className="fixed inset-0 z-[9999]">
+          <LaunchScreen backgroundClass={backgroundClass} dismissed={isHydrated} />
+        </div>
+      )}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-95" />
 
       <div className="relative z-10 px-3 lg:px-4 py-4 lg:py-6">

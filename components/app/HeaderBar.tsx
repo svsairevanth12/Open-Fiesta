@@ -1,9 +1,9 @@
 "use client";
 import Image from "next/image";
-import GithubStar from "@/components/GithubStar";
+import GithubStar from "@/components/app/GithubStar";
 import ThemeToggle from "@/components/ThemeToggle";
-import CustomModels from "@/components/CustomModels";
-import Settings from "@/components/Settings";
+import CustomModels from "@/components/modals/CustomModels";
+import Settings from "@/components/app/Settings";
 import { Layers } from "lucide-react";
 import { Menu as MenuIcon } from "lucide-react";
 

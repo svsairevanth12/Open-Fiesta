@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Plus, Settings, Trash2 } from "lucide-react";
 import { Project } from "@/lib/projects";
-import ProjectModal from "@/components/ProjectModal";
-import ConfirmDialog from "@/components/ConfirmDialog";
+import ProjectModal from "@/components/modals/ProjectModal";
+import ConfirmDialog from "@/components/modals/ConfirmDialog";
 
 interface ProjectsSectionProps {
   projects: Project[];

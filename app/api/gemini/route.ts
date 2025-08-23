@@ -23,10 +23,24 @@ export async function POST(req: NextRequest) {
       return 'user';
     };
 
-    const contents: GeminiContent[] = (Array.isArray(messages) ? (messages as InMsg[]) : []).map((m) => ({
+    let contents: GeminiContent[] = (Array.isArray(messages) ? (messages as InMsg[]) : []).map((m) => ({
       role: toRole(m.role),
       parts: [{ text: typeof m?.content === 'string' ? m.content : String(m?.content ?? '') }],
     }));
+
+    // Extract a system prompt (from project custom prompt) into systemInstruction
+    const systemParts: GeminiPart[] = [];
+    contents = contents.filter((c) => {
+      if (c.role === 'system') {
+        for (const p of c.parts) {
+          if (typeof p?.text === 'string' && p.text.trim()) {
+            systemParts.push({ text: p.text });
+          }
+        }
+        return false; // remove from contents
+      }
+      return true;
+    });
 
     // If a data URL is provided, attach it to the last user message ONLY if it's an image.
     // For unsupported types (e.g., docx/pdf), add a small text note and omit binary data.
@@ -56,6 +70,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         contents,
+        ...(systemParts.length > 0 ? { systemInstruction: { parts: systemParts } } : {}),
         generationConfig: {
           response_mime_type: 'text/plain',
         },
