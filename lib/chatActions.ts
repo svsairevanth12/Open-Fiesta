@@ -4,6 +4,21 @@ import type { AiModel, ApiKeys, ChatMessage, ChatThread } from './types';
 import type { Project } from './projects';
 import { toast } from "react-toastify";
 
+const abortControllers: Record<string, AbortController> = {};
+
+function abortAll() {
+  Object.values(abortControllers).forEach(controller => {
+    try {
+      controller.abort();
+    } catch (e) {
+      // ignore
+    }
+  });
+  for (const key in abortControllers) {
+    delete abortControllers[key];
+  }
+}
+
 export type ChatDeps = {
   selectedModels: AiModel[];
   keys: ApiKeys;
@@ -72,14 +87,16 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
     const prompt = text.trim();
     if (!prompt) return;
 
-  if (selectedModels.length === 0) { 
-  toast.warn("Select at least one model.", {
-    style: {
-    background: "#ff4d4f",
-    color: "#fff",
-          },
-         }); 
-     }
+    abortAll();
+
+    if (selectedModels.length === 0) { 
+      toast.warn("Select at least one model.", {
+        style: {
+          background: "#ff4d4f",
+          color: "#fff",
+        },
+      }); 
+    }
     
     const userMsg: ChatMessage = { role: 'user', content: prompt, ts: Date.now() };
     const thread = ensureThread();
@@ -88,6 +105,8 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
 
     setLoadingIdsInit(selectedModels.map(m => m.id));
     await Promise.allSettled(selectedModels.map(async (m) => {
+      const controller = new AbortController();
+      abortControllers[m.id] = controller;
       try {
         if (m.provider === 'gemini') {
           // create placeholder for typing animation
@@ -95,7 +114,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
-          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl, signal: controller.signal });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(t => {
@@ -270,7 +289,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const isNonImageAttachment = !!imageDataUrl && (!mt || !isImage); // txt/pdf/docx or unknown
 
           if (isNonImageAttachment) {
-            const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+            const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl, signal: controller.signal });
             const text = extractText(res);
             setThreads(prev => prev.map(t => {
               if (t.id !== thread.id) return t;
@@ -280,7 +299,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             return;
           }
 
-          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl }, {
+          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl, signal: controller.signal }, {
             onToken: (delta) => {
               gotAny = true;
               buffer += delta;
@@ -307,7 +326,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               flush();
               if (!gotAny) {
                 try {
-                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl });
+                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: nextHistory, imageDataUrl, signal: controller.signal });
                   const text = extractText(res);
                   setThreads(prev => prev.map(t => {
                     if (t.id !== thread.id) return t;
@@ -320,6 +339,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           });
         }
       } finally {
+        delete abortControllers[m.id];
         setLoadingIds(prev => prev.filter(x => x !== m.id));
       }
     }));
@@ -330,6 +350,8 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
     const t = threads.find(tt => tt.id === activeThread.id);
     if (!t) return;
     const original = [...(t.messages ?? [])];
+
+    abortAll();
 
     let userCount = -1;
     let userIdx = -1;
@@ -365,12 +387,14 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
 
     setLoadingIdsInit(selectedModels.map(m => m.id));
     Promise.allSettled(selectedModels.map(async (m) => {
+      const controller = new AbortController();
+      abortControllers[m.id] = controller;
       const ph = placeholders.find(p => p.model.id === m.id);
       if (!ph) { setLoadingIds(prev => prev.filter(x => x !== m.id)); return; }
       const placeholderTs = ph.ts;
       try {
         if (m.provider === 'gemini') {
-          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: baseHistory });
+          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: baseHistory, signal: controller.signal });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(tt => {
@@ -519,7 +543,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               return { ...tt, messages: msgs };
             }));
           };
-          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory }, {
+          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory, signal: controller.signal }, {
             onToken: (delta) => {
               gotAny = true;
               buffer += delta;
@@ -546,7 +570,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               flush();
               if (!gotAny) {
                 try {
-                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory });
+                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory, signal: controller.signal });
                   const text = extractText(res);
                   setThreads(prev => prev.map(tt => {
                     if (tt.id !== t.id) return tt;
@@ -559,6 +583,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           });
         }
       } finally {
+        delete abortControllers[m.id];
         setLoadingIds(prev => prev.filter(x => x !== m.id));
       }
     }));
