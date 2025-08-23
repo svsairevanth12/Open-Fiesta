@@ -44,11 +44,24 @@ function truncatePreservingTurns(messages: ChatMessage[], maxMessages: number): 
     return messages;
   }
   
-  // Group messages into conversation turns
+  // Extract any leading system messages (preserve if possible)
+  const systemMessages: ChatMessage[] = [];
+  let restStart = 0;
+  for (const msg of messages) {
+    if (msg.role === 'system') {
+      systemMessages.push(msg);
+      restStart++;
+    } else {
+      break;
+    }
+  }
+  const conversationMessages = messages.slice(restStart);
+  
+  // Group conversation messages into turns
   const turns: ChatMessage[][] = [];
   let currentTurn: ChatMessage[] = [];
   
-  for (const message of messages) {
+  for (const message of conversationMessages) {
     if (message.role === 'user') {
       // Start a new turn
       if (currentTurn.length > 0) {
@@ -59,6 +72,7 @@ function truncatePreservingTurns(messages: ChatMessage[], maxMessages: number): 
       // Add to current turn
       currentTurn.push(message);
     }
+    // Note: system messages in the middle are intentionally dropped for privacy
   }
   
   // Don't forget the last turn
@@ -84,10 +98,12 @@ function truncatePreservingTurns(messages: ChatMessage[], maxMessages: number): 
   
   // If we couldn't fit any complete turns, fall back to simple truncation
   if (selectedMessages.length === 0) {
-    selectedMessages = messages.slice(-maxMessages);
+    selectedMessages = conversationMessages.slice(-maxMessages);
   }
   
-  return selectedMessages;
+  // Try to include system messages if they fit
+  const finalMessages = [...systemMessages, ...selectedMessages];
+  return finalMessages.length <= maxMessages ? finalMessages : selectedMessages;
 }
 
 /**
@@ -97,8 +113,15 @@ export function validateMessagesForSharing(messages: ChatMessage[]): boolean {
   if (!Array.isArray(messages)) return false;
   if (messages.length === 0) return false;
   
-  // Check that all messages have required fields
-  return messages.every(msg => 
+  // Filter to shareable message types
+  const shareableMessages = messages.filter(msg => 
+    msg.role === 'user' || msg.role === 'assistant' || msg.role === 'system'
+  );
+  
+  if (shareableMessages.length === 0) return false;
+  
+  // Check that all shareable messages have required fields
+  return shareableMessages.every(msg => 
     msg.role && 
     typeof msg.content === 'string' && 
     msg.content.trim().length > 0

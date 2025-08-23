@@ -156,7 +156,7 @@ export default function ChatRenderer({
       )}
 
       {/* Messages */}
-      <main id="chat-messages" className="space-y-6" role="main" aria-label="Conversation messages">
+      <section id="chat-messages" className="space-y-6" role={readOnly ? "main" : undefined} aria-label="Conversation messages">
         {conversationTurns.map((turn, turnIndex) => (
           <article key={turnIndex} className="space-y-4" aria-labelledby={`turn-${turnIndex}`}>
             {/* User Message */}
@@ -297,7 +297,7 @@ export default function ChatRenderer({
             )}
           </article>
         ))}
-      </main>
+      </section>
       
       {readOnly && (
         <footer className="mt-8 pt-6 border-t border-white/10 text-center">

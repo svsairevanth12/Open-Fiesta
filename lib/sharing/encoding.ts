@@ -6,8 +6,19 @@ import type { SharedChatData } from './types';
 export function encodeShareData(data: SharedChatData): string {
   try {
     const jsonString = JSON.stringify(data);
-    // Convert to Base64 and make it URL-safe
-    const base64 = btoa(unescape(encodeURIComponent(jsonString)));
+    let base64: string;
+    
+    if (typeof window === 'undefined') {
+      // Node.js/SSR environment
+      base64 = Buffer.from(jsonString, 'utf8').toString('base64');
+    } else {
+      // Browser environment - use TextEncoder for proper UTF-8 handling
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(jsonString);
+      const binary = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
+      base64 = btoa(binary);
+    }
+    
     // Make URL-safe by replacing problematic characters
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   } catch (error) {
@@ -23,17 +34,31 @@ export function decodeShareData(encoded: string): SharedChatData | null {
     // Restore URL-safe Base64 to standard Base64
     let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
     // Add padding if needed
-    while (base64.length % 4) {
-      base64 += '=';
+    const padLength = Math.ceil(base64.length / 4) * 4;
+    base64 = base64.padEnd(padLength, '=');
+    
+    let jsonString: string;
+    
+    if (typeof window === 'undefined') {
+      // Node.js/SSR environment
+      jsonString = Buffer.from(base64, 'base64').toString('utf8');
+    } else {
+      // Browser environment - use TextDecoder for proper UTF-8 handling
+      const binary = atob(base64);
+      const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+      const decoder = new TextDecoder();
+      jsonString = decoder.decode(bytes);
     }
     
-    // Decode Base64 and then URL decode
-    const jsonString = decodeURIComponent(escape(atob(base64)));
     const data = JSON.parse(jsonString) as SharedChatData;
     
     // Validate the decoded data structure
     if (!isValidSharedChatData(data)) {
-      console.warn('Invalid shared chat data structure:', data);
+      console.warn('Invalid shared chat data structure', {
+        hasTitle: typeof data?.title === 'string',
+        hasMessages: Array.isArray(data?.messages),
+        version: data?.version
+      });
       return null;
     }
     

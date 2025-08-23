@@ -31,22 +31,18 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Run tests
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/app \
-            -w /app \
-            ai-fiesta:test npm test
+        run: docker run --rm ai-fiesta:test npm test
 
       - name: Run linting
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/app \
-            -w /app \
-            ai-fiesta:test npm run lint
+        run: docker run --rm ai-fiesta:test npm run lint
 
   build:
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      image_tags: ${{ steps.meta.outputs.tags }}
+      image_labels: ${{ steps.meta.outputs.labels }}
+      image_digest: ${{ steps.buildx.outputs.digest }}
     permissions:
       contents: read
       packages: write
@@ -78,6 +74,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
+        id: buildx
         uses: docker/build-push-action@v5
         with:
           context: .
