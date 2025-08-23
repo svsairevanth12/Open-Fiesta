@@ -179,8 +179,8 @@ export const MODEL_CATALOG: AiModel[] = [
   {
     id: 'open-gemini',
     label: 'Gemini 2.5 Flash Lite',
-    provider: 'open-provider',
-    model: 'gemini',
+    provider: 'gemini',
+    model: 'gemini-2.5-flash',
     free: true,
     category: 'text',
   },
