@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model, apiKey: apiKeyFromBody, imageDataUrl } = await req.json();
+    const { messages, model, apiKey: apiKeyFromBody, imageDataUrl, voice } = await req.json();
     // Use the provided token or fallback to environment variable
     const apiKey = apiKeyFromBody || process.env.OPEN_PROVIDER_API_KEY || 'tQ14HuL-wtewmt1H';
     const usedKeyType = apiKeyFromBody ? 'user' : (process.env.OPEN_PROVIDER_API_KEY ? 'shared' : 'default');
@@ -57,7 +57,8 @@ export async function POST(req: NextRequest) {
     if (isAudioModel) {
       // For audio models, use GET format with voice parameter
       const encodedPrompt = encodeURIComponent(prompt);
-      textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=alloy&token=${encodeURIComponent(apiKey)}`;
+      const selectedVoice = voice || 'alloy'; // Use provided voice or default to alloy
+      textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=${selectedVoice}&token=${encodeURIComponent(apiKey)}`;
     } else {
       // Use OpenAI-compatible endpoint for text models
       const baseUrl = 'https://text.pollinations.ai/openai';
@@ -192,23 +193,36 @@ export async function POST(req: NextRequest) {
 
       if (isAudioModel) {
         // For audio models, handle binary audio response
+        console.log('Audio response content-type:', contentType);
+
         if (contentType?.includes('audio/') || contentType?.includes('application/octet-stream')) {
           // Binary audio response - get as blob and create URL
           const audioBlob = await resp.blob();
           audioUrl = URL.createObjectURL(audioBlob);
           data = { audio_url: audioUrl };
+          console.log('Created blob URL for audio:', audioUrl);
         } else {
           // Try to parse as JSON first, then as text
           const responseText = await resp.text();
+          console.log('Audio response text:', responseText.substring(0, 200));
+
           try {
             data = JSON.parse(responseText);
             // Check if JSON contains audio URL
             if (data.audio_url || data.url) {
               audioUrl = data.audio_url || data.url;
+              console.log('Found audio URL in JSON:', audioUrl);
             }
           } catch {
-            // If not JSON, treat as plain text response
-            data = { text: responseText };
+            // If response looks like a URL, use it as audio URL
+            if (responseText.startsWith('http') && (responseText.includes('.mp3') || responseText.includes('.wav') || responseText.includes('.m4a'))) {
+              audioUrl = responseText.trim();
+              data = { audio_url: audioUrl };
+              console.log('Using response text as audio URL:', audioUrl);
+            } else {
+              // If not JSON or URL, treat as plain text response
+              data = { text: responseText };
+            }
           }
         }
       } else {
