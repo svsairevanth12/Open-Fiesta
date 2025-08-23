@@ -93,18 +93,34 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // For text and audio models, use the OpenAI-compatible endpoint for both
-    // This supports long text for audio models and avoids URL length limits
-    const baseUrl = 'https://text.pollinations.ai/openai';
-    const textUrl = `${baseUrl}?token=${encodeURIComponent(apiKey)}`;
+    // For audio models, use GET format with chunking for long text
+    // For text models, use POST format
+    let textUrl;
+    let useChunking = false;
+
+    if (isAudioModel) {
+      // Check if text is too long for URL (conservative limit: 800 chars for reliable audio)
+      if (prompt.length > 800) {
+        // For very long text, truncate with a note
+        const truncatedPrompt = prompt.substring(0, 750) + "... [Audio truncated due to length limit]";
+        const encodedPrompt = encodeURIComponent(truncatedPrompt);
+        const selectedVoice = voice || 'alloy';
+        textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=${selectedVoice}&token=${encodeURIComponent(apiKey)}`;
+        useChunking = true;
+      } else {
+        // For shorter text, use full content
+        const encodedPrompt = encodeURIComponent(prompt);
+        const selectedVoice = voice || 'alloy';
+        textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=${selectedVoice}&token=${encodeURIComponent(apiKey)}`;
+      }
+    } else {
+      // Use OpenAI-compatible endpoint for text models
+      const baseUrl = 'https://text.pollinations.ai/openai';
+      textUrl = `${baseUrl}?token=${encodeURIComponent(apiKey)}`;
+    }
 
     // Prepare the request body in OpenAI format for Pollinations API
-    const requestBody = isAudioModel ? {
-      // For audio models, use standard OpenAI TTS format
-      model: model, // "openai-audio"
-      input: prompt, // Direct text input for TTS (standard OpenAI format)
-      voice: voice || 'alloy', // Use selected voice or default to alloy
-    } : {
+    const requestBody = isAudioModel ? null : {
       // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
         role: msg.role,
@@ -128,14 +144,16 @@ export async function POST(req: NextRequest) {
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
         bodyPreview: isAudioModel ? {
-          model: requestBody.model,
-          input: requestBody.input,
-          voice: requestBody.voice,
+          method: 'GET',
+          model: 'openai-audio',
+          voice: voice || 'alloy',
           isAudio: true,
-          inputLength: prompt?.length || 0
+          originalLength: prompt?.length || 0,
+          truncated: prompt.length > 800,
+          finalLength: prompt.length > 800 ? 750 : prompt.length
         } : {
-          model: requestBody.model,
-          messageCount: 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
+          model: requestBody?.model || model,
+          messageCount: requestBody && 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
           isReasoning: isReasoningModel,
           endpoint: 'openai-compatible'
         }
@@ -155,9 +173,12 @@ export async function POST(req: NextRequest) {
       }
 
       const resp = await fetch(textUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody),
+        method: isAudioModel ? 'GET' : 'POST',
+        headers: isAudioModel ? {
+          'User-Agent': 'Open-Fiesta/1.0',
+          'Authorization': `Bearer ${apiKey}`,
+        } : headers,
+        ...(isAudioModel ? {} : { body: JSON.stringify(requestBody) }),
         signal: aborter.signal,
       });
 
