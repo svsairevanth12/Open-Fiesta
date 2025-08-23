@@ -302,7 +302,9 @@ export default function Home() {
               />
             )}
 
-            <FixedInputBar onSubmit={send} loading={anyLoading} />
+            {isHydrated && (
+              <FixedInputBar onSubmit={send} loading={anyLoading} />
+            )}
           </div>
         </div>
       </div>
