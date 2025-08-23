@@ -593,4 +593,131 @@ export const MODEL_CATALOG: AiModel[] = [
     category: 'text',
   },
 
+  // Mistral Provider Models - Core Text Models
+  {
+    id: 'mistral-large-latest',
+    label: 'Mistral Large 2.1',
+    provider: 'mistral',
+    model: 'mistral-large-latest',
+    good: true,
+    category: 'text',
+  },
+  {
+    id: 'mistral-medium-latest',
+    label: 'Mistral Medium 3.1',
+    provider: 'mistral',
+    model: 'mistral-medium-latest',
+    good: true,
+    category: 'text',
+  },
+  {
+    id: 'mistral-small-latest',
+    label: 'Mistral Small 3.2',
+    provider: 'mistral',
+    model: 'mistral-small-latest',
+    category: 'text',
+  },
+  {
+    id: 'magistral-medium-latest',
+    label: 'Magistral Medium 1.1 (Reasoning)',
+    provider: 'mistral',
+    model: 'magistral-medium-latest',
+    good: true,
+    category: 'text',
+  },
+  {
+    id: 'magistral-small-latest',
+    label: 'Magistral Small 1.1 (Reasoning)',
+    provider: 'mistral',
+    model: 'magistral-small-latest',
+    category: 'text',
+  },
+
+  // Mistral Provider Models - Coding Specialists
+  {
+    id: 'codestral-latest',
+    label: 'Codestral 2508 (Coding)',
+    provider: 'mistral',
+    model: 'codestral-latest',
+    good: true,
+    category: 'text',
+  },
+  {
+    id: 'devstral-medium-latest',
+    label: 'Devstral Medium (Enterprise Coding)',
+    provider: 'mistral',
+    model: 'devstral-medium-latest',
+    category: 'text',
+  },
+  {
+    id: 'devstral-small-latest',
+    label: 'Devstral Small (Open Source Coding)',
+    provider: 'mistral',
+    model: 'devstral-small-latest',
+    free: true,
+    category: 'text',
+  },
+
+  // Mistral Provider Models - Multimodal
+  {
+    id: 'pixtral-large-latest',
+    label: 'Pixtral Large (Vision)',
+    provider: 'mistral',
+    model: 'pixtral-large-latest',
+    good: true,
+    category: 'image',
+  },
+  {
+    id: 'pixtral-12b',
+    label: 'Pixtral 12B (Open Vision)',
+    provider: 'mistral',
+    model: 'pixtral-12b',
+    free: true,
+    category: 'image',
+  },
+
+  // Mistral Provider Models - Edge Models
+  {
+    id: 'ministral-8b-latest',
+    label: 'Ministral 8B (Edge)',
+    provider: 'mistral',
+    model: 'ministral-8b-latest',
+    category: 'text',
+  },
+  {
+    id: 'ministral-3b-latest',
+    label: 'Ministral 3B (Efficient Edge)',
+    provider: 'mistral',
+    model: 'ministral-3b-latest',
+    category: 'text',
+  },
+
+  // Mistral Provider Models - Audio
+  {
+    id: 'voxtral-small-latest',
+    label: 'Voxtral Small (Audio Input)',
+    provider: 'mistral',
+    model: 'voxtral-small-latest',
+    free: true,
+    category: 'audio',
+  },
+  {
+    id: 'voxtral-mini-latest',
+    label: 'Voxtral Mini (Audio Input)',
+    provider: 'mistral',
+    model: 'voxtral-mini-latest',
+    free: true,
+    category: 'audio',
+  },
+
+  // Mistral Provider Models - Specialized
+  {
+    id: 'open-mistral-nemo',
+    label: 'Mistral Nemo 12B (Multilingual)',
+    provider: 'mistral',
+    model: 'open-mistral-nemo',
+    free: true,
+    category: 'text',
+  },
+
 ];
