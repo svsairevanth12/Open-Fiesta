@@ -16,7 +16,7 @@ export default function FirstVisitNote({ open, onClose }: Props) {
       <div className="relative mx-3 w-full max-w-md sm:max-w-lg rounded-2xl border border-white/10 bg-zinc-900/90 p-5 shadow-2xl">
         <div className="flex items-start gap-3 mb-2">
           <h3 className="text-base font-semibold tracking-wide">
-            Access pro models with API keys
+            Access pro models 
           </h3>
         </div>
         <div className="text-sm text-zinc-300 space-y-2">
