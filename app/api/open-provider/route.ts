@@ -71,6 +71,9 @@ export async function POST(req: NextRequest) {
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
     const isAudioModel = model === 'openai-audio';
     const isReasoningModel = ['deepseek-reasoning'].includes(model);
+    // Special-case detection for Azure GPT-5 Nano (Vision) model which only supports default temperature (1)
+    const modelId = String(model || '').toLowerCase();
+    const isGpt5NanoVision = modelId.includes('gpt-5') && modelId.includes('nano') && modelId.includes('vision');
 
     // For audio models, add natural TTS prefix to make it feel more conversational
     if (isAudioModel && prompt) {
@@ -130,9 +133,10 @@ export async function POST(req: NextRequest) {
       model: model,
       stream: false,
       // Add defaults and reasoning parameters
+      // Note: Omit `temperature` entirely to satisfy Azure models that only accept the default (1)
       ...(isReasoningModel
-        ? { temperature: isGpt5Nano ? 1 : 0.7, max_tokens: 4000 }
-        : { temperature: isGpt5Nano ? 1 : 0.7, max_tokens: 2048 })
+        ? { max_tokens: 4000 }
+        : { max_tokens: 2048 })
     };
 
     // Longer timeout for reasoning models as they take more time
