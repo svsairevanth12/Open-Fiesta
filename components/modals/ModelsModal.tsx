@@ -24,11 +24,11 @@ export default function ModelsModal({
 }: ModelsModalProps) {
   const [activeProvider, setActiveProvider] = useState<string>('all');
   const [favoriteIds, setFavoriteIds] = useLocalStorage<string[]>("ai-fiesta:favorite-models", [
-    "llama-3.3-70b-instruct",
+    "unstable-gpt-5-chat",
     "gemini-2.5-pro",
-    "openai-gpt-oss-20b-free",
-    "glm-4.5-air",
-    "moonshot-kimi-k2",
+    "unstable-claude-sonnet-4",
+    "unstable-grok-4",
+    "open-evil",
   ]);
 
   // Lock background scroll while modal is open

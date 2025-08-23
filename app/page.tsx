@@ -28,11 +28,11 @@ export default function Home() {
   const [selectedIds, setSelectedIds] = useLocalStorage<string[]>(
     "ai-fiesta:selected-models",
     [
-      "gemini-2.5-flash",
-      "llama-3.3-70b-instruct",
-      "qwen-2.5-72b-instruct",
-      "openai-gpt-oss-20b-free",
-      "glm-4.5-air",
+      "unstable-gpt-5-chat",
+      "gemini-2.5-pro",
+      "unstable-claude-sonnet-4",
+      "unstable-grok-4",
+      "open-evil",
     ]
   );
   const [keys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
