@@ -1,8 +1,42 @@
 import { NextRequest } from 'next/server';
 
+// Function to get natural TTS prefix based on content type
+function getTTSPrefix(text: string): string {
+  const lowerText = text.toLowerCase().trim();
+
+  // For questions
+  if (lowerText.includes('?') || lowerText.startsWith('what') || lowerText.startsWith('how') ||
+      lowerText.startsWith('why') || lowerText.startsWith('when') || lowerText.startsWith('where') ||
+      lowerText.startsWith('who') || lowerText.startsWith('which') || lowerText.startsWith('can you')) {
+    return 'Here\'s what you asked:';
+  }
+
+  // For greetings
+  if (lowerText.includes('hello') || lowerText.includes('hi ') || lowerText.includes('hey') ||
+      lowerText.startsWith('good morning') || lowerText.startsWith('good afternoon') ||
+      lowerText.startsWith('good evening')) {
+    return 'You said:';
+  }
+
+  // For commands or requests
+  if (lowerText.startsWith('please') || lowerText.startsWith('can you') ||
+      lowerText.startsWith('could you') || lowerText.startsWith('tell me') ||
+      lowerText.startsWith('explain') || lowerText.startsWith('describe')) {
+    return 'Your request was:';
+  }
+
+  // For statements or stories
+  if (lowerText.length > 50) {
+    return 'Here\'s your text:';
+  }
+
+  // Default for short phrases
+  return 'Repeating:';
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model, apiKey: apiKeyFromBody, imageDataUrl } = await req.json();
+    const { messages, model, apiKey: apiKeyFromBody, imageDataUrl, voice } = await req.json();
     // Use the provided token or fallback to environment variable
     const apiKey = apiKeyFromBody || process.env.OPEN_PROVIDER_API_KEY || 'tQ14HuL-wtewmt1H';
     const usedKeyType = apiKeyFromBody ? 'user' : (process.env.OPEN_PROVIDER_API_KEY ? 'shared' : 'default');
@@ -30,12 +64,19 @@ export async function POST(req: NextRequest) {
 
     // Extract the last user message as the prompt for image generation
     const lastUserMessage = trimmedMessages.filter(msg => msg.role === 'user').pop();
-    const prompt = lastUserMessage ? lastUserMessage.content : 'A beautiful image';
+    let prompt = lastUserMessage ? lastUserMessage.content : 'A beautiful image';
 
     // Handle different model categories
     const isImageModel = ['flux', 'kontext', 'turbo'].includes(model);
     const isAudioModel = model === 'openai-audio';
     const isReasoningModel = ['openai-reasoning', 'deepseek-reasoning'].includes(model);
+
+    // For audio models, add natural TTS prefix to make it feel more conversational
+    if (isAudioModel && prompt) {
+      const ttsPrefix = getTTSPrefix(prompt);
+      prompt = `${ttsPrefix} ${prompt}`;
+      console.log(`Audio TTS input length: ${prompt.length} characters`);
+    }
 
     if (isImageModel) {
       // For image models, use the image generation endpoint with token authentication
@@ -55,9 +96,8 @@ export async function POST(req: NextRequest) {
     // For text and audio models, use the correct endpoint based on model type
     let textUrl;
     if (isAudioModel) {
-      // For audio models, use GET format with voice parameter
-      const encodedPrompt = encodeURIComponent(prompt);
-      textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=alloy&token=${encodeURIComponent(apiKey)}`;
+      // For audio models, use POST to avoid URL length limits for long text
+      textUrl = `https://text.pollinations.ai/openai?token=${encodeURIComponent(apiKey)}`;
     } else {
       // Use OpenAI-compatible endpoint for text models
       const baseUrl = 'https://text.pollinations.ai/openai';
@@ -66,12 +106,11 @@ export async function POST(req: NextRequest) {
 
     // Prepare the request body in OpenAI format for Pollinations API
     const requestBody = isAudioModel ? {
-      // For audio models, use TTS format
+      // For audio models, use simplified OpenAI TTS format (no modalities to avoid errors)
       model: model,
-      input: prompt, // Use the last user message as input for TTS
-      voice: 'alloy', // Default voice
+      input: prompt, // Use the full user message as input for TTS
+      voice: voice || 'alloy', // Use selected voice or default to alloy
       response_format: 'mp3',
-      modalities: ['text', 'audio'], // Specify both text and audio modalities
     } : {
       // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
@@ -99,11 +138,12 @@ export async function POST(req: NextRequest) {
           model: requestBody.model,
           input: requestBody.input,
           voice: requestBody.voice,
-          modalities: requestBody.modalities,
-          isAudio: true
+          response_format: requestBody.response_format,
+          isAudio: true,
+          inputLength: requestBody.input?.length || 0
         } : {
           model: requestBody.model,
-          messageCount,
+          messageCount: 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
           isReasoning: isReasoningModel,
           endpoint: 'openai-compatible'
         }
@@ -123,12 +163,9 @@ export async function POST(req: NextRequest) {
       }
 
       const resp = await fetch(textUrl, {
-        method: isAudioModel ? 'GET' : 'POST',
-        headers: isAudioModel ? {
-          'User-Agent': 'Open-Fiesta/1.0',
-          'Authorization': `Bearer ${apiKey}`,
-        } : headers,
-        ...(isAudioModel ? {} : { body: JSON.stringify(requestBody) }),
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
         signal: aborter.signal,
       });
 
@@ -192,23 +229,38 @@ export async function POST(req: NextRequest) {
 
       if (isAudioModel) {
         // For audio models, handle binary audio response
+        console.log('Audio response content-type:', contentType);
+
         if (contentType?.includes('audio/') || contentType?.includes('application/octet-stream')) {
-          // Binary audio response - get as blob and create URL
-          const audioBlob = await resp.blob();
-          audioUrl = URL.createObjectURL(audioBlob);
+          // Binary audio response - convert to base64 for client-side blob creation
+          const audioBuffer = await resp.arrayBuffer();
+          const audioBase64 = Buffer.from(audioBuffer).toString('base64');
+          const mimeType = contentType || 'audio/mpeg';
+          audioUrl = `data:${mimeType};base64,${audioBase64}`;
           data = { audio_url: audioUrl };
+          console.log('Created data URL for audio, size:', audioBuffer.byteLength, 'bytes');
         } else {
           // Try to parse as JSON first, then as text
           const responseText = await resp.text();
+          console.log('Audio response text:', responseText.substring(0, 200));
+
           try {
             data = JSON.parse(responseText);
             // Check if JSON contains audio URL
             if (data.audio_url || data.url) {
               audioUrl = data.audio_url || data.url;
+              console.log('Found audio URL in JSON:', audioUrl);
             }
           } catch {
-            // If not JSON, treat as plain text response
-            data = { text: responseText };
+            // If response looks like a URL, use it as audio URL
+            if (responseText.startsWith('http') && (responseText.includes('.mp3') || responseText.includes('.wav') || responseText.includes('.m4a'))) {
+              audioUrl = responseText.trim();
+              data = { audio_url: audioUrl };
+              console.log('Using response text as audio URL:', audioUrl);
+            } else {
+              // If not JSON or URL, treat as plain text response
+              data = { text: responseText };
+            }
           }
         }
       } else {

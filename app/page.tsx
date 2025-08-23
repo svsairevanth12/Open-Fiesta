@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import HeaderBar from "@/components/app/HeaderBar";
 import SelectedModelsBar from "@/components/chat/SelectedModelsBar";
+import VoiceSelector from "@/components/modals/VoiceSelector";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { mergeModels, useCustomModels } from "@/lib/customModels";
 import { ChatMessage, ApiKeys, ChatThread } from "@/lib/types";
@@ -50,6 +51,10 @@ export default function Home() {
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [modelsModalOpen, setModelsModalOpen] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useLocalStorage<string>(
+    "ai-fiesta:selected-voice",
+    "alloy"
+  );
 
   const [customModels] = useCustomModels();
   const allModels = useMemo(() => mergeModels(customModels), [customModels]);
@@ -146,6 +151,7 @@ export default function Home() {
         setLoadingIds: (updater) => setLoadingIds(updater),
         setLoadingIdsInit: (ids) => setLoadingIds(ids),
         activeProject, // include project system prompt/context
+        selectedVoice, // pass voice selection for audio models
       }),
     [
       selectedModels,
@@ -155,6 +161,7 @@ export default function Home() {
       setThreads,
       setActiveId,
       activeProject,
+      selectedVoice,
     ]
   );
 
@@ -250,6 +257,19 @@ export default function Home() {
 
             {/* Selected models row + actions */}
             <SelectedModelsBar selectedModels={selectedModels} onToggle={toggle} />
+
+            {/* Voice selector for audio models */}
+            {selectedModels.some(m => m.category === 'audio') && (
+              <div className="mb-3 px-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-zinc-400">Voice:</span>
+                  <VoiceSelector
+                    selectedVoice={selectedVoice}
+                    onVoiceChange={setSelectedVoice}
+                  />
+                </div>
+              </div>
+            )}
 
             <ModelsModal
               open={modelsModalOpen}

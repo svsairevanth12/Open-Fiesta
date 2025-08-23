@@ -19,7 +19,7 @@ export async function callOpenRouter(args: { apiKey?: string; model: string; mes
   return res.json();
 }
 
-export async function callOpenProvider(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }) {
+export async function callOpenProvider(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string; voice?: string }) {
   const res = await fetch('/api/open-provider', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -14,6 +14,7 @@ export type ChatDeps = {
   setLoadingIds: (updater: (prev: string[]) => string[]) => void;
   setLoadingIdsInit: (ids: string[]) => void;
   activeProject?: Project | null;
+  selectedVoice?: string;
 };
 
 type ApiTextResult = {
@@ -34,7 +35,7 @@ function extractText(res: unknown): string {
   return 'No response';
 }
 
-export function createChatActions({ selectedModels, keys, threads, activeThread, setThreads, setActiveId, setLoadingIds, setLoadingIdsInit, activeProject }: ChatDeps) {
+export function createChatActions({ selectedModels, keys, threads, activeThread, setThreads, setActiveId, setLoadingIds, setLoadingIdsInit, activeProject, selectedVoice }: ChatDeps) {
   function ensureThread(): ChatThread {
     if (activeThread) return activeThread;
     const t: ChatThread = { id: safeUUID(), title: 'New Chat', messages: [], createdAt: Date.now() };
@@ -123,7 +124,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
-          const res = await callOpenProvider({ apiKey: keys['open-provider'] || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+          const res = await callOpenProvider({ apiKey: keys['open-provider'] || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl, voice: selectedVoice });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(t => {
@@ -299,7 +300,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             }, 24);
           }
         } else if (m.provider === 'open-provider') {
-          const res = await callOpenProvider({ apiKey: keys['open-provider'] || undefined, model: m.model, messages: baseHistory });
+          const res = await callOpenProvider({ apiKey: keys['open-provider'] || undefined, model: m.model, messages: baseHistory, voice: selectedVoice });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(tt => {
