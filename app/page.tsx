@@ -6,7 +6,7 @@ import SelectedModelsBar from "@/components/chat/SelectedModelsBar";
 import VoiceSelector from "@/components/modals/VoiceSelector";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { mergeModels, useCustomModels } from "@/lib/customModels";
-import { ChatMessage, ApiKeys, ChatThread } from "@/lib/types";
+import { ChatMessage, ApiKeys, ChatThread, AiModel } from "@/lib/types";
 import { createChatActions } from "@/lib/chatActions";
 import { useProjects } from "@/lib/useProjects";
 import ModelsModal from "@/components/modals/ModelsModal";
