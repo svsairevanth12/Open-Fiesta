@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
-import type { ChatThread } from "@/lib/types";
+import type { ChatThread, AiModel } from "@/lib/types";
 import type { Project } from "@/lib/projects";
 import ConfirmDialog from "@/components/modals/ConfirmDialog";
 import ProjectsSection from "@/components/app/ProjectsSection";
+import DownloadMenu from "./DownloadMenu";
 import ShareButton from "@/components/chat/ShareButton";
 
 type Props = {
@@ -18,6 +19,7 @@ type Props = {
   onCloseMobile: () => void;
   onOpenMobile: () => void;
   onDeleteThread: (id: string) => void;
+  selectedModels: AiModel[];
   // Projects props
   projects: Project[];
   activeProjectId: string | null;
@@ -37,6 +39,7 @@ export default function ThreadSidebar({
   mobileSidebarOpen,
   onCloseMobile,
   onDeleteThread,
+  selectedModels,
   projects,
   activeProjectId,
   onSelectProject,
@@ -45,13 +48,12 @@ export default function ThreadSidebar({
   onDeleteProject,
 }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  
-  // Helper function to get project name for a thread
-  const getProjectNameForThread = (thread: ChatThread): string | undefined => {
-    if (!thread.projectId) return undefined;
-    const project = projects.find(p => p.id === thread.projectId);
-    return project?.name;
-  };
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -105,10 +107,13 @@ export default function ThreadSidebar({
               Chats
             </div>
             <div className="flex-1 overflow-y-auto space-y-1 pr-1">
-              {threads.length === 0 && (
+              {!isHydrated ? (
+                // Show consistent state during SSR
+                <div className="text-xs opacity-60">Loading...</div>
+              ) : threads.length === 0 ? (
                 <div className="text-xs opacity-60">No chats yet</div>
-              )}
-              {threads.map((t) => (
+              ) : null}
+              {isHydrated && threads.map((t) => (
                 <div
                   key={t.id}
                   className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group ${
@@ -125,9 +130,9 @@ export default function ThreadSidebar({
                     {t.title || "Untitled"}
                   </button>
                   <div className="flex items-center gap-1">
-                    <ShareButton 
+                    <DownloadMenu 
                       thread={t} 
-                      projectName={getProjectNameForThread(t)}
+                      selectedModels={selectedModels} 
                     />
                     <button
                       aria-label="Delete chat"
@@ -272,9 +277,9 @@ export default function ThreadSidebar({
                     {t.title || "Untitled"}
                   </button>
                   <div className="flex items-center gap-1">
-                    <ShareButton 
+                    <DownloadMenu 
                       thread={t} 
-                      projectName={getProjectNameForThread(t)}
+                      selectedModels={selectedModels} 
                     />
                     <button
                       aria-label="Delete chat"
