@@ -25,8 +25,8 @@ export default function ModelsModal({
   const [activeProvider, setActiveProvider] = useState<string>('all');
   const [favoriteIds, setFavoriteIds] = useLocalStorage<string[]>("ai-fiesta:favorite-models", [
     "unstable-gpt-5-chat",
-    "gemini-2.5-pro",
     "unstable-claude-sonnet-4",
+    "gemini-2.5-pro",
     "unstable-grok-4",
     "open-evil",
   ]);

@@ -29,8 +29,8 @@ export default function Home() {
     "ai-fiesta:selected-models",
     [
       "unstable-gpt-5-chat",
-      "gemini-2.5-pro",
       "unstable-claude-sonnet-4",
+      "gemini-2.5-pro",
       "unstable-grok-4",
       "open-evil",
     ]
