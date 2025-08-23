@@ -103,7 +103,7 @@ export default function Home() {
     "ai-fiesta:first-visit-note-dismissed",
     false
   );
-  const showFirstVisitNote =
+  const showFirstVisitNote = isHydrated &&
     !firstNoteDismissed && (!keys?.openrouter || !keys?.gemini);
 
   // Copy helper with fallback when navigator.clipboard is unavailable
@@ -319,7 +319,9 @@ export default function Home() {
               onToggle={toggle}
             />
 
-            <FirstVisitNote open={showFirstVisitNote} onClose={() => setFirstNoteDismissed(true)} />
+            {isHydrated && (
+              <FirstVisitNote open={showFirstVisitNote} onClose={() => setFirstNoteDismissed(true)} />
+            )}
 
             {isHydrated && (
               <ChatGrid
