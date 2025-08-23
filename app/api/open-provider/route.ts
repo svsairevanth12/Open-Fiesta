@@ -97,8 +97,7 @@ export async function POST(req: NextRequest) {
       // For image models, use the image generation endpoint with token authentication
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&model=${encodeURIComponent(model)}&nologo=true&enhance=true&token=${encodeURIComponent(apiKey)}`;
 
-      // For image generation, we don't need to fetch the image, just return the URL
-      // The image will be displayed directly in the chat using the markdown image syntax
+      // Return the image URL directly without markdown text to avoid showing text before image loads
       const text = `![Generated Image](${imageUrl})`;
       const promptTokensEstimate = estimateTokens(prompt);
       return Response.json({
@@ -106,6 +105,7 @@ export async function POST(req: NextRequest) {
         imageUrl,
         provider: 'open-provider',
         usedKeyType,
+        isImageGeneration: true, // Flag to indicate this is image generation
         tokens: {
           by: 'prompt',
           total: promptTokensEstimate,

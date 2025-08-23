@@ -70,39 +70,6 @@ export default function ModelsModal({
   const isFav = (m: AiModel) =>
     favoriteIds.includes(m.id);
 
-  // Brand classifier for text models
-  const getBrand = (m: AiModel): 'OpenAI' | 'Google' | 'Anthropic' | 'Grok' | 'Open Source Models' => {
-    const id = m.id.toLowerCase();
-    const model = m.model.toLowerCase();
-    const label = m.label.toLowerCase();
-    // OpenAI family: gpt-*, o3*, o4*, any explicit openai
-    if (
-      model.startsWith('gpt-') ||
-      model.startsWith('o3') ||
-      model.startsWith('o4') ||
-      model.includes('openai') ||
-      /gpt\b/.test(label)
-    ) return 'OpenAI';
-    // Google family: gemini*, gemma*
-    if (model.includes('gemini') || model.includes('gemma') || id.includes('gemini')) return 'Google';
-    // Anthropic family: claude*
-    if (model.includes('claude') || id.includes('claude')) return 'Anthropic';
-    // Grok family
-    if (model.includes('grok') || id.includes('grok')) return 'Grok';
-    // Everything else
-    return 'Open Source Models';
-  };
-
-  // External SVG icons for brand headings (monochrome, reliable)
-  // Using Simple Icons CDN
-  const BRAND_ICONS: Record<string, { url: string; alt: string }> = {
-    'OpenAI': { url: 'https://cdn.simpleicons.org/openai/ffffff', alt: 'OpenAI' },
-    'Google': { url: 'https://cdn.simpleicons.org/google/ffffff', alt: 'Google' },
-    'Anthropic': { url: 'https://cdn.simpleicons.org/anthropic/ffffff', alt: 'Anthropic' },
-    // Grok icon not separate in Simple Icons; using xAI brand
-    'Grok': { url: 'https://cdn.simpleicons.org/xai/ffffff', alt: 'xAI Grok' },
-  };
-
   const toggleFavorite = (modelId: string) => {
     setFavoriteIds(prev =>
       prev.includes(modelId)
@@ -140,26 +107,14 @@ export default function ModelsModal({
     title,
     models,
     showBadges = true,
-    iconUrl,
-    iconAlt,
   }: {
     title: string;
     models: AiModel[];
     showBadges?: boolean;
-    iconUrl?: string;
-    iconAlt?: string;
   }) => (
     <div className="space-y-2">
-      <div className="text-sm md:text-base font-semibold uppercase tracking-wide text-zinc-200 flex items-center gap-2">
-        {iconUrl && (
-          <img
-            src={iconUrl}
-            alt={iconAlt || title}
-            className="h-4 w-4 object-contain opacity-90"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-          />
-        )}
-        <span>{title}</span>
+      <div className="text-sm md:text-base font-semibold uppercase tracking-wide text-zinc-200">
+        {title}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
         {models.map((m) => {
@@ -300,35 +255,9 @@ export default function ModelsModal({
     "Good",
     "Others",
   ];
-  // Build sections; for Text Models, group into branded subsections
   const builtInSections = order
     .filter((k) => buckets[k].length > 0)
-    .flatMap((k) => {
-      if (k !== 'Text Models') return <Section key={k} title={k} models={buckets[k]} />;
-      const textModels = buckets[k].filter(m => (m.category === 'text') || m.provider === 'open-provider');
-      const grouped: Record<string, AiModel[]> = {
-        'OpenAI': [],
-        'Google': [],
-        'Anthropic': [],
-        'Grok': [],
-        'Open Source Models': [],
-      };
-      textModels.forEach(m => {
-        grouped[getBrand(m)].push(m);
-      });
-      const brandOrder = ['OpenAI', 'Google', 'Anthropic', 'Grok', 'Open Source Models'] as const;
-      return brandOrder
-        .filter(name => grouped[name].length > 0)
-        .map(name => (
-          <Section
-            key={`Text-${name}`}
-            title={name}
-            models={grouped[name]}
-            iconUrl={BRAND_ICONS[name]?.url}
-            iconAlt={BRAND_ICONS[name]?.alt}
-          />
-        ));
-    });
+    .map((k) => <Section key={k} title={k} models={buckets[k]} />);
 
   const customSection = (
     <Section

@@ -154,29 +154,44 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
               return { ...t, messages: msgs };
             }));
           } else {
-            // typewriter effect for all models (image models already have markdown in the response)
-            let i = 0;
-            const step = Math.max(2, Math.ceil(full.length / 80));
-            const timer = window.setInterval(() => {
-              i = Math.min(full.length, i + step);
-              const chunk = full.slice(0, i);
+            // Check if this is image or audio generation - skip typewriter effect for these
+            const isImageGeneration = full.startsWith('![') && full.includes('](');
+            const isAudioGeneration = full.startsWith('[AUDIO:') && full.endsWith(']');
+
+            if (isImageGeneration || isAudioGeneration) {
+              // Show image/audio content immediately without typewriter effect
               setThreads(prev => prev.map(t => {
                 if (t.id !== thread.id) return t;
-                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                  ? { ...msg, content: full, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                  : msg);
                 return { ...t, messages: msgs };
               }));
-              if (i >= full.length) {
-                window.clearInterval(timer);
-                // attach provider meta and token info once complete
+            } else {
+              // typewriter effect for text models
+              let i = 0;
+              const step = Math.max(2, Math.ceil(full.length / 80));
+              const timer = window.setInterval(() => {
+                i = Math.min(full.length, i + step);
+                const chunk = full.slice(0, i);
                 setThreads(prev => prev.map(t => {
                   if (t.id !== thread.id) return t;
-                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
-                    : msg);
+                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
                   return { ...t, messages: msgs };
                 }));
-              }
-            }, 24);
+                if (i >= full.length) {
+                  window.clearInterval(timer);
+                  // attach provider meta and token info once complete
+                  setThreads(prev => prev.map(t => {
+                    if (t.id !== thread.id) return t;
+                    const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                      ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                      : msg);
+                    return { ...t, messages: msgs };
+                  }));
+                }
+              }, 24);
+            }
           }
         } else if (m.provider === 'unstable') {
           // create placeholder for typing animation
