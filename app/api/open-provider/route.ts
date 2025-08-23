@@ -58,15 +58,21 @@ export async function POST(req: NextRequest) {
     const textUrl = `${baseUrl}?token=${encodeURIComponent(apiKey)}`;
 
     // Prepare the request body in OpenAI format for Pollinations API
-    const requestBody = {
+    const requestBody = isAudioModel ? {
+      // For audio models, use TTS format
+      model: model,
+      input: prompt, // Use the last user message as input for TTS
+      voice: 'alloy', // Default voice
+      response_format: 'mp3',
+      modalities: ['audio'], // Specify audio output modality
+    } : {
+      // For text models, use chat format
       messages: trimmedMessages.map(msg => ({
         role: msg.role,
         content: msg.content
       })),
       model: model,
       stream: false,
-      // Add voice parameter for audio models
-      ...(isAudioModel ? { voice: 'alloy' } : {}),
       // Add reasoning parameters for reasoning models
       ...(isReasoningModel ? {
         temperature: 0.7,
@@ -82,10 +88,15 @@ export async function POST(req: NextRequest) {
     try {
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
-        bodyPreview: {
+        bodyPreview: isAudioModel ? {
           model: requestBody.model,
-          messageCount: requestBody.messages.length,
-          hasVoice: !!requestBody.voice,
+          input: requestBody.input,
+          voice: requestBody.voice,
+          modalities: requestBody.modalities,
+          isAudio: true
+        } : {
+          model: requestBody.model,
+          messageCount: requestBody.messages?.length || 0,
           isReasoning: isReasoningModel,
           endpoint: 'openai-compatible'
         }
@@ -164,43 +175,73 @@ export async function POST(req: NextRequest) {
         }, { status: resp.status });
       }
 
-      // Try to parse JSON response first
+      // Handle different response types based on model
       let data;
-      const responseText = await resp.text();
-      
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        // If not JSON, treat as plain text response
-        data = { text: responseText };
+      let audioUrl = null;
+      const contentType = resp.headers.get('content-type');
+
+      if (isAudioModel) {
+        // For audio models, handle binary audio response
+        if (contentType?.includes('audio/') || contentType?.includes('application/octet-stream')) {
+          // Binary audio response - get as blob and create URL
+          const audioBlob = await resp.blob();
+          audioUrl = URL.createObjectURL(audioBlob);
+          data = { audio_url: audioUrl };
+        } else {
+          // Try to parse as JSON first, then as text
+          const responseText = await resp.text();
+          try {
+            data = JSON.parse(responseText);
+            // Check if JSON contains audio URL
+            if (data.audio_url || data.url) {
+              audioUrl = data.audio_url || data.url;
+            }
+          } catch {
+            // If not JSON, treat as plain text response
+            data = { text: responseText };
+          }
+        }
+      } else {
+        // For text models, handle as before
+        const responseText = await resp.text();
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          // If not JSON, treat as plain text response
+          data = { text: responseText };
+        }
       }
 
       // Extract text from response
       let text = '';
-      let audioUrl = null;
+      // audioUrl is already declared above
 
-      if (typeof data === 'string') {
-        text = data;
-      } else if (data && typeof data.text === 'string') {
-        text = data.text;
-      } else if (data && typeof data.content === 'string') {
-        text = data.content;
-      } else if (data && data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
-        text = data.choices[0].message.content;
-      } else if (responseText) {
-        text = responseText;
-      }
-
-      // Check for audio URL in response (for audio models)
-      if (isAudioModel && data && data.audio_url) {
-        audioUrl = data.audio_url;
-        text = `[AUDIO:${audioUrl}]`; // Special format for audio
-      } else if (isAudioModel && text && text.includes('http') && (text.includes('.mp3') || text.includes('.wav') || text.includes('.m4a'))) {
-        // Extract audio URL from text response
-        const urlMatch = text.match(/(https?:\/\/[^\s]+\.(?:mp3|wav|m4a))/i);
-        if (urlMatch) {
-          audioUrl = urlMatch[1];
+      if (isAudioModel) {
+        // For audio models, prioritize audio URL
+        if (audioUrl) {
+          text = `[AUDIO:${audioUrl}]`; // Special format for audio
+        } else if (data && data.audio_url) {
+          audioUrl = data.audio_url;
           text = `[AUDIO:${audioUrl}]`;
+        } else if (typeof data === 'string') {
+          text = data;
+        } else if (data && typeof data.text === 'string') {
+          text = data.text;
+        } else {
+          text = 'Audio generation failed. Please try again.';
+        }
+      } else {
+        // For text models, extract text as before
+        if (typeof data === 'string') {
+          text = data;
+        } else if (data && typeof data.text === 'string') {
+          text = data.text;
+        } else if (data && typeof data.content === 'string') {
+          text = data.content;
+        } else if (data && data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
+          text = data.choices[0].message.content;
+        } else {
+          text = 'No response generated. Please try again with a different prompt.';
         }
       }
 
