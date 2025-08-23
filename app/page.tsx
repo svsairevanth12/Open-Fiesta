@@ -285,20 +285,22 @@ export default function Home() {
               onClose={() => setFirstNoteDismissed(true)}
             />
 
-            <ChatGrid
-              selectedModels={selectedModels}
-              headerTemplate={headerTemplate}
-              collapsedIds={collapsedIds}
-              setCollapsedIds={setCollapsedIds}
-              loadingIds={loadingIds}
-              pairs={pairs}
-              copyToClipboard={copyToClipboard}
-              copiedAllIdx={copiedAllIdx}
-              setCopiedAllIdx={setCopiedAllIdx}
-              copiedKey={copiedKey}
-              setCopiedKey={setCopiedKey}
-              onEditUser={onEditUser}
-            />
+            {isHydrated && (
+              <ChatGrid
+                selectedModels={selectedModels}
+                headerTemplate={headerTemplate}
+                collapsedIds={collapsedIds}
+                setCollapsedIds={setCollapsedIds}
+                loadingIds={loadingIds}
+                pairs={pairs}
+                copyToClipboard={copyToClipboard}
+                copiedAllIdx={copiedAllIdx}
+                setCopiedAllIdx={setCopiedAllIdx}
+                copiedKey={copiedKey}
+                setCopiedKey={setCopiedKey}
+                onEditUser={onEditUser}
+              />
+            )}
 
             <FixedInputBar onSubmit={send} loading={anyLoading} />
           </div>
