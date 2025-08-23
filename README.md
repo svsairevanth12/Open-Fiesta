@@ -54,8 +54,8 @@ INFERENCE_API_KEY=kf-aP6qQ7rR8sS9tT0uUv1wX2xC3yZ4b  # Already provided
 # REQUIRED: Google Gemini (Gemini 2.5 Pro)
 GEMINI_API_KEY=your_key_from_https://aistudio.google.com/app/apikey
 
-# REQUIRED: Pollinations (Evil Uncensored)
-OPEN_PROVIDER_API_KEY=your_seed_tier_token_from_https://auth.pollinations.ai/
+# REQUIRED: Pollinations (Evil Uncensored) - WORKING TOKEN PROVIDED
+OPEN_PROVIDER_API_KEY=tQ14HuL-wtewmt1H  # Already provided
 ```
 
    **Optional providers for additional models:**
