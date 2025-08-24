@@ -101,6 +101,10 @@ function isValidSharedChatData(data: unknown): data is SharedChatData {
     return false;
   }
   
+  if (obj.originalUserMessageCount !== undefined && typeof obj.originalUserMessageCount !== 'number') {
+    return false;
+  }
+  
   if (obj.projectContext !== undefined) {
     if (typeof obj.projectContext !== 'object' || obj.projectContext === null || typeof (obj.projectContext as Record<string, unknown>).name !== 'string') {
       return false;

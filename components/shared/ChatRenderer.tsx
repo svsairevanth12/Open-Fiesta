@@ -12,26 +12,26 @@ interface ChatRendererProps {
   createdAt?: number;
   readOnly?: boolean;
   truncated?: boolean;
-  originalMessageCount?: number;
+  originalUserMessageCount?: number;
   projectContext?: {
     name: string;
   };
 }
 
-export default function ChatRenderer({ 
-  messages, 
+export default function ChatRenderer({
+  messages,
   title,
   createdAt,
   readOnly = false,
   truncated = false,
-  originalMessageCount,
+  originalUserMessageCount,
   projectContext
 }: ChatRendererProps) {
   // Group messages by conversation turns (user message followed by assistant responses)
   const conversationTurns = useMemo(() => {
     const turns: { user: ChatMessage; assistants: ChatMessage[] }[] = [];
     let currentUser: ChatMessage | null = null;
-    
+
     for (const message of messages) {
       if (message.role === 'user') {
         currentUser = message;
@@ -43,7 +43,7 @@ export default function ChatRenderer({
         }
       }
     }
-    
+
     return turns;
   }, [messages]);
 
@@ -77,8 +77,8 @@ export default function ChatRenderer({
     <div className="space-y-6" data-testid="chat-renderer">
       {/* Skip to main content link for screen readers */}
       {readOnly && (
-        <a 
-          href="#chat-messages" 
+        <a
+          href="#chat-messages"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded z-50"
         >
           Skip to conversation
@@ -90,7 +90,7 @@ export default function ChatRenderer({
         <header className="mb-6 space-y-4">
           {/* Navigation */}
           <nav className="flex items-center justify-between" aria-label="Page navigation">
-            <Link 
+            <Link
               href="/"
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent rounded"
               aria-label="Return to Open Fiesta main application"
@@ -98,7 +98,7 @@ export default function ChatRenderer({
               <ArrowLeft size={16} aria-hidden="true" />
               <span>Back to Open Fiesta</span>
             </Link>
-            
+
             <Link
               href="/"
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent rounded"
@@ -117,13 +117,13 @@ export default function ChatRenderer({
                   {title}
                 </h1>
               )}
-              
+
               {createdAt && (
                 <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
                   <time dateTime={new Date(createdAt).toISOString()}>
                     Created {formatDate(createdAt)}
                   </time>
-                  
+
                   {projectContext && (
                     <span className="flex items-center gap-1">
                       <span aria-hidden="true">•</span>
@@ -135,7 +135,7 @@ export default function ChatRenderer({
 
               {/* Truncation Notice */}
               {truncated && (
-                <div 
+                <div
                   className="flex items-start gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg"
                   role="alert"
                   aria-live="polite"
@@ -144,8 +144,8 @@ export default function ChatRenderer({
                   <div className="text-sm text-yellow-200">
                     <p className="font-medium">Conversation Truncated</p>
                     <p className="text-yellow-200/80">
-                      This shared link contains the last 20 messages from a conversation 
-                      {originalMessageCount && ` that originally had ${originalMessageCount} messages`}.
+                      This shared link contains the last {conversationTurns.length} messages from a conversation
+                      {originalUserMessageCount && ` that originally had ${originalUserMessageCount} messages`}.
                     </p>
                   </div>
                 </div>
@@ -161,7 +161,7 @@ export default function ChatRenderer({
           <article key={turnIndex} className="space-y-4" aria-labelledby={`turn-${turnIndex}`}>
             {/* User Message */}
             <div className="flex gap-3" role="group" aria-labelledby={`user-message-${turnIndex}`}>
-              <div 
+              <div
                 className="flex-shrink-0 w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center"
                 role="img"
                 aria-label="User avatar"
@@ -172,7 +172,7 @@ export default function ChatRenderer({
                 <div className="flex items-center gap-2 mb-2">
                   <span id={`user-message-${turnIndex}`} className="font-medium text-white">You</span>
                   {turn.user.ts && (
-                    <time 
+                    <time
                       className="text-xs text-white/50"
                       dateTime={new Date(turn.user.ts).toISOString()}
                       title={new Date(turn.user.ts).toLocaleString()}
@@ -192,10 +192,10 @@ export default function ChatRenderer({
               <div className="space-y-4">
                 {turn.assistants.length > 1 ? (
                   // Grid layout for multiple models (like original chat)
-                  <div 
+                  <div
                     className="grid gap-3 items-stretch"
-                    style={{ 
-                      gridTemplateColumns: `repeat(${Math.min(turn.assistants.length, 3)}, minmax(280px, 1fr))` 
+                    style={{
+                      gridTemplateColumns: `repeat(${Math.min(turn.assistants.length, 3)}, minmax(280px, 1fr))`
                     }}
                   >
                     {turn.assistants.map((assistant, assistantIndex) => (
@@ -204,7 +204,7 @@ export default function ChatRenderer({
                           <div className="text-sm leading-relaxed w-full space-y-2 max-h-[40vh] md:max-h-[400px] overflow-y-auto">
                             {/* Model header */}
                             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/10">
-                              <div 
+                              <div
                                 className="flex-shrink-0 w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center"
                                 role="img"
                                 aria-label="Assistant avatar"
@@ -215,7 +215,7 @@ export default function ChatRenderer({
                                 {assistant.modelId || 'Assistant'}
                               </span>
                               {assistant.ts && (
-                                <time 
+                                <time
                                   className="text-xs text-white/50 ml-auto"
                                   dateTime={new Date(assistant.ts).toISOString()}
                                   title={new Date(assistant.ts).toLocaleString()}
@@ -224,19 +224,19 @@ export default function ChatRenderer({
                                 </time>
                               )}
                             </div>
-                            
+
                             {/* Content */}
                             <div className="prose prose-invert max-w-none prose-sm" role="region" aria-label={`${assistant.modelId || 'Assistant'} response`}>
                               <MarkdownLite text={assistant.content} />
                             </div>
-                            
+
                             {/* Error indicator if message has error code */}
                             {assistant.code && assistant.code >= 400 && (
                               <div className="mt-2 text-xs text-red-400" role="alert" aria-live="polite">
                                 Error {assistant.code}: Failed to get response
                               </div>
                             )}
-                            
+
                             {/* Provider info */}
                             {assistant.provider && (
                               <div className="text-xs text-white/40 mt-2 pt-2 border-t border-white/5">
@@ -252,7 +252,7 @@ export default function ChatRenderer({
                   // Single column layout for single model
                   turn.assistants.map((assistant, assistantIndex) => (
                     <div key={assistantIndex} className="flex gap-3" role="group" aria-labelledby={`assistant-message-${turnIndex}-${assistantIndex}`}>
-                      <div 
+                      <div
                         className="flex-shrink-0 w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center"
                         role="img"
                         aria-label="Assistant avatar"
@@ -265,7 +265,7 @@ export default function ChatRenderer({
                             {assistant.modelId || 'Assistant'}
                           </span>
                           {assistant.ts && (
-                            <time 
+                            <time
                               className="text-xs text-white/50"
                               dateTime={new Date(assistant.ts).toISOString()}
                               title={new Date(assistant.ts).toLocaleString()}
@@ -282,7 +282,7 @@ export default function ChatRenderer({
                         <div className="prose prose-invert max-w-none" role="region" aria-label={`Assistant message ${turnIndex + 1}-${assistantIndex + 1} content`}>
                           <MarkdownLite text={assistant.content} />
                         </div>
-                        
+
                         {/* Error indicator if message has error code */}
                         {assistant.code && assistant.code >= 400 && (
                           <div className="mt-2 text-xs text-red-400" role="alert" aria-live="polite">
@@ -298,7 +298,7 @@ export default function ChatRenderer({
           </article>
         ))}
       </section>
-      
+
       {readOnly && (
         <footer className="mt-8 pt-6 border-t border-white/10 text-center">
           <p className="text-white/50 text-sm">

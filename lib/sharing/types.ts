@@ -7,6 +7,7 @@ export interface SharedChatData {
   messages: ChatMessage[]; // Truncated to last 20 messages
   truncated: boolean;
   originalMessageCount?: number;
+  originalUserMessageCount?: number;
   projectContext?: {
     name: string;
     // Exclude systemPrompt for privacy
@@ -23,6 +24,7 @@ export interface TruncationResult {
   messages: ChatMessage[];
   truncated: boolean;
   originalCount: number;
+  originalUserMessageCount: number;
 }
 
 export interface ShareResult {

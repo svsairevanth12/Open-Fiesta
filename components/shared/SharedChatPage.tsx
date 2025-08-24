@@ -37,7 +37,7 @@ export default function SharedChatPage({ chatData }: SharedChatPageProps) {
             createdAt={chatData.createdAt}
             readOnly={true}
             truncated={chatData.truncated}
-            originalMessageCount={chatData.originalMessageCount}
+            originalUserMessageCount={chatData.originalUserMessageCount}
             projectContext={chatData.projectContext}
           />
         </div>

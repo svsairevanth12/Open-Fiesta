@@ -72,17 +72,6 @@ export default function Home() {
     isLoaded: projectsLoaded,
   } = useProjects();
 
-  // Show loading state until projects are loaded to avoid flicker
-  if (!projectsLoaded) {
-    return (
-      <div className={`min-h-screen w-full ${backgroundClass} relative text-white`}>
-        <div className="relative z-10 px-3 lg:px-4 py-4 lg:py-6">
-          <div className="text-white/60">Loading projects…</div>
-        </div>
-      </div>
-    );
-  }
-
   const activeThread = useMemo(
     () => threads.find((t) => t.id === activeId) || null,
     [threads, activeId]
@@ -119,41 +108,6 @@ export default function Home() {
   );
   const showFirstVisitNote =
     !firstNoteDismissed && (!keys?.openrouter || !keys?.gemini);
-
-  // Copy helper with fallback when navigator.clipboard is unavailable
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // Fallback for older browsers or insecure contexts
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      ta.style.top = "-9999px";
-      ta.setAttribute('readonly', '');
-      document.body.appendChild(ta);
-      ta.select();
-      ta.setSelectionRange(0, 99999);
-      try {
-        document.execCommand("copy");
-      } catch {
-        // Silent fail - user will need to copy manually
-      } finally {
-        document.body.removeChild(ta);
-      }
-    }
-  };
-
-  const toggle = (id: string) => {
-    setSelectedIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      const valid = new Set(allModels.map((m) => m.id));
-      const currentValidCount = prev.filter((x) => valid.has(x)).length;
-      if (currentValidCount >= 5) return prev;
-      return [...prev, id];
-    });
-  };
 
   // Chat actions (send and onEditUser) moved to lib/chatActions.ts to avoid state races
   const { send, onEditUser, onDeleteUser, onDeleteAnswer } = useMemo(
@@ -202,6 +156,60 @@ export default function Home() {
     const t = setTimeout(() => setShowSplash(false), 350); // fade-out duration match
     return () => clearTimeout(t);
   }, []);
+
+  // Copy helper with fallback when navigator.clipboard is unavailable
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Fallback for older browsers or insecure contexts
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      ta.style.top = "-9999px";
+      ta.setAttribute('readonly', '');
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, 99999);
+      try {
+        document.execCommand("copy");
+      } catch {
+        // Silent fail - user will need to copy manually
+      } finally {
+        document.body.removeChild(ta);
+      }
+    }
+  };
+
+  const toggle = (id: string) => {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      const valid = new Set(allModels.map((m) => m.id));
+      const currentValidCount = prev.filter((x) => valid.has(x)).length;
+      if (currentValidCount >= 5) return prev;
+      return [...prev, id];
+    });
+  };
+
+  // Show loading state until projects are loaded to avoid flicker
+  if (!projectsLoaded) {
+    return (
+      <div className={`min-h-screen w-full ${backgroundClass} relative text-black dark:text-white`}>
+        <div className="relative z-10 px-3 lg:px-4 py-4 lg:py-6">
+          <div className="text-black/60 dark:text-white/60">
+            Loading projects…
+          </div>
+          {/* Production debugging info */}
+          {process.env.NODE_ENV === 'production' && (
+            <div className="mt-4 text-xs text-black/40 dark:text-white/40">
+              Environment: {process.env.NODE_ENV} | Hydrated: {isHydrated ? 'Yes' : 'No'}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen w-full ${backgroundClass} relative text-black dark:text-white`}>

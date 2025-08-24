@@ -15,12 +15,14 @@ export function truncateMessages(
   config: TruncationConfig = DEFAULT_TRUNCATION_CONFIG
 ): TruncationResult {
   const originalCount = messages.length;
+  const originalUserMessageCount = messages.filter(msg => msg.role === 'user').length;
   
   if (originalCount <= config.maxMessages) {
     return {
       messages,
       truncated: false,
-      originalCount
+      originalCount,
+      originalUserMessageCount
     };
   }
   
@@ -30,7 +32,8 @@ export function truncateMessages(
   return {
     messages: selectedMessages,
     truncated: true,
-    originalCount
+    originalCount,
+    originalUserMessageCount
   };
 }
 
@@ -110,15 +113,22 @@ function truncatePreservingTurns(messages: ChatMessage[], maxMessages: number): 
  * Validates that messages array is suitable for sharing
  */
 export function validateMessagesForSharing(messages: ChatMessage[]): boolean {
-  if (!Array.isArray(messages)) return false;
-  if (messages.length === 0) return false;
+  if (!Array.isArray(messages)) {
+    return false;
+  }
+  
+  if (messages.length === 0) {
+    return false;
+  }
   
   // Filter to shareable message types
   const shareableMessages = messages.filter(msg => 
-    msg.role === 'user' || msg.role === 'assistant' || msg.role === 'system'
+    msg && (msg.role === 'user' || msg.role === 'assistant' || msg.role === 'system')
   );
   
-  if (shareableMessages.length === 0) return false;
+  if (shareableMessages.length === 0) {
+    return false;
+  }
   
   // Check that all shareable messages have required fields
   return shareableMessages.every(msg => 

@@ -173,7 +173,7 @@ export default function AiInput() {
                   <div className="absolute w-[100px] h-[100px] top-14 -left-4">
                     <Image
                       className="object-cover rounded-2xl"
-                      src={imagePreview || "/picture1.jpeg"}
+                      src={imagePreview}
                       height={500}
                       width={500}
                       alt="additional image"

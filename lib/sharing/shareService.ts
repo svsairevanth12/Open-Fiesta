@@ -158,7 +158,8 @@ export class ShareService {
       ...sanitizedThread,
       messages: sanitizedMessages,
       truncated: truncationResult.truncated,
-      originalMessageCount: truncationResult.truncated ? truncationResult.originalCount : undefined
+      originalMessageCount: truncationResult.truncated ? truncationResult.originalCount : undefined,
+      originalUserMessageCount: truncationResult.truncated ? truncationResult.originalUserMessageCount : undefined
     };
   }
 

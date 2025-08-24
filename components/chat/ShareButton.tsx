@@ -20,23 +20,23 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering parent click handlers
-    
+
     if (isSharing) return;
-    
+
     setIsSharing(true);
     setShowManualCopy(false);
     setManualCopySuccess(false);
-    
+
     try {
       const shareService = new ShareService();
       const result = await shareService.generateShareableUrl(thread, projectName);
-      
+
       if (result.success && result.url) {
         setShareUrl(result.url);
-        
+
         // Try to copy to clipboard
         const copySuccess = await shareService.copyToClipboard(result.url);
-        
+
         if (copySuccess) {
           toast.success("Share link copied to clipboard!", {
             style: {
@@ -57,15 +57,21 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
         }
       } else {
         const errorMessage = result.error || "Failed to create share link";
-        toast.error(errorMessage, {
+
+        // Provide more helpful error messages for common issues
+        let userFriendlyMessage = errorMessage;
+        if (errorMessage === "Invalid message format") {
+          userFriendlyMessage = "This conversation contains invalid message data and cannot be shared.";
+        } else if (errorMessage === "Cannot share empty conversation") {
+          userFriendlyMessage = "Cannot share an empty conversation. Please add some messages first.";
+        }
+
+        toast.error(userFriendlyMessage, {
           style: {
             background: "#ef4444",
             color: "#fff",
           },
         });
-        
-        // Log error for debugging (but don't use console.error to avoid the hydration error)
-        console.warn("Share generation failed:", errorMessage);
       }
     } catch (error) {
       const errorMessage = "An unexpected error occurred while sharing";
@@ -75,9 +81,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
           color: "#fff",
         },
       });
-      
-      // Log error for debugging (but don't use console.error to avoid the hydration error)
-      console.warn("Share error:", error);
     } finally {
       setIsSharing(false);
     }
@@ -85,12 +88,12 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
 
   const handleManualCopy = async () => {
     if (!urlInputRef.current) return;
-    
+
     try {
       // Select the text
       urlInputRef.current.select();
       urlInputRef.current.setSelectionRange(0, 99999); // For mobile devices
-      
+
       // Try modern clipboard API first
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(shareUrl);
@@ -102,17 +105,26 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
           },
         });
       } else {
-        // Fallback to execCommand
-        const successful = document.execCommand('copy');
-        if (successful) {
-          setManualCopySuccess(true);
-          toast.success("Link copied to clipboard!", {
-            style: {
-              background: "#10b981",
-              color: "#fff",
-            },
-          });
-        } else {
+        // Fallback to execCommand (deprecated but still supported)
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            setManualCopySuccess(true);
+            toast.success("Link copied to clipboard!", {
+              style: {
+                background: "#10b981",
+                color: "#fff",
+              },
+            });
+          } else {
+            toast.info("Please manually copy the selected text", {
+              style: {
+                background: "#3b82f6",
+                color: "#fff",
+              },
+            });
+          }
+        } catch {
           toast.info("Please manually copy the selected text", {
             style: {
               background: "#3b82f6",
@@ -121,8 +133,7 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
           });
         }
       }
-    } catch (error) {
-      console.error("Manual copy failed:", error);
+    } catch {
       toast.info("Please manually copy the selected text", {
         style: {
           background: "#3b82f6",
@@ -130,7 +141,7 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
         },
       });
     }
-    
+
     // Reset success state after 2 seconds
     setTimeout(() => setManualCopySuccess(false), 2000);
   };
@@ -138,7 +149,12 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      handleShare(e as any);
+      // Create a synthetic mouse event for keyboard activation
+      const syntheticEvent = {
+        stopPropagation: () => { },
+        preventDefault: () => { }
+      } as React.MouseEvent<HTMLButtonElement>;
+      handleShare(syntheticEvent);
     }
   };
 
@@ -164,7 +180,7 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
           <Share2 size={14} aria-hidden="true" />
         )}
       </button>
-      
+
       {/* Hidden description for screen readers */}
       <span id="share-button-description" className="sr-only">
         Creates a shareable link for this conversation that can be viewed by anyone with the URL
@@ -172,7 +188,7 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
 
       {/* Manual Copy Fallback Modal */}
       {showManualCopy && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           role="dialog"
           aria-modal="true"
@@ -186,7 +202,7 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
             <p id="manual-copy-description" className="text-white/70 text-sm mb-4">
               Automatic clipboard access failed. Please copy the link manually:
             </p>
-            
+
             <div className="space-y-3">
               <div className="flex gap-2">
                 <input
@@ -215,7 +231,7 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
                   )}
                 </button>
               </div>
-              
+
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={closeManualCopy}

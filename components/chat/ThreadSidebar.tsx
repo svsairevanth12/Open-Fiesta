@@ -130,6 +130,10 @@ export default function ThreadSidebar({
                     {t.title || "Untitled"}
                   </button>
                   <div className="flex items-center gap-1">
+                    <ShareButton 
+                      thread={t}
+                      projectName={projects.find(p => p.id === t.projectId)?.name}
+                    />
                     <DownloadMenu 
                       thread={t} 
                       selectedModels={selectedModels} 
@@ -277,6 +281,10 @@ export default function ThreadSidebar({
                     {t.title || "Untitled"}
                   </button>
                   <div className="flex items-center gap-1">
+                    <ShareButton 
+                      thread={t}
+                      projectName={projects.find(p => p.id === t.projectId)?.name}
+                    />
                     <DownloadMenu 
                       thread={t} 
                       selectedModels={selectedModels} 

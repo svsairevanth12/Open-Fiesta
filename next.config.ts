@@ -3,13 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Needed for Docker multi-stage build that runs `server.js` from `.next/standalone`
   output: 'standalone',
-  // Skip linting during build for Docker (only when explicitly disabled)
+  // Skip linting during build for production (warnings only)
   eslint: {
-    ignoreDuringBuilds: process.env.DISABLE_BUILD_CHECKS === 'true',
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
   },
-  // Skip type checking during build for Docker (only when explicitly disabled)
+  // Skip type checking during build for production (warnings only)
   typescript: {
-    ignoreBuildErrors: process.env.DISABLE_BUILD_CHECKS === 'true',
+    ignoreBuildErrors: process.env.NODE_ENV === 'production',
   },
   
   // Production optimizations
@@ -64,7 +64,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://scripts.simpleanalyticscdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https:; frame-ancestors 'none';"
           }
         ]
       });

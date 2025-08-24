@@ -1,34 +1,17 @@
 version: '3.8'
 
 services:
-  # Production service
   ai_fiesta:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runner
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_TELEMETRY_DISABLED=1
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.ai-fiesta.rule=Host(`localhost`)"
-      - "traefik.http.services.ai-fiesta.loadbalancer.server.port=3000"
-    networks:
-      - ai_fiesta_network
 
-  # Development service with hot reload
+  # Development version with hot reload
   ai_fiesta_dev:
     build:
       context: .
@@ -38,54 +21,6 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/.next
     environment:
       - NODE_ENV=development
-      - NEXT_TELEMETRY_DISABLED=1
-      - WATCHPACK_POLLING=true
     command: npm run dev
-    restart: unless-stopped
-    networks:
-      - ai_fiesta_network
-    depends_on:
-      - redis
-
-  # Redis for caching (optional for development)
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    networks:
-      - ai_fiesta_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Testing service
-  ai_fiesta_test:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=test
-      - CI=true
-    command: npm test
-    networks:
-      - ai_fiesta_network
-    profiles:
-      - testing
-
-networks:
-  ai_fiesta_network:
-    driver: bridge
-
-volumes:
-  redis_data:

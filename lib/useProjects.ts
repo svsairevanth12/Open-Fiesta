@@ -10,19 +10,30 @@ export function useProjects() {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Fallback timeout to ensure isLoaded becomes true
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsLoaded(true);
+    }, 500);
+    
+    return () => clearTimeout(timeout);
+  }, []);
+
   // Load projects from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const activeId = localStorage.getItem(ACTIVE_PROJECT_KEY);
-      
-      if (saved) {
-        const parsed = JSON.parse(saved) as Project[];
-        setProjects(Array.isArray(parsed) ? parsed : []);
-      }
-      
-      if (activeId && activeId !== 'null') {
-        setActiveProjectId(activeId);
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        const activeId = localStorage.getItem(ACTIVE_PROJECT_KEY);
+        
+        if (saved) {
+          const parsed = JSON.parse(saved) as Project[];
+          setProjects(Array.isArray(parsed) ? parsed : []);
+        }
+        
+        if (activeId && activeId !== 'null') {
+          setActiveProjectId(activeId);
+        }
       }
     } catch (error) {
       console.warn('Failed to load projects from localStorage:', error);
