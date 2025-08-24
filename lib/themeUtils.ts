@@ -12,19 +12,16 @@ import {
   BACKGROUND_STYLES,
   CSS_VARIABLES,
   generateThemeClasses,
-} from "./themes";
-import { generateBadgeVariables } from "./badgeSystem";
+} from './themes';
+import { generateBadgeVariables } from './badgeSystem';
 
 // LocalStorage key for theme persistence
-export const THEME_STORAGE_KEY = "ai-fiesta:theme";
+export const THEME_STORAGE_KEY = 'ai-fiesta:theme';
 
 // Theme Class Management
-export const applyThemeClasses = (
-  config: ThemeConfig,
-  targetElement?: Element
-): void => {
+export const applyThemeClasses = (config: ThemeConfig, targetElement?: Element): void => {
   // Check if we're in a browser environment (not SSR)
-  if (typeof window === "undefined" || typeof document === "undefined") {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
 
@@ -33,21 +30,21 @@ export const applyThemeClasses = (
 
   // Remove existing theme classes
   element.classList.remove(
-    "light",
-    "dark",
-    "accent-crimson",
-    "accent-emerald",
-    "accent-blue",
-    "accent-purple",
-    "accent-black",
-    "font-geist",
-    "font-inter",
-    "font-mono",
-    "font-poppins",
-    "bg-gradient-theme",
-    "bg-minimal-theme",
-    "chatinput-default",
-    "chatinput-frosty"
+    'light',
+    'dark',
+    'accent-crimson',
+    'accent-emerald',
+    'accent-blue',
+    'accent-purple',
+    'accent-black',
+    'font-geist',
+    'font-inter',
+    'font-mono',
+    'font-poppins',
+    'bg-gradient-theme',
+    'bg-minimal-theme',
+    'chatinput-default',
+    'chatinput-frosty',
   );
 
   // Apply new theme classes
@@ -57,7 +54,7 @@ export const applyThemeClasses = (
 // CSS Variable Management
 export const updateCSSVariables = (config: ThemeConfig): void => {
   // Check if we're in a browser environment (not SSR)
-  if (typeof window === "undefined" || typeof document === "undefined") {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
 
@@ -70,24 +67,15 @@ export const updateCSSVariables = (config: ThemeConfig): void => {
   root.setProperty(CSS_VARIABLES.ACCENT_SECONDARY, accent.secondary);
   root.setProperty(CSS_VARIABLES.ACCENT_TERTIARY, accent.tertiary);
   root.setProperty(CSS_VARIABLES.ACCENT_BG_PRIMARY, accent.background.primary);
-  root.setProperty(
-    CSS_VARIABLES.ACCENT_BG_SECONDARY,
-    accent.background.secondary
-  );
+  root.setProperty(CSS_VARIABLES.ACCENT_BG_SECONDARY, accent.background.secondary);
 
   // Update font variables
   root.setProperty(CSS_VARIABLES.FONT_PRIMARY, font.primary);
-  root.setProperty(
-    CSS_VARIABLES.FONT_SECONDARY,
-    font.secondary || font.primary
-  );
+  root.setProperty(CSS_VARIABLES.FONT_SECONDARY, font.secondary || font.primary);
 
   // Update background pattern
-  const gradientKey = config.mode === "dark" ? "dark" : "light";
-  root.setProperty(
-    CSS_VARIABLES.BACKGROUND_PATTERN,
-    accent.gradient[gradientKey]
-  );
+  const gradientKey = config.mode === 'dark' ? 'dark' : 'light';
+  root.setProperty(CSS_VARIABLES.BACKGROUND_PATTERN, accent.gradient[gradientKey]);
 
   // Update badge variables
   const badgeVariables = generateBadgeVariables(config.badgePair);
@@ -99,31 +87,29 @@ export const updateCSSVariables = (config: ThemeConfig): void => {
 // Complete Theme Application
 export const applyTheme = (config: ThemeConfig): void => {
   // Check if we're in a browser environment (not SSR)
-  if (typeof window === "undefined" || typeof document === "undefined") {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
 
   applyThemeClasses(config);
   updateCSSVariables(config);
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === 'development') {
     try {
       const rootStyles = getComputedStyle(document.documentElement);
-      const fontPrimary = rootStyles.getPropertyValue("--font-primary").trim();
-      const fontSecondary = rootStyles
-        .getPropertyValue("--font-secondary")
-        .trim();
+      const fontPrimary = rootStyles.getPropertyValue('--font-primary').trim();
+      const fontSecondary = rootStyles.getPropertyValue('--font-secondary').trim();
       // Force body font update explicitly (Tailwind base already sets it, but reinforce for debug)
       document.body.style.fontFamily = `${fontPrimary}, system-ui, -apple-system, sans-serif`;
-      console.log("[Theme] Applied font:", config.font, {
+      console.log('[Theme] Applied font:', config.font, {
         fontPrimary,
         fontSecondary,
         bodyFont: document.body.style.fontFamily,
-        htmlClassList: Array.from(document.documentElement.classList).filter(
-          (c) => c.startsWith("font-")
+        htmlClassList: Array.from(document.documentElement.classList).filter((c) =>
+          c.startsWith('font-'),
         ),
       });
     } catch (e) {
-      console.warn("[Theme] Font debug failed", e);
+      console.warn('[Theme] Font debug failed', e);
     }
   }
 };
@@ -132,36 +118,33 @@ export const applyTheme = (config: ThemeConfig): void => {
 export const saveTheme = (config: ThemeConfig): void => {
   try {
     // Check if we're in a browser environment (not SSR)
-    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
       return;
     }
     localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(config));
   } catch (error) {
-    console.warn("Failed to save theme to localStorage:", error);
+    console.warn('Failed to save theme to localStorage:', error);
   }
 };
 
 export const loadTheme = (): ThemeConfig | null => {
   try {
     // Check if we're in a browser environment (not SSR)
-    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
       return null;
     }
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     return stored ? JSON.parse(stored) : null;
   } catch (error) {
-    console.warn("Failed to load theme from localStorage:", error);
+    console.warn('Failed to load theme from localStorage:', error);
     return null;
   }
 };
 
 // Theme Transition Helpers
-export const withThemeTransition = (
-  callback: () => void,
-  duration: number = 300
-): void => {
+export const withThemeTransition = (callback: () => void, duration: number = 300): void => {
   // Check if we're in a browser environment (not SSR)
-  if (typeof window === "undefined" || typeof document === "undefined") {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
     // Just execute callback without transition in SSR
     callback();
     return;
@@ -175,7 +158,7 @@ export const withThemeTransition = (
 
   // Remove transition after completion
   setTimeout(() => {
-    document.body.style.transition = "";
+    document.body.style.transition = '';
   }, duration);
 };
 
@@ -189,7 +172,7 @@ export const hexToRgba = (hex: string, alpha: number = 1): string => {
 
 export const getAccentColor = (
   accent: AccentColor,
-  variant: "primary" | "secondary" | "tertiary" = "primary"
+  variant: 'primary' | 'secondary' | 'tertiary' = 'primary',
 ): string => {
   return ACCENT_COLORS[accent][variant];
 };
@@ -197,7 +180,7 @@ export const getAccentColor = (
 // Font Loading Helpers - Completely non-blocking approach
 export const loadGoogleFont = (fontFamily: FontFamily): void => {
   // Check if we're in a browser environment (not SSR)
-  if (typeof window === "undefined" || typeof document === "undefined") {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
 
@@ -209,25 +192,23 @@ export const loadGoogleFont = (fontFamily: FontFamily): void => {
 
   try {
     // Check if font is already loaded to avoid duplicate requests
-    const existingLink = document.querySelector(
-      `link[href*="${font.googleFont}"]`
-    );
+    const existingLink = document.querySelector(`link[href*="${font.googleFont}"]`);
     if (existingLink) {
       return;
     }
 
     // Create link elements for Google Fonts (non-blocking)
-    const preconnect1 = document.createElement("link");
-    preconnect1.rel = "preconnect";
-    preconnect1.href = "https://fonts.googleapis.com";
+    const preconnect1 = document.createElement('link');
+    preconnect1.rel = 'preconnect';
+    preconnect1.href = 'https://fonts.googleapis.com';
 
-    const preconnect2 = document.createElement("link");
-    preconnect2.rel = "preconnect";
-    preconnect2.href = "https://fonts.gstatic.com";
-    preconnect2.crossOrigin = "anonymous";
+    const preconnect2 = document.createElement('link');
+    preconnect2.rel = 'preconnect';
+    preconnect2.href = 'https://fonts.gstatic.com';
+    preconnect2.crossOrigin = 'anonymous';
 
-    const fontLink = document.createElement("link");
-    fontLink.rel = "stylesheet";
+    const fontLink = document.createElement('link');
+    fontLink.rel = 'stylesheet';
     fontLink.href = `https://fonts.googleapis.com/css2?family=${font.googleFont}&display=swap`;
 
     // Add loading error handling but don't block UI
@@ -248,12 +229,9 @@ export const loadGoogleFont = (fontFamily: FontFamily): void => {
 };
 
 // Theme Preview Helpers
-export const previewTheme = (
-  config: ThemeConfig,
-  previewElement: Element
-): void => {
+export const previewTheme = (config: ThemeConfig, previewElement: Element): void => {
   // Check if we're in a browser environment (not SSR)
-  if (typeof window === "undefined" || typeof document === "undefined") {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
 
@@ -263,9 +241,9 @@ export const previewTheme = (
   const accent = ACCENT_COLORS[config.accent];
   const element = previewElement as HTMLElement;
 
-  element.style.setProperty("--accent-primary", accent.primary);
-  element.style.setProperty("--accent-secondary", accent.secondary);
-  element.style.setProperty("--accent-bg-primary", accent.background.primary);
+  element.style.setProperty('--accent-primary', accent.primary);
+  element.style.setProperty('--accent-secondary', accent.secondary);
+  element.style.setProperty('--accent-bg-primary', accent.background.primary);
 };
 
 // Accessibility / Contrast Helpers
@@ -274,8 +252,7 @@ const relativeLuminance = (hex: string): number => {
   const r = parseInt(hex.slice(1, 3), 16) / 255;
   const g = parseInt(hex.slice(3, 5), 16) / 255;
   const b = parseInt(hex.slice(5, 7), 16) / 255;
-  const transform = (c: number) =>
-    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const transform = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
   const rl = transform(r);
   const gl = transform(g);
   const bl = transform(b);
@@ -291,44 +268,42 @@ export const contrastRatio = (hex1: string, hex2: string): number => {
 };
 
 // Evaluate accent contrast against dark/light base text colors
-export const evaluateAccentContrast = (
-  accent: AccentColor
-): { light: number; dark: number } => {
+export const evaluateAccentContrast = (accent: AccentColor): { light: number; dark: number } => {
   const accentPrimary = ACCENT_COLORS[accent].primary;
   // Assume body text colors (#000 for light mode, #fff for dark surfaces)
   return {
-    light: contrastRatio(accentPrimary, "#000000"),
-    dark: contrastRatio(accentPrimary, "#ffffff"),
+    light: contrastRatio(accentPrimary, '#000000'),
+    dark: contrastRatio(accentPrimary, '#ffffff'),
   };
 };
 
 export const logAccentContrastIfLow = (accent: AccentColor): void => {
-  if (process.env.NODE_ENV !== "development") return;
+  if (process.env.NODE_ENV !== 'development') return;
   try {
     const ratios = evaluateAccentContrast(accent);
     const MIN_RATIO = 4.5; // WCAG AA for normal text
     if (ratios.light < MIN_RATIO || ratios.dark < MIN_RATIO) {
       console.warn(
         `[Accessibility] Accent '${accent}' contrast warning: light=${ratios.light.toFixed(
-          2
-        )}, dark=${ratios.dark.toFixed(2)} (target >= ${MIN_RATIO})`
+          2,
+        )}, dark=${ratios.dark.toFixed(2)} (target >= ${MIN_RATIO})`,
       );
     } else {
       // Subtle debug log (could be silenced later)
       console.log(
         `[Accessibility] Accent '${accent}' contrast OK: light=${ratios.light.toFixed(
-          2
-        )}, dark=${ratios.dark.toFixed(2)}`
+          2,
+        )}, dark=${ratios.dark.toFixed(2)}`,
       );
     }
   } catch (e) {
-    console.warn("[Accessibility] Contrast evaluation failed", e);
+    console.warn('[Accessibility] Contrast evaluation failed', e);
   }
 };
 
 // Initial one-time evaluation of stored theme (dev only)
 try {
-  if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     const stored = loadTheme();
     if (stored) logAccentContrastIfLow(stored.accent);
   }
@@ -339,7 +314,7 @@ try {
 // Theme Comparison Helpers
 export const getThemeDifferences = (
   theme1: ThemeConfig,
-  theme2: ThemeConfig
+  theme2: ThemeConfig,
 ): (keyof ThemeConfig)[] => {
   const differences: (keyof ThemeConfig)[] = [];
 
@@ -353,39 +328,36 @@ export const getThemeDifferences = (
 };
 
 // Accessibility Helpers
-export const getContrastColor = (
-  accent: AccentColor,
-  mode: "light" | "dark"
-): string => {
+export const getContrastColor = (accent: AccentColor, mode: 'light' | 'dark'): string => {
   // Return appropriate text color based on accent and mode for accessibility
   const lightColors: Record<AccentColor, string> = {
-    crimson: "#ffffff",
-    emerald: "#ffffff",
-    blue: "#ffffff",
-    purple: "#ffffff",
-    black: "#ffffff",
+    crimson: '#ffffff',
+    emerald: '#ffffff',
+    blue: '#ffffff',
+    purple: '#ffffff',
+    black: '#ffffff',
   };
 
   const darkColors: Record<AccentColor, string> = {
-    crimson: "#000000",
-    emerald: "#000000",
-    blue: "#000000",
-    purple: "#000000",
-    black: "#ffffff", // inverted for readability on very dark surfaces
+    crimson: '#000000',
+    emerald: '#000000',
+    blue: '#000000',
+    purple: '#000000',
+    black: '#ffffff', // inverted for readability on very dark surfaces
   };
 
-  return mode === "dark" ? lightColors[accent] : darkColors[accent];
+  return mode === 'dark' ? lightColors[accent] : darkColors[accent];
 };
 
 // Theme Analytics (for debugging)
 export const logThemeInfo = (config: ThemeConfig): void => {
-  if (process.env.NODE_ENV !== "development") return;
+  if (process.env.NODE_ENV !== 'development') return;
 
-  console.group("🎨 Theme System Debug Info");
-  console.log("Current Configuration:", config);
-  console.log("Generated Classes:", generateThemeClasses(config));
-  console.log("Accent Colors:", ACCENT_COLORS[config.accent]);
-  console.log("Font Family:", FONT_FAMILIES[config.font]);
-  console.log("Background Style:", BACKGROUND_STYLES[config.background]);
+  console.group('🎨 Theme System Debug Info');
+  console.log('Current Configuration:', config);
+  console.log('Generated Classes:', generateThemeClasses(config));
+  console.log('Accent Colors:', ACCENT_COLORS[config.accent]);
+  console.log('Font Family:', FONT_FAMILIES[config.font]);
+  console.log('Background Style:', BACKGROUND_STYLES[config.background]);
   console.groupEnd();
 };

@@ -4,8 +4,9 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, model, apiKey: apiKeyFromBody, imageDataUrl } = await req.json();
     const apiKey = apiKeyFromBody || process.env.GEMINI_API_KEY;
-    const usedKeyType = apiKeyFromBody ? 'user' : (process.env.GEMINI_API_KEY ? 'shared' : 'none');
-    if (!apiKey) return new Response(JSON.stringify({ error: 'Missing Gemini API key' }), { status: 400 });
+    const usedKeyType = apiKeyFromBody ? 'user' : process.env.GEMINI_API_KEY ? 'shared' : 'none';
+    if (!apiKey)
+      return new Response(JSON.stringify({ error: 'Missing Gemini API key' }), { status: 400 });
     const allowed = new Set(['gemini-2.5-flash', 'gemini-2.5-pro']);
     const requested = typeof model === 'string' ? model : 'gemini-2.5-flash';
     const geminiModel = allowed.has(requested) ? requested : 'gemini-2.5-flash';
@@ -23,10 +24,12 @@ export async function POST(req: NextRequest) {
       return 'user';
     };
 
-    let contents: GeminiContent[] = (Array.isArray(messages) ? (messages as InMsg[]) : []).map((m) => ({
-      role: toRole(m.role),
-      parts: [{ text: typeof m?.content === 'string' ? m.content : String(m?.content ?? '') }],
-    }));
+    let contents: GeminiContent[] = (Array.isArray(messages) ? (messages as InMsg[]) : []).map(
+      (m) => ({
+        role: toRole(m.role),
+        parts: [{ text: typeof m?.content === 'string' ? m.content : String(m?.content ?? '') }],
+      }),
+    );
 
     // Extract a system prompt (from project custom prompt) into systemInstruction
     const systemParts: GeminiPart[] = [];
@@ -51,9 +54,13 @@ export async function POST(req: NextRequest) {
             const [meta, base64] = String(imageDataUrl).split(',');
             const mt = /data:(.*?);base64/.exec(meta || '')?.[1] || '';
             if (/^image\//i.test(mt)) {
-              contents[i].parts.push({ inline_data: { mime_type: mt || 'image/png', data: base64 } });
+              contents[i].parts.push({
+                inline_data: { mime_type: mt || 'image/png', data: base64 },
+              });
             } else {
-              contents[i].parts.push({ text: `(Attachment omitted: ${mt || 'unknown type'} unsupported by Gemini)` });
+              contents[i].parts.push({
+                text: `(Attachment omitted: ${mt || 'unknown type'} unsupported by Gemini)`,
+              });
             }
           } catch {}
           break;
@@ -70,7 +77,10 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         // Ensure there is at least one user message; Gemini requires user/model roles in contents
-        contents: contents.length > 0 ? contents : [{ role: 'user', parts: [{ text: 'Please respond to the instruction.' }] }],
+        contents:
+          contents.length > 0
+            ? contents
+            : [{ role: 'user', parts: [{ text: 'Please respond to the instruction.' }] }],
         ...(systemParts.length > 0 ? { systemInstruction: { parts: systemParts } } : {}),
         generationConfig: {
           response_mime_type: 'text/plain',
@@ -84,23 +94,36 @@ export async function POST(req: NextRequest) {
     const data: unknown = await resp.json();
     if (!resp.ok) {
       const errStr = (() => {
-        const d = data as { error?: { message?: unknown } } | Record<string, unknown> | string | null | undefined;
+        const d = data as
+          | { error?: { message?: unknown } }
+          | Record<string, unknown>
+          | string
+          | null
+          | undefined;
         if (typeof d === 'string') return d;
         if (d && typeof d === 'object') {
           if ('error' in d && d.error && typeof (d as { error?: unknown }).error === 'object') {
             const maybe = (d as { error?: { message?: unknown } }).error;
-            const m = maybe && typeof maybe === 'object' && 'message' in maybe ? (maybe as { message?: unknown }).message : undefined;
+            const m =
+              maybe && typeof maybe === 'object' && 'message' in maybe
+                ? (maybe as { message?: unknown }).message
+                : undefined;
             return typeof m === 'string' ? m : JSON.stringify(m);
           }
-          try { return JSON.stringify(d); } catch { return 'Unknown error'; }
+          try {
+            return JSON.stringify(d);
+          } catch {
+            return 'Unknown error';
+          }
         }
         return 'Unknown error';
       })();
       const errObj = errStr;
       if (resp.status === 429) {
-        const text = usedKeyType === 'user'
-          ? 'Your Gemini API key hit a rate limit. Please retry after a moment or upgrade your plan/limits.'
-          : 'This model hit a shared rate limit. Add your own Gemini API key for FREE in Settings for higher limits and reliability.';
+        const text =
+          usedKeyType === 'user'
+            ? 'Your Gemini API key hit a rate limit. Please retry after a moment or upgrade your plan/limits.'
+            : 'This model hit a shared rate limit. Add your own Gemini API key for FREE in Settings for higher limits and reliability.';
         return Response.json({ text, error: errObj, code: 429, provider: 'gemini', usedKeyType });
       }
       return new Response(JSON.stringify({ error: errObj, raw: data }), { status: resp.status });
@@ -114,7 +137,11 @@ export async function POST(req: NextRequest) {
       const parts = cand?.content?.parts;
       if (!Array.isArray(parts)) return '';
       const texts = parts
-        .map((p) => (typeof (p as { text?: unknown })?.text === 'string' ? String((p as { text?: unknown }).text) : ''))
+        .map((p) =>
+          typeof (p as { text?: unknown })?.text === 'string'
+            ? String((p as { text?: unknown }).text)
+            : '',
+        )
         .filter(Boolean);
       return texts.join('\n');
     };
@@ -126,7 +153,11 @@ export async function POST(req: NextRequest) {
       const parts = (cand?.content as { parts?: unknown[] } | undefined)?.parts ?? [];
       if (Array.isArray(parts) && parts.length) {
         const collected = parts
-          .map((p) => (typeof (p as { text?: unknown })?.text === 'string' ? String((p as { text?: unknown }).text) : ''))
+          .map((p) =>
+            typeof (p as { text?: unknown })?.text === 'string'
+              ? String((p as { text?: unknown }).text)
+              : '',
+          )
           .filter(Boolean);
         text = collected.join('\n');
       }
@@ -135,9 +166,15 @@ export async function POST(req: NextRequest) {
       const cand = (data as { candidates?: unknown[] } | null)?.candidates?.[0] as
         | { finishReason?: unknown; safetyRatings?: unknown[] }
         | undefined;
-      const finish = (cand as { finishReason?: unknown } | undefined)?.finishReason || (data as { finishReason?: unknown } | undefined)?.finishReason;
-      const blockReason = (data as { promptFeedback?: { blockReason?: unknown } } | undefined)?.promptFeedback?.blockReason ||
-        (Array.isArray((cand as { safetyRatings?: Array<{ category?: unknown }> } | undefined)?.safetyRatings)
+      const finish =
+        (cand as { finishReason?: unknown } | undefined)?.finishReason ||
+        (data as { finishReason?: unknown } | undefined)?.finishReason;
+      const blockReason =
+        (data as { promptFeedback?: { blockReason?: unknown } } | undefined)?.promptFeedback
+          ?.blockReason ||
+        (Array.isArray(
+          (cand as { safetyRatings?: Array<{ category?: unknown }> } | undefined)?.safetyRatings,
+        )
           ? (cand as { safetyRatings?: Array<{ category?: unknown }> }).safetyRatings?.[0]?.category
           : undefined);
       const blocked = finish && String(finish).toLowerCase().includes('safety');
@@ -146,7 +183,8 @@ export async function POST(req: NextRequest) {
       }
     }
     if (!text) {
-      const hint = 'Gemini returned an empty message. This can happen on shared quota. Try again, rephrase, or add your own Gemini API key in Settings.';
+      const hint =
+        'Gemini returned an empty message. This can happen on shared quota. Try again, rephrase, or add your own Gemini API key in Settings.';
       text = hint;
     }
     // Token estimation similar to open-provider: ~4 chars per token
@@ -155,12 +193,19 @@ export async function POST(req: NextRequest) {
       return t.length > 0 ? Math.ceil(t.length / 4) : 0;
     };
     // messages may contain non-strings; coerce and sum
-    const inputArray = Array.isArray(messages) ? (messages as Array<{ role?: unknown; content?: unknown }>) : [];
+    const inputArray = Array.isArray(messages)
+      ? (messages as Array<{ role?: unknown; content?: unknown }>)
+      : [];
     const perMessage = inputArray.map((m, idx) => ({
       index: idx,
       role: typeof m?.role === 'string' ? String(m.role) : 'user',
-      chars: typeof m?.content === 'string' ? (m.content as string).length : String(m?.content ?? '').length,
-      tokens: estimateTokens(typeof m?.content === 'string' ? (m.content as string) : String(m?.content ?? '')),
+      chars:
+        typeof m?.content === 'string'
+          ? (m.content as string).length
+          : String(m?.content ?? '').length,
+      tokens: estimateTokens(
+        typeof m?.content === 'string' ? (m.content as string) : String(m?.content ?? ''),
+      ),
     }));
     const total = perMessage.reduce((sum, x) => sum + x.tokens, 0);
 
@@ -181,4 +226,3 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
 }
-

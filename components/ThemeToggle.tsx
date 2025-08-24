@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState, useCallback, useMemo } from "react";
-import { createPortal } from "react-dom";
-import { X, Palette, Sun, Moon, Type, Grid3X3, Star, MessageSquare } from "lucide-react";
-import { useTheme } from "@/lib/themeContext";
+import React, { useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { X, Palette, Sun, Moon, Type, Grid3X3, Star, MessageSquare } from 'lucide-react';
+import { useTheme } from '@/lib/themeContext';
 import {
   ACCENT_COLORS,
   FONT_FAMILIES,
@@ -13,8 +13,8 @@ import {
   type BackgroundStyle,
   type BadgePair,
   type ChatInputStyle,
-} from "@/lib/themes";
-import { BADGE_PAIRS } from "@/lib/badgeSystem";
+} from '@/lib/themes';
+import { BADGE_PAIRS } from '@/lib/badgeSystem';
 
 // Memoized accent option component
 const AccentOption = React.memo<{
@@ -37,9 +37,7 @@ const AccentOption = React.memo<{
     <button
       onClick={handleClick}
       className={`p-3 rounded-lg border transition-colors text-left ${
-        isSelected
-          ? "border-white/30 bg-white/10"
-          : "border-white/10 bg-white/5 hover:bg-white/8"
+        isSelected ? 'border-white/30 bg-white/10' : 'border-white/10 bg-white/5 hover:bg-white/8'
       }`}
     >
       <div className="flex items-center gap-3 mb-2">
@@ -48,8 +46,8 @@ const AccentOption = React.memo<{
             accent.id
           }-primary ${
             isSelected
-              ? "ring-2 ring-[var(--accent-interactive-focus)] ring-offset-1 ring-offset-black/20"
-              : ""
+              ? 'ring-2 ring-[var(--accent-interactive-focus)] ring-offset-1 ring-offset-black/20'
+              : ''
           }`}
           aria-hidden="true"
         />
@@ -76,7 +74,7 @@ const AccentOption = React.memo<{
   );
 });
 
-AccentOption.displayName = "AccentOption";
+AccentOption.displayName = 'AccentOption';
 
 // Memoized font option component
 const FontOption = React.memo<{
@@ -92,9 +90,7 @@ const FontOption = React.memo<{
     <button
       onClick={handleClick}
       className={`w-full p-4 rounded-lg border transition-colors text-left ${
-        isSelected
-          ? "border-white/30 bg-white/10"
-          : "border-white/10 bg-white/5 hover:bg-white/8"
+        isSelected ? 'border-white/30 bg-white/10' : 'border-white/10 bg-white/5 hover:bg-white/8'
       }`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -104,16 +100,14 @@ const FontOption = React.memo<{
         </div>
         {isSelected && <div className="w-2 h-2 rounded-full bg-blue-500" />}
       </div>
-      <div
-        className={`text-sm text-white/80 font-preview font-preview-${font.id}`}
-      >
+      <div className={`text-sm text-white/80 font-preview font-preview-${font.id}`}>
         The quick brown fox jumps over the lazy dog 123456
       </div>
     </button>
   );
 });
 
-FontOption.displayName = "FontOption";
+FontOption.displayName = 'FontOption';
 
 // Memoized background option component
 const BackgroundOption = React.memo<{
@@ -134,9 +128,7 @@ const BackgroundOption = React.memo<{
     <button
       onClick={handleClick}
       className={`p-3 rounded-lg border transition-colors text-left ${
-        isSelected
-          ? "border-white/30 bg-white/10"
-          : "border-white/10 bg-white/5 hover:bg-white/8"
+        isSelected ? 'border-white/30 bg-white/10' : 'border-white/10 bg-white/5 hover:bg-white/8'
       }`}
     >
       <div className="flex items-center justify-between mb-3">
@@ -146,14 +138,12 @@ const BackgroundOption = React.memo<{
         </div>
         {isSelected && <div className="w-2 h-2 rounded-full bg-blue-500" />}
       </div>
-      <div
-        className={`w-full h-16 rounded border border-white/20 ${background.className}`}
-      />
+      <div className={`w-full h-16 rounded border border-white/20 ${background.className}`} />
     </button>
   );
 });
 
-BackgroundOption.displayName = "BackgroundOption";
+BackgroundOption.displayName = 'BackgroundOption';
 
 // Memoized badge option component
 const BadgeOption = React.memo<{
@@ -175,9 +165,7 @@ const BadgeOption = React.memo<{
     <button
       onClick={handleClick}
       className={`p-3 rounded-lg border transition-colors text-left ${
-        isSelected
-          ? "border-white/30 bg-white/10"
-          : "border-white/10 bg-white/5 hover:bg-white/8"
+        isSelected ? 'border-white/30 bg-white/10' : 'border-white/10 bg-white/5 hover:bg-white/8'
       }`}
     >
       <div className="flex items-center justify-between mb-3">
@@ -218,24 +206,17 @@ const BadgeOption = React.memo<{
   );
 });
 
-BadgeOption.displayName = "BadgeOption";
+BadgeOption.displayName = 'BadgeOption';
 
 type ThemeToggleProps = { compact?: boolean };
 
 export default function ThemeToggle({ compact }: ThemeToggleProps) {
-  const {
-    theme,
-    setAccent,
-    setFont,
-    setBackground,
-    setBadgePair,
-    toggleMode,
-    updateTheme,
-  } = useTheme();
+  const { theme, setAccent, setFont, setBackground, setBadgePair, toggleMode, updateTheme } =
+    useTheme();
   const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "accent" | "font" | "background" | "badges" | "input"
-  >("accent");
+  const [activeTab, setActiveTab] = useState<'accent' | 'font' | 'background' | 'badges' | 'input'>(
+    'accent',
+  );
 
   // Memoize the arrays to prevent recreating on every render
   const accentValues = useMemo(() => Object.values(ACCENT_COLORS), []);
@@ -252,53 +233,47 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
     (accent: AccentColor) => {
       setAccent(accent);
     },
-    [setAccent]
+    [setAccent],
   );
 
   const handleFontChange = useCallback(
     (font: FontFamily) => {
-      console.log("Font change requested:", font);
+      console.log('Font change requested:', font);
       try {
         setFont(font);
       } catch (error) {
-        console.error("Font change error:", error);
+        console.error('Font change error:', error);
       }
     },
-    [setFont]
+    [setFont],
   );
 
   const handleBackgroundChange = useCallback(
     (background: BackgroundStyle) => {
       setBackground(background);
     },
-    [setBackground]
+    [setBackground],
   );
 
   const handleBadgeChange = useCallback(
     (badge: BadgePair) => {
       setBadgePair(badge);
     },
-    [setBadgePair]
+    [setBadgePair],
   );
 
   const handleTabChange = useCallback(
-    (tab: "accent" | "font" | "background" | "badges" | "input") => {
+    (tab: 'accent' | 'font' | 'background' | 'badges' | 'input') => {
       setActiveTab(tab);
     },
-    []
+    [],
   );
 
   // Memoized current theme info
-  const currentAccent = useMemo(
-    () => ACCENT_COLORS[theme.accent],
-    [theme.accent]
-  );
+  const currentAccent = useMemo(() => ACCENT_COLORS[theme.accent], [theme.accent]);
   const currentFont = useMemo(() => FONT_FAMILIES[theme.font], [theme.font]);
-  const currentBackground = useMemo(
-    () => BACKGROUND_STYLES[theme.background],
-    [theme.background]
-  );
-  const currentChatInputStyle = theme.chatInputStyle || "default";
+  const currentBackground = useMemo(() => BACKGROUND_STYLES[theme.background], [theme.background]);
+  const currentChatInputStyle = theme.chatInputStyle || 'default';
 
   return (
     <div className="relative">
@@ -316,13 +291,10 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
       </button>
 
       {open &&
-        typeof document !== "undefined" &&
+        typeof document !== 'undefined' &&
         createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-            <div
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-              onClick={handleClose}
-            />
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={handleClose} />
             <div
               role="dialog"
               aria-modal="true"
@@ -331,9 +303,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg md:text-xl font-semibold">
-                  Theme Settings
-                </h2>
+                <h2 className="text-lg md:text-xl font-semibold">Theme Settings</h2>
                 <button
                   aria-label="Close"
                   onClick={handleClose}
@@ -351,11 +321,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                     onClick={handleToggleMode}
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition-colors"
                   >
-                    {theme.mode === "dark" ? (
-                      <Moon size={14} />
-                    ) : (
-                      <Sun size={14} />
-                    )}
+                    {theme.mode === 'dark' ? <Moon size={14} /> : <Sun size={14} />}
                     <span className="text-sm capitalize">{theme.mode}</span>
                   </button>
                 </div>
@@ -364,17 +330,17 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
               {/* Tab Navigation */}
               <div className="flex flex-nowrap gap-1 mb-4 p-1 rounded-lg bg-white/5 shrink-0 overflow-x-auto -mx-1 px-1">
                 {[
-                  { id: "accent" as const, label: "Colors", icon: Palette },
-                  { id: "badges" as const, label: "Badges", icon: Star },
-                  { id: "font" as const, label: "Fonts", icon: Type },
+                  { id: 'accent' as const, label: 'Colors', icon: Palette },
+                  { id: 'badges' as const, label: 'Badges', icon: Star },
+                  { id: 'font' as const, label: 'Fonts', icon: Type },
                   {
-                    id: "background" as const,
-                    label: "Backgrounds",
+                    id: 'background' as const,
+                    label: 'Backgrounds',
                     icon: Grid3X3,
                   },
                   {
-                    id: "input" as const,
-                    label: "Chat Input",
+                    id: 'input' as const,
+                    label: 'Chat Input',
                     icon: MessageSquare,
                   },
                 ].map(({ id, label, icon: Icon }) => (
@@ -383,8 +349,8 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                     onClick={() => handleTabChange(id)}
                     className={`shrink-0 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                       activeTab === id
-                        ? "bg-white/15 text-white border border-white/20"
-                        : "text-white/70 hover:text-white hover:bg-white/5"
+                        ? 'bg-white/15 text-white border border-white/20'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
                     }`}
                   >
                     <Icon size={14} />
@@ -396,7 +362,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
               {/* Tab Content (scrollable) */}
               <div className="min-h-[200px] flex-1 overflow-y-auto pr-1 space-y-0">
                 {/* Accent Colors Tab */}
-                {activeTab === "accent" && (
+                {activeTab === 'accent' && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-medium text-white/80 mb-3">
                       Choose your accent color
@@ -415,7 +381,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                 )}
 
                 {/* Badge Colors Tab */}
-                {activeTab === "badges" && (
+                {activeTab === 'badges' && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-medium text-white/80 mb-3">
                       Choose your badge colors
@@ -432,15 +398,15 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                     </div>
                     <div className="mt-4 p-3 rounded-lg bg-white/5 border border-white/10">
                       <p className="text-xs text-white/60">
-                        Badge colors change the Pro/Free badge appearance while
-                        maintaining the same shape, size, and icons.
+                        Badge colors change the Pro/Free badge appearance while maintaining the same
+                        shape, size, and icons.
                       </p>
                     </div>
                   </div>
                 )}
 
                 {/* Font Families Tab */}
-                {activeTab === "font" && (
+                {activeTab === 'font' && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-medium text-white/80 mb-3">
                       Choose your font family
@@ -459,7 +425,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                 )}
 
                 {/* Background Styles Tab */}
-                {activeTab === "background" && (
+                {activeTab === 'background' && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-medium text-white/80 mb-3">
                       Choose your background style
@@ -476,32 +442,29 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                     </div>
                     <div className="mt-4 p-3 rounded-lg bg-white/5 border border-white/10">
                       <p className="text-xs text-white/60">
-                        <strong>Gradient:</strong> Rich, complex radial
-                        gradients that match your accent color
+                        <strong>Gradient:</strong> Rich, complex radial gradients that match your
+                        accent color
                         <br />
-                        <strong>Minimal:</strong> Clean solid background with
-                        subtle accent patterns
+                        <strong>Minimal:</strong> Clean solid background with subtle accent patterns
                       </p>
                     </div>
                   </div>
                 )}
 
-                {activeTab === "input" && (
+                {activeTab === 'input' && (
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-white/80 mb-3">
-                      Chat input style
-                    </h3>
+                    <h3 className="text-sm font-medium text-white/80 mb-3">Chat input style</h3>
                     <div className="grid sm:grid-cols-2 gap-3">
                       {[
                         {
-                          id: "default",
-                          name: "Subtle",
-                          desc: "Soft translucent panel",
+                          id: 'default',
+                          name: 'Subtle',
+                          desc: 'Soft translucent panel',
                         },
                         {
-                          id: "frosty",
-                          name: "Frosty Dark",
-                          desc: "Higher blur & depth",
+                          id: 'frosty',
+                          name: 'Frosty Dark',
+                          desc: 'Higher blur & depth',
                         },
                       ].map((opt) => {
                         const selected = currentChatInputStyle === opt.id;
@@ -515,28 +478,22 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                             }
                             className={`p-3 rounded-lg border text-left transition-colors ${
                               selected
-                                ? "border-white/30 bg-white/10"
-                                : "border-white/10 bg-white/5 hover:bg-white/8"
+                                ? 'border-white/30 bg-white/10'
+                                : 'border-white/10 bg-white/5 hover:bg-white/8'
                             }`}
                           >
                             <div className="flex items-center justify-between mb-3">
                               <div>
-                                <div className="text-sm font-medium">
-                                  {opt.name}
-                                </div>
-                                <div className="text-xs text-white/60">
-                                  {opt.desc}
-                                </div>
+                                <div className="text-sm font-medium">{opt.name}</div>
+                                <div className="text-xs text-white/60">{opt.desc}</div>
                               </div>
-                              {selected && (
-                                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                              )}
+                              {selected && <div className="w-2 h-2 rounded-full bg-blue-500" />}
                             </div>
                             <div
                               className={`w-full h-16 rounded border border-white/15 flex items-center justify-center text-[10px] tracking-wide uppercase opacity-70 chat-input-shell ${
-                                opt.id === "default"
-                                  ? "bg-white/10 backdrop-blur-md"
-                                  : "bg-black/30"
+                                opt.id === 'default'
+                                  ? 'bg-white/10 backdrop-blur-md'
+                                  : 'bg-black/30'
                               }`}
                             >
                               Aa
@@ -546,8 +503,8 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
                       })}
                     </div>
                     <div className="mt-2 p-3 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60">
-                      Frosty adds stronger glass effect, brightness separation
-                      and a focus ring when active.
+                      Frosty adds stronger glass effect, brightness separation and a focus ring when
+                      active.
                     </div>
                   </div>
                 )}
@@ -556,8 +513,8 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
               {/* Footer */}
               <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/10 shrink-0">
                 <div className="text-xs text-white/60">
-                  Current: {theme.mode} mode, {currentAccent.name},{" "}
-                  {currentFont.name}, {currentBackground.name}
+                  Current: {theme.mode} mode, {currentAccent.name}, {currentFont.name},{' '}
+                  {currentBackground.name}
                 </div>
                 <button
                   onClick={handleClose}
@@ -568,7 +525,7 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

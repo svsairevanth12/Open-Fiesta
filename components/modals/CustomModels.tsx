@@ -1,26 +1,24 @@
-"use client";
+'use client';
 import { useState } from 'react';
-import { createPortal } from "react-dom";
-import { Wrench } from "lucide-react";
-import { useCustomModels, makeCustomModel } from "@/lib/customModels";
-import { useLocalStorage } from "@/lib/useLocalStorage";
-import type { ApiKeys } from "@/lib/types";
-import { X, Check, Copy, Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { createPortal } from 'react-dom';
+import { Wrench } from 'lucide-react';
+import { useCustomModels, makeCustomModel } from '@/lib/customModels';
+import { useLocalStorage } from '@/lib/useLocalStorage';
+import type { ApiKeys } from '@/lib/types';
+import { X, Check, Copy, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 
 type CustomModelsProps = { compact?: boolean };
 
 export default function CustomModels({ compact }: CustomModelsProps) {
   const [open, setOpen] = useState(false);
   const [customModels, setCustomModels] = useCustomModels();
-  const [label, setLabel] = useState("");
-  const [slug, setSlug] = useState("");
+  const [label, setLabel] = useState('');
+  const [slug, setSlug] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [validMsg, setValidMsg] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
-  const [validState, setValidState] = useState<null | "ok" | "fail" | "error">(
-    null
-  );
-  const [keys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
+  const [validState, setValidState] = useState<null | 'ok' | 'fail' | 'error'>(null);
+  const [keys] = useLocalStorage<ApiKeys>('ai-fiesta:keys', {});
 
   const addCustom = () => {
     setErr(null);
@@ -29,24 +27,24 @@ export default function CustomModels({ compact }: CustomModelsProps) {
     const l = label.trim();
     const s = slug.trim();
     if (!l || !s) {
-      setErr("Please enter both Label and Model ID.");
+      setErr('Please enter both Label and Model ID.');
       return;
     }
     if (customModels.some((m) => m.id === s)) {
-      setErr("A custom model with this Model ID already exists.");
+      setErr('A custom model with this Model ID already exists.');
       return;
     }
     // Require successful validation before adding
-    if (validState !== "ok") {
-      setErr("Please validate the Model ID before adding.");
+    if (validState !== 'ok') {
+      setErr('Please validate the Model ID before adding.');
       return;
     }
     const model = makeCustomModel(l, s);
     setCustomModels([...customModels, model]);
-    setLabel("");
-    setSlug("");
+    setLabel('');
+    setSlug('');
     // Ensure UI picks up new models consistently
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       setTimeout(() => window.location.reload(), 10);
     }
   };
@@ -61,34 +59,32 @@ export default function CustomModels({ compact }: CustomModelsProps) {
     setValidState(null);
     const s = slug.trim();
     if (!s) {
-      setErr("Enter a Model ID to validate.");
+      setErr('Enter a Model ID to validate.');
       return;
     }
     try {
       setValidating(true);
-      const res = await fetch("/api/openrouter/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/openrouter/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug: s, apiKey: keys?.openrouter }),
       });
       const data = await res.json();
       if (!data?.ok) {
-        setValidMsg(
-          `Validation error${data?.status ? ` (status ${data.status})` : ""}.`
-        );
-        setValidState("error");
+        setValidMsg(`Validation error${data?.status ? ` (status ${data.status})` : ''}.`);
+        setValidState('error');
         return;
       }
       if (data.exists) {
-        setValidMsg("Model found.");
-        setValidState("ok");
+        setValidMsg('Model found.');
+        setValidState('ok');
       } else {
-        setValidMsg("Model not found. Check the exact slug on OpenRouter.");
-        setValidState("fail");
+        setValidMsg('Model not found. Check the exact slug on OpenRouter.');
+        setValidState('fail');
       }
     } catch {
-      setValidMsg("Could not validate right now.");
-      setValidState("error");
+      setValidMsg('Could not validate right now.');
+      setValidState('error');
     } finally {
       setValidating(false);
     }
@@ -109,7 +105,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
         {!compact && <span>Custom models</span>}
       </button>
       {open &&
-        typeof document !== "undefined" &&
+        typeof document !== 'undefined' &&
         createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center">
             <div
@@ -123,8 +119,8 @@ export default function CustomModels({ compact }: CustomModelsProps) {
                     Add custom OpenRouter models
                   </h3>
                   <p className="text-xs md:text-sm text-zinc-400 mt-1">
-                    Add any model slug from OpenRouter. Selection is still
-                    capped at 5 in the picker.
+                    Add any model slug from OpenRouter. Selection is still capped at 5 in the
+                    picker.
                   </p>
                 </div>
                 <button
@@ -137,9 +133,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 mb-3">
                 <div className="space-y-1 sm:col-span-1">
-                  <label className="text-[11px] md:text-xs text-zinc-400">
-                    Label
-                  </label>
+                  <label className="text-[11px] md:text-xs text-zinc-400">Label</label>
                   <input
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}
@@ -148,9 +142,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
                   />
                 </div>
                 <div className="space-y-1 sm:col-span-1">
-                  <label className="text-[11px] md:text-xs text-zinc-400">
-                    Model ID (slug)
-                  </label>
+                  <label className="text-[11px] md:text-xs text-zinc-400">Model ID (slug)</label>
                   <input
                     value={slug}
                     onChange={(e) => {
@@ -165,8 +157,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
               </div>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
                 <div className="text-[12px] md:text-sm text-zinc-400">
-                  Tip: Only use &quot;:free&quot; if the model page lists a free
-                  variant.
+                  Tip: Only use &quot;:free&quot; if the model page lists a free variant.
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -179,11 +170,11 @@ export default function CustomModels({ compact }: CustomModelsProps) {
                     ) : (
                       <Check size={16} />
                     )}
-                    <span>{validating ? "Validating…" : "Validate"}</span>
+                    <span>{validating ? 'Validating…' : 'Validate'}</span>
                   </button>
                   <button
                     onClick={addCustom}
-                    disabled={validState !== "ok"}
+                    disabled={validState !== 'ok'}
                     className="px-3.5 py-2 rounded-md accent-action-fill accent-focus disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm md:text-base"
                   >
                     Add Model
@@ -198,16 +189,16 @@ export default function CustomModels({ compact }: CustomModelsProps) {
               {validMsg && (
                 <div
                   className={`mb-2 text-xs inline-flex items-center gap-2 px-2 py-1 rounded-md border ${
-                    validState === "ok"
-                      ? "text-emerald-300 border-emerald-300/30 bg-emerald-400/10"
-                      : validState === "fail"
-                      ? "text-rose-300 border-rose-300/30 bg-rose-400/10"
-                      : "text-amber-300 border-amber-300/30 bg-amber-400/10"
+                    validState === 'ok'
+                      ? 'text-emerald-300 border-emerald-300/30 bg-emerald-400/10'
+                      : validState === 'fail'
+                        ? 'text-rose-300 border-rose-300/30 bg-rose-400/10'
+                        : 'text-amber-300 border-amber-300/30 bg-amber-400/10'
                   }`}
                 >
-                  {validState === "ok" ? (
+                  {validState === 'ok' ? (
                     <Check size={14} />
-                  ) : validState === "fail" ? (
+                  ) : validState === 'fail' ? (
                     <AlertCircle size={14} />
                   ) : (
                     <AlertCircle size={14} />
@@ -222,17 +213,12 @@ export default function CustomModels({ compact }: CustomModelsProps) {
                       <tr className="text-left">
                         <th className="px-3 py-2 font-medium">Label</th>
                         <th className="px-3 py-2 font-medium">Model ID</th>
-                        <th className="px-3 py-2 w-32 md:w-40 text-right">
-                          Actions
-                        </th>
+                        <th className="px-3 py-2 w-32 md:w-40 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {customModels.map((m) => (
-                        <tr
-                          key={m.id}
-                          className="border-t border-white/10 hover:bg-white/5"
-                        >
+                        <tr key={m.id} className="border-t border-white/10 hover:bg-white/5">
                           <td className="px-3 py-2 align-top">
                             <div className="flex items-center gap-2">
                               <span className="truncate max-w-[260px] lg:max-w-[360px]">
@@ -253,9 +239,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
                               </span>
                               <button
                                 className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-white/10 border border-white/10 hover:bg-white/20"
-                                onClick={() =>
-                                  navigator.clipboard.writeText(m.model)
-                                }
+                                onClick={() => navigator.clipboard.writeText(m.model)}
                                 title="Copy model ID"
                               >
                                 <Copy size={12} /> Copy
@@ -278,7 +262,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
               )}
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

@@ -1,19 +1,16 @@
-import type { ChatThread, AiModel, ChatMessage } from "./types";
+import type { ChatThread, AiModel, ChatMessage } from './types';
 
 /**
  * Formats a chat thread for export
  */
-export function formatChatForExport(
-  thread: ChatThread,
-  selectedModels: AiModel[]
-): string {
-  const title = thread.title || "Untitled Chat";
-  const date = new Date(thread.createdAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+export function formatChatForExport(thread: ChatThread, selectedModels: AiModel[]): string {
+  const title = thread.title || 'Untitled Chat';
+  const date = new Date(thread.createdAt).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 
   // Group messages by conversation pairs
@@ -21,12 +18,12 @@ export function formatChatForExport(
   let currentPair: { user: ChatMessage; answers: ChatMessage[] } | null = null;
 
   for (const msg of thread.messages) {
-    if (msg.role === "user") {
+    if (msg.role === 'user') {
       if (currentPair) {
         pairs.push(currentPair);
       }
       currentPair = { user: msg, answers: [] };
-    } else if (msg.role === "assistant" && currentPair) {
+    } else if (msg.role === 'assistant' && currentPair) {
       currentPair.answers.push(msg);
     }
   }
@@ -40,9 +37,7 @@ export function formatChatForExport(
   markdown += `**Date:** ${date}\n\n`;
 
   if (selectedModels.length > 0) {
-    markdown += `**Models Used:** ${selectedModels
-      .map((m) => m.label)
-      .join(", ")}\n\n`;
+    markdown += `**Models Used:** ${selectedModels.map((m) => m.label).join(', ')}\n\n`;
   }
 
   markdown += `---\n\n`;
@@ -57,15 +52,15 @@ export function formatChatForExport(
       if (pair.answers.length === 1) {
         const answer = pair.answers[0];
         const model = selectedModels.find((m) => m.id === answer.modelId);
-        const modelLabel = model ? model.label : answer.modelId || "Assistant";
+        const modelLabel = model ? model.label : answer.modelId || 'Assistant';
         markdown += `### ${modelLabel}\n\n`;
         markdown += `${answer.content}\n\n`;
       } else {
         markdown += `### Responses\n\n`;
         pair.answers.forEach((answer) => {
           const model = selectedModels.find((m) => m.id === answer.modelId);
-          const modelLabel = model ? model.label : answer.modelId || "Assistant";
-          
+          const modelLabel = model ? model.label : answer.modelId || 'Assistant';
+
           markdown += `#### ${modelLabel}\n\n`;
           markdown += `${answer.content}\n\n`;
         });
@@ -84,9 +79,9 @@ export function formatChatForExport(
  * Download a text file
  */
 export function downloadTextFile(content: string, filename: string): void {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
+  const link = document.createElement('a');
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
@@ -102,27 +97,30 @@ function markdownToHtml(markdown: string): string {
   // Simple markdown to HTML conversion with improved formatting
   const html = markdown
     // Headers
-    .replace(/^#### (.*$)/gm, "<h4>$1</h4>")
-    .replace(/^### (.*$)/gm, "<h3>$1</h3>")
-    .replace(/^## (.*$)/gm, "<h2>$1</h2>")
-    .replace(/^# (.*$)/gm, "<h1>$1</h1>")
+    .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
     // Bold
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     // Italic
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
     // Code blocks with syntax highlighting preservation
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="code-block"><code class="language-$1">$2</code></pre>')
+    .replace(
+      /```(\w*)\n([\s\S]*?)```/g,
+      '<pre class="code-block"><code class="language-$1">$2</code></pre>',
+    )
     // Inline code
     .replace(/`(.*?)`/g, '<code class="inline-code">$1</code>')
     // Horizontal rules
-    .replace(/^---$/gm, "<hr>")
+    .replace(/^---$/gm, '<hr>')
     // Links (basic)
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
     // Line breaks - handle paragraphs properly
     .split('\n\n')
-    .map(para => para.trim())
-    .filter(para => para)
-    .map(para => {
+    .map((para) => para.trim())
+    .filter((para) => para)
+    .map((para) => {
       // Don't wrap headers, hrs, or pre blocks in p tags
       if (para.match(/^<(h[1-6]|hr|pre)/)) {
         return para;
@@ -137,21 +135,18 @@ function markdownToHtml(markdown: string): string {
 /**
  * Generate and download PDF using browser's print functionality
  */
-export function downloadAsPdf(
-  thread: ChatThread,
-  selectedModels: AiModel[]
-): void {
+export function downloadAsPdf(thread: ChatThread, selectedModels: AiModel[]): void {
   const markdown = formatChatForExport(thread, selectedModels);
   const html = markdownToHtml(markdown);
-  
+
   // Create a new window for PDF generation
-  const printWindow = window.open("", "_blank");
+  const printWindow = window.open('', '_blank');
   if (!printWindow) {
-    alert("Popup blocked. Please allow popups for this site to download PDF.");
+    alert('Popup blocked. Please allow popups for this site to download PDF.');
     return;
   }
 
-  const title = thread.title || "Untitled Chat";
+  const title = thread.title || 'Untitled Chat';
 
   printWindow.document.write(`
     <!DOCTYPE html>
@@ -285,7 +280,7 @@ export function downloadAsPdf(
   `);
 
   printWindow.document.close();
-  
+
   // Wait for content to load, then trigger print
   printWindow.onload = () => {
     setTimeout(() => {
@@ -298,13 +293,10 @@ export function downloadAsPdf(
 /**
  * Download chat thread as Markdown file
  */
-export function downloadAsMarkdown(
-  thread: ChatThread,
-  selectedModels: AiModel[]
-): void {
+export function downloadAsMarkdown(thread: ChatThread, selectedModels: AiModel[]): void {
   const markdown = formatChatForExport(thread, selectedModels);
-  const title = thread.title || "Untitled Chat";
-  const filename = `${title.replace(/[^a-z0-9]/gi, "_")}_${new Date().toISOString().split("T")[0]}.md`;
-  
+  const title = thread.title || 'Untitled Chat';
+  const filename = `${title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.md`;
+
   downloadTextFile(markdown, filename);
 }

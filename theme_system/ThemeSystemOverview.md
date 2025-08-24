@@ -14,17 +14,17 @@ A unified, extensible, and performant theming layer providing:
 
 ## 2. Core Concepts
 
-| Concept | Description | Source of Truth |
-|---------|-------------|-----------------|
-| ThemeConfig | Canonical theme state (mode, accent, font, background, badgePair, chatInputStyle) | `lib/themes.ts` |
-| Root Classes | Deterministic class list applied to `<html>` | `generateThemeClasses` |
-| CSS Variables | Stable contract consumed by components & utilities | `updateCSSVariables` |
-| Accent System | Palette + gradient per accent + derived interaction tiers | `ACCENT_COLORS` |
-| Background Styles | 2 consolidated variants mapping to classes | `BACKGROUND_STYLES` |
-| Badge Pair System | Dual (pro/free) color token sets -> badges & model chips | `BADGE_PAIRS`, `badgeSystem.ts` |
-| Persistence | LocalStorage load/save keyed by `ai-fiesta:theme` | `loadTheme`, `saveTheme` |
-| Non-blocking Fonts | Fire-and-forget Google Fonts loader | `loadGoogleFont` |
-| Contrast Helpers | WCAG ratio evaluation & dev logging | `contrastRatio`, `evaluateAccentContrast` |
+| Concept            | Description                                                                       | Source of Truth                           |
+| ------------------ | --------------------------------------------------------------------------------- | ----------------------------------------- |
+| ThemeConfig        | Canonical theme state (mode, accent, font, background, badgePair, chatInputStyle) | `lib/themes.ts`                           |
+| Root Classes       | Deterministic class list applied to `<html>`                                      | `generateThemeClasses`                    |
+| CSS Variables      | Stable contract consumed by components & utilities                                | `updateCSSVariables`                      |
+| Accent System      | Palette + gradient per accent + derived interaction tiers                         | `ACCENT_COLORS`                           |
+| Background Styles  | 2 consolidated variants mapping to classes                                        | `BACKGROUND_STYLES`                       |
+| Badge Pair System  | Dual (pro/free) color token sets -> badges & model chips                          | `BADGE_PAIRS`, `badgeSystem.ts`           |
+| Persistence        | LocalStorage load/save keyed by `ai-fiesta:theme`                                 | `loadTheme`, `saveTheme`                  |
+| Non-blocking Fonts | Fire-and-forget Google Fonts loader                                               | `loadGoogleFont`                          |
+| Contrast Helpers   | WCAG ratio evaluation & dev logging                                               | `contrastRatio`, `evaluateAccentContrast` |
 
 ## 3. Data Structures (Simplified)
 
@@ -115,13 +115,13 @@ Extended (internal but currently used):
 
 ## 8. Troubleshooting & Diagnostics
 
-| Symptom | Likely Cause | Check |
-|---------|--------------|-------|
-| Theme classes missing | Early access before init | Confirm `isInitialized` before relying on theme-dependent layout |
-| Font flash or fallback | Font still loading | Confirm network tab; ensure `googleFont` entry exists |
-| Accent contrast warning | New low-contrast accent | Adjust tone or darken/lighten `primary` color |
-| Background not changing | Class override or stale variable | Inspect `<html>` class list + `--background-pattern` value |
-| Persistent old theme | LocalStorage stale/corrupt | Clear `localStorage['ai-fiesta:theme']` |
+| Symptom                 | Likely Cause                     | Check                                                            |
+| ----------------------- | -------------------------------- | ---------------------------------------------------------------- |
+| Theme classes missing   | Early access before init         | Confirm `isInitialized` before relying on theme-dependent layout |
+| Font flash or fallback  | Font still loading               | Confirm network tab; ensure `googleFont` entry exists            |
+| Accent contrast warning | New low-contrast accent          | Adjust tone or darken/lighten `primary` color                    |
+| Background not changing | Class override or stale variable | Inspect `<html>` class list + `--background-pattern` value       |
+| Persistent old theme    | LocalStorage stale/corrupt       | Clear `localStorage['ai-fiesta:theme']`                          |
 
 Dev Helpers: `logThemeInfo(theme)`, `contrastRatio`, `evaluateAccentContrast`.
 
@@ -139,12 +139,12 @@ Dev Helpers: `logThemeInfo(theme)`, `contrastRatio`, `evaluateAccentContrast`.
 
 ## 11. Open Polish Tasks
 
-| Priority | Task | Rationale |
-|----------|------|-----------|
-| P1 | Chat input inline background cleanup | Purity & maintainability |
-| P1 | Snapshot test for `generateThemeClasses` | Prevent contract drift |
-| P2 | Document accent addition snippet (now integrated here) | Contributor clarity |
-| P2 | Consider surface/elevation tokens (`--surface-*`) | Future semantic layering |
+| Priority | Task                                                   | Rationale                |
+| -------- | ------------------------------------------------------ | ------------------------ |
+| P1       | Chat input inline background cleanup                   | Purity & maintainability |
+| P1       | Snapshot test for `generateThemeClasses`               | Prevent contract drift   |
+| P2       | Document accent addition snippet (now integrated here) | Contributor clarity      |
+| P2       | Consider surface/elevation tokens (`--surface-*`)      | Future semantic layering |
 
 ## 12. Future Enhancements (Optional)
 

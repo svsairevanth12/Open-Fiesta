@@ -9,6 +9,7 @@
 </video>
 
 <!-- Fallback link for renderers that don't support <video> -->
+
 [![Open-Fiesta](public/osfiesta.png)](public/OSFiesta.mp4)
 
 An open-source, multi-model AI chat playground built with Next.js App Router. Switch between providers and models, compare outputs side-by-side, and use optional web search and image attachments.
@@ -65,14 +66,13 @@ npm run dev
 # open http://localhost:3000
 ```
 
-
 ## Environment Variables
 
 Set only those you need; others can be provided per-request from the UI:
 
 - `OPENROUTER_API_KEY` — required for OpenRouter models.
 - `GEMINI_API_KEY` — required for Gemini models with images/web.
-- 
+-
 
 ## Docker Support
 
@@ -118,16 +118,13 @@ Open-Fiesta post-processes DeepSeek R1 outputs to remove reasoning tags and conv
 We welcome contributions of all kinds: bug fixes, features, docs, and examples.
 
 - **Set up**
-
   - Fork this repo and clone your fork.
   - Start the dev server with `npm run dev`.
 
 - **Branching**
-
   - Create a feature branch from `main`: `feat/<short-name>` or `fix/<short-name>`.
 
 - **Coding standards**
-
   - TypeScript, Next.js App Router.
   - Run linters and build locally:
     - `npm run lint`
@@ -135,23 +132,19 @@ We welcome contributions of all kinds: bug fixes, features, docs, and examples.
   - Keep changes focused and small. Prefer clear names and minimal dependencies.
 
 - **UI/UX**
-
   - Reuse components in `components/` where possible.
   - Keep props typed and avoid unnecessary state.
 
 - **APIs & models**
-
   - OpenRouter logic lives in `app/api/openrouter/`.
   - Gemini logic lives in `app/api/gemini/` and `app/api/gemini-pro/`.
   - If adding models/providers, update `lib/models.ts` or `lib/customModels.ts` and ensure the UI reflects new options.
 
 - **Docker changes**
-
   - When modifying dependencies, ensure both `Dockerfile` and `Dockerfile.dev` are updated if needed
   - Test both development and production Docker builds
 
 - **Commit & PR**
-
   - Write descriptive commits (imperative mood): `fix: …`, `feat: …`, `docs: …`.
   - Open a PR to `main` with:
     - What/why, screenshots if UI changes, and testing notes.

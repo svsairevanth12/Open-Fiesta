@@ -35,8 +35,8 @@ export type ApiKeys = {
   gemini?: string;
   openrouter?: string;
   'open-provider'?: string; // Optional API key for open-provider (currently free)
-  'unstable'?: string; // API key for unstable provider (inference.quran.lat)
-  'mistral'?: string; // API key for Mistral AI (api.mistral.ai)
+  unstable?: string; // API key for unstable provider (inference.quran.lat)
+  mistral?: string; // API key for Mistral AI (api.mistral.ai)
 };
 
 export type ChatThread = {

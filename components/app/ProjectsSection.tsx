@@ -1,9 +1,9 @@
-"use client";
-import { useState } from "react";
-import { Plus, Settings, Trash2 } from "lucide-react";
-import { Project } from "@/lib/projects";
-import ProjectModal from "@/components/modals/ProjectModal";
-import ConfirmDialog from "@/components/modals/ConfirmDialog";
+'use client';
+import { useState } from 'react';
+import { Plus, Settings, Trash2 } from 'lucide-react';
+import { Project } from '@/lib/projects';
+import ProjectModal from '@/components/modals/ProjectModal';
+import ConfirmDialog from '@/components/modals/ConfirmDialog';
 
 interface ProjectsSectionProps {
   projects: Project[];
@@ -88,13 +88,11 @@ export default function ProjectsSection({
                 className={`h-6 w-6 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none 
                   ${
                     isActive
-                      ? "bg-[var(--accent-interactive-primary)] ring-1 ring-[var(--accent-interactive-hover)] ring-offset-1 ring-offset-black text-white"
-                      : "bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white"
+                      ? 'bg-[var(--accent-interactive-primary)] ring-1 ring-[var(--accent-interactive-hover)] ring-offset-1 ring-offset-black text-white'
+                      : 'bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white'
                   }`}
               >
-                <span className="text-[10px] font-semibold leading-none">
-                  {initial}
-                </span>
+                <span className="text-[10px] font-semibold leading-none">{initial}</span>
               </button>
             );
           })}
@@ -126,9 +124,7 @@ export default function ProjectsSection({
       <div className="space-y-2">
         {/* Header with add button */}
         <div className="flex items-center justify-between">
-          <div className="text-xs uppercase tracking-wide opacity-60">
-            Projects
-          </div>
+          <div className="text-xs uppercase tracking-wide opacity-60">Projects</div>
           <button
             title="New Project"
             onClick={handleCreateNew}
@@ -139,16 +135,14 @@ export default function ProjectsSection({
         </div>
 
         {/* No projects message */}
-        {projects.length === 0 && (
-          <div className="text-xs opacity-60 py-2">No projects yet</div>
-        )}
+        {projects.length === 0 && <div className="text-xs opacity-60 py-2">No projects yet</div>}
 
         {/* None/Default option */}
         <div
           className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group cursor-pointer ${
             activeProjectId === null
-              ? "bg-white/15 border-white/20"
-              : "bg-white/5 border-white/10 hover:bg-white/10"
+              ? 'bg-white/15 border-white/20'
+              : 'bg-white/5 border-white/10 hover:bg-white/10'
           }`}
           onClick={() => onSelectProject(null)}
         >
@@ -166,8 +160,8 @@ export default function ProjectsSection({
               key={project.id}
               className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group ${
                 isActive
-                  ? "bg-white/15 border-white/20"
-                  : "bg-white/5 border-white/10 hover:bg-white/10"
+                  ? 'bg-white/15 border-white/20'
+                  : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
             >
               <button
@@ -177,12 +171,10 @@ export default function ProjectsSection({
               >
                 <div className="truncate font-medium">{project.name}</div>
                 {project.systemPrompt && (
-                  <div className="text-xs opacity-60 truncate">
-                    {project.systemPrompt}
-                  </div>
+                  <div className="text-xs opacity-60 truncate">{project.systemPrompt}</div>
                 )}
               </button>
-              
+
               {/* Action buttons */}
               <div className="flex gap-1 shrink-0">
                 <button
