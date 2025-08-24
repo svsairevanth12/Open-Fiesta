@@ -17,11 +17,12 @@ export async function POST(req: NextRequest) {
     // First, test basic connectivity to the Ollama instance
     let pingTimeoutId: NodeJS.Timeout | null = null;
     const pingController = new AbortController();
-    pingTimeoutId = setTimeout(() => pingController.abort(), 5000); // 5 second timeout for ping
+    pingTimeoutId = setTimeout(() => pingController.abort(), 15000); // 15 seconds for debugging
     
     try {
       let pingResponse;
       try {
+        console.log(`Testing connectivity to Ollama at: ${ollamaUrl}`);
         pingResponse = await fetch(`${ollamaUrl}/`, {
           method: 'GET',
           signal: pingController.signal,
@@ -30,18 +31,27 @@ export async function POST(req: NextRequest) {
         console.log(`Ollama ping response status: ${pingResponse.status}`);
       } catch (pingError) {
         if (pingTimeoutId) clearTimeout(pingTimeoutId);
-        console.log(`Ollama ping failed:`, pingError);
+        const err = pingError as Error;
+        if (err?.name === 'AbortError') {
+          if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama ping timed out');
+          return NextResponse.json({ 
+            ok: false, 
+            error: 'Cannot connect to Ollama instance', 
+            details: 'Connection timeout - Ollama instance not responding. Check network connectivity and Ollama configuration.'
+          }, { status: 504 });
+        }
+        console.log(`Ollama ping failed:`, err);
         return NextResponse.json({ 
           ok: false, 
           error: 'Cannot connect to Ollama instance', 
-          details: pingError instanceof Error ? pingError.message : 'Unknown connection error'
+          details: err instanceof Error ? err.message : 'Unknown connection error'
         }, { status: 200 });
       }
       
       // Query Ollama models endpoint to check if the model exists
       let timeoutId: NodeJS.Timeout | null = null;
       const controller = new AbortController();
-      timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds for debugging
       
       const res = await fetch(`${ollamaUrl}/api/tags`, {
         headers: {
@@ -120,16 +130,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(response);
     } catch (fetchError: unknown) {
       // Note: timeoutId is already cleared in the successful path above
-      const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown error';
-      console.log(`Fetch error: ${errorMessage}`);
-      
-      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+      const err = fetchError as Error;
+      if (err?.name === 'AbortError') {
         return NextResponse.json({ 
           ok: false, 
           error: 'Connection timeout - Ollama instance not responding', 
-          details: 'Request timed out after 10 seconds' 
-        }, { status: 200 });
+          details: 'Request timed out after 15 seconds. Check network connectivity and Ollama configuration.'
+        }, { status: 504 });
       }
+      
+      const errorMessage = err?.message || 'Unknown error';
+      console.log(`Fetch error: ${errorMessage}`);
       
       return NextResponse.json({ 
         ok: false, 

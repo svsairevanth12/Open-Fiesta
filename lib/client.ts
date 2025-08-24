@@ -80,7 +80,7 @@ export async function callMistral(args: {
   return res.json();
 }
 
-export async function callOllama(args: { apiKey?: string; model: string; messages: ChatMessage[] }) {
+export async function callOllama(args: { baseUrl?: string; model: string; messages: ChatMessage[] }) {
   const res = await fetch('/api/ollama', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

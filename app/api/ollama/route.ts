@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     console.log(`Ollama request body:`, JSON.stringify(requestBody, null, 2));
     
     const controller = new AbortController();
-    timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -47,7 +47,9 @@ export async function POST(req: NextRequest) {
       console.log(`Ollama error response:`, errorText);
       return new Response(JSON.stringify({ 
         error: `Ollama API error: ${response.status} ${response.statusText}`, 
-        details: errorText 
+        details: errorText,
+        provider: 'ollama',
+        code: response.status
       }), { status: response.status });
     }
 
@@ -69,8 +71,13 @@ export async function POST(req: NextRequest) {
     // Clear timeout if it exists
     if (timeoutId) clearTimeout(timeoutId);
     
-    const message = e instanceof Error ? e.message : 'Unknown error';
+    const err = e as Error;
+    if (err?.name === 'AbortError') {
+      if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama request timed out');
+      return new Response(JSON.stringify({ error: 'Ollama request timed out', provider: 'ollama', code: 504 }), { status: 504 });
+    }
+    const message = err?.message || 'Unknown error';
     console.log(`Ollama error:`, message);
-    return new Response(JSON.stringify({ error: message }), { status: 500 });
+    return new Response(JSON.stringify({ error: message, provider: 'ollama' }), { status: 500 });
   }
 }
