@@ -5,14 +5,14 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { slug, baseUrl, apiKey } = body;
+    const { slug, baseUrl } = body;
     
     if (!slug || typeof slug !== 'string') {
       return NextResponse.json({ ok: false, error: 'Missing model name' }, { status: 400 });
     }
 
     // For Ollama, we get the base URL from the request body (user settings) or environment or default to localhost
-    const ollamaUrl = baseUrl || apiKey || process.env.OLLAMA_URL || 'http://localhost:11434';
+    const ollamaUrl = baseUrl || process.env.OLLAMA_URL || 'http://localhost:11434';
 
     // First, test basic connectivity to the Ollama instance
     let pingTimeoutId: NodeJS.Timeout | null = null;

@@ -6,9 +6,9 @@ export async function POST(req: NextRequest) {
   let timeoutId: NodeJS.Timeout | null = null;
   
   try {
-    const { messages, model, baseUrl, apiKey } = await req.json();
+    const { messages, model, baseUrl } = await req.json();
     // For Ollama, we get the base URL from the request body (user settings) or environment or default to localhost
-    const ollamaUrl = baseUrl || apiKey || process.env.OLLAMA_URL || 'http://localhost:11434';
+    const ollamaUrl = baseUrl || process.env.OLLAMA_URL || 'http://localhost:11434';
     
     console.log(`Calling Ollama model: ${model} at ${ollamaUrl}`);
     
