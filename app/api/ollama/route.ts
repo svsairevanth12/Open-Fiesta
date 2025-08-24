@@ -64,6 +64,11 @@ export async function POST(req: NextRequest) {
 
     return Response.json({ text, raw: data });
   } catch (e: unknown) {
+    // Clear timeout if it exists
+    if (typeof clearTimeout !== 'undefined' && typeof timeoutId !== 'undefined') {
+      clearTimeout(timeoutId);
+    }
+    
     const message = e instanceof Error ? e.message : 'Unknown error';
     console.log(`Ollama error:`, message);
     return new Response(JSON.stringify({ error: message }), { status: 500 });

@@ -14,14 +14,11 @@ export async function POST(req: NextRequest) {
     // For Ollama, we get the base URL from the request body (user settings) or environment or default to localhost
     const ollamaUrl = ollamaUrlFromBody || process.env.OLLAMA_URL || 'http://localhost:11434';
 
+    // First, test basic connectivity to the Ollama instance
+    const pingController = new AbortController();
+    const pingTimeoutId = setTimeout(() => pingController.abort(), 5000); // 5 second timeout for ping
+    
     try {
-      // Log for debugging
-      console.log(`Validating Ollama model: ${slug} at ${ollamaUrl}`);
-      
-      // First, test basic connectivity to the Ollama instance
-      const pingController = new AbortController();
-      const pingTimeoutId = setTimeout(() => pingController.abort(), 5000); // 5 second timeout for ping
-      
       let pingResponse;
       try {
         pingResponse = await fetch(`${ollamaUrl}/`, {
@@ -120,7 +117,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(response);
     } catch (fetchError: unknown) {
-      clearTimeout(timeoutId);
+      // Note: timeoutId is already cleared in the successful path above
       const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown error';
       console.log(`Fetch error: ${errorMessage}`);
       
