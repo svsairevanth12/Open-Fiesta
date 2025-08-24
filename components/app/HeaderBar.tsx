@@ -80,9 +80,6 @@ export default function HeaderBar({
       <div className="flex items-center gap-2 z-10 ml-auto">
         <button
           onClick={() => onOpenModelsModal && onOpenModelsModal()}
-          className="inline-flex items-center gap-1.5 text-xs h-9 w-9 justify-center rounded-md
-            bg-gray-200 border border-gray-300 text-gray-800 hover:bg-gray-300
-            dark:bg-white/5 dark:border-white/15 dark:text-white dark:hover:bg-white/10"
           className="inline-flex items-center gap-1.5 text-xs h-9 w-9 justify-center rounded-md border border-black/15 dark:border-white/15 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 shadow accent-focus"
           title="Change models"
           aria-label="Change models"
