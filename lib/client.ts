@@ -80,6 +80,22 @@ export async function callMistral(args: {
   return res.json();
 }
 
+export async function callOllama(args: {
+  baseUrl?: string;
+  model: string;
+  messages: ChatMessage[];
+  signal?: AbortSignal;
+}) {
+  const { signal, ...body } = args;
+  const res = await fetch('/api/ollama', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  });
+  return res.json();
+}
+
 export type ORStreamHandlers = {
   onToken: (chunk: string) => void;
   onMeta?: (meta: { provider?: string; usedKeyType?: 'user' | 'shared' | 'none' }) => void;

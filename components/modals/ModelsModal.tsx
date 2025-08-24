@@ -61,8 +61,8 @@ export default function ModelsModal({
     return m.provider === 'open-provider' && m.free;
   };
   const isByok = (m: AiModel) => {
-    // OpenRouter, Gemini, and Mistral models require API keys (BYOK)
-    return m.provider === 'openrouter' || m.provider === 'gemini' || m.provider === 'mistral';
+    // OpenRouter, Gemini, Mistral, and Ollama models require configuration (BYOK)
+    return m.provider === 'openrouter' || m.provider === 'gemini' || m.provider === 'mistral' || m.provider === 'ollama';
   };
   const isUnc = (m: AiModel) =>
     /uncensored/i.test(m.label) ||
@@ -364,39 +364,14 @@ export default function ModelsModal({
         <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-white/10">
           {[
             { id: 'all', label: 'All Models', count: MODEL_CATALOG.length },
-            {
-              id: 'pro',
-              label: 'Pro Models',
-              count: MODEL_CATALOG.filter(
-                (m) => m.provider === 'unstable' || m.provider === 'mistral',
-              ).length,
-            },
-            {
-              id: 'gemini',
-              label: 'Gemini',
-              count: MODEL_CATALOG.filter((m) => m.provider === 'gemini').length,
-            },
-            {
-              id: 'openrouter',
-              label: 'OpenRouter',
-              count: MODEL_CATALOG.filter((m) => m.provider === 'openrouter').length,
-            },
-            {
-              id: 'open-provider',
-              label: 'Open Provider',
-              count: MODEL_CATALOG.filter((m) => m.provider === 'open-provider').length,
-            },
-            {
-              id: 'unstable',
-              label: 'Unstable',
-              count: MODEL_CATALOG.filter((m) => m.provider === 'unstable').length,
-            },
-            {
-              id: 'mistral',
-              label: 'Mistral',
-              count: MODEL_CATALOG.filter((m) => m.provider === 'mistral').length,
-            },
-          ].map((provider) => (
+            { id: 'pro', label: 'Pro Models', count: MODEL_CATALOG.filter(m => m.provider === 'unstable' || m.provider === 'mistral').length },
+            { id: 'gemini', label: 'Gemini', count: MODEL_CATALOG.filter(m => m.provider === 'gemini').length },
+            { id: 'openrouter', label: 'OpenRouter', count: MODEL_CATALOG.filter(m => m.provider === 'openrouter').length },
+            { id: 'open-provider', label: 'Open Provider', count: MODEL_CATALOG.filter(m => m.provider === 'open-provider').length },
+            { id: 'unstable', label: 'Unstable', count: MODEL_CATALOG.filter(m => m.provider === 'unstable').length },
+            { id: 'mistral', label: 'Mistral', count: MODEL_CATALOG.filter(m => m.provider === 'mistral').length },
+            { id: 'ollama', label: 'Ollama', count: MODEL_CATALOG.filter(m => m.provider === 'ollama').length },
+          ].map(provider => (
             <button
               key={provider.id}
               onClick={() => setActiveProvider(provider.id)}

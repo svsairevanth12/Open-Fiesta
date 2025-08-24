@@ -1,11 +1,4 @@
-import {
-  callGemini,
-  callOpenRouter,
-  callOpenProvider,
-  callUnstable,
-  callMistral,
-  streamOpenRouter,
-} from './client';
+import { callGemini, callOpenRouter, callOpenProvider, callUnstable, callMistral, callOllama, streamOpenRouter } from './client';
 import { safeUUID } from './uuid';
 import type { AiModel, ApiKeys, ChatMessage, ChatThread } from './types';
 import type { Project } from './projects';
@@ -428,87 +421,93 @@ export function createChatActions({
               ),
             );
 
-            const res = await callMistral({
-              apiKey: keys['mistral'] || undefined,
-              model: m.model,
-              messages: prepareMessages(nextHistory),
-              imageDataUrl,
-            });
-            const full = String(extractText(res) || '').trim();
-            if (!full) {
-              setThreads((prev) =>
-                prev.map((t) => {
-                  if (t.id !== thread.id) return t;
-                  const msgs = (t.messages ?? []).map((msg) =>
-                    msg.ts === placeholderTs && msg.modelId === m.id
-                      ? ({
-                          ...msg,
-                          content: 'No response',
-                          provider: (res as any)?.provider,
-                          usedKeyType: (res as any)?.usedKeyType,
-                          tokens: (res as any)?.tokens,
-                        } as ChatMessage)
-                      : msg,
-                  );
-                  return { ...t, messages: msgs };
-                }),
-              );
-            } else {
-              // typewriter effect for mistral models
-              let i = 0;
-              const step = Math.max(2, Math.ceil(full.length / 80));
-              const timer = window.setInterval(() => {
-                i = Math.min(full.length, i + step);
-                const chunk = full.slice(0, i);
-                setThreads((prev) =>
-                  prev.map((t) => {
-                    if (t.id !== thread.id) return t;
-                    const msgs = (t.messages ?? []).map((msg) =>
-                      msg.ts === placeholderTs && msg.modelId === m.id
-                        ? { ...msg, content: chunk }
-                        : msg,
-                    );
-                    return { ...t, messages: msgs };
-                  }),
-                );
-                if (i >= full.length) {
-                  window.clearInterval(timer);
-                  // attach provider meta and token info once complete
-                  setThreads((prev) =>
-                    prev.map((t) => {
-                      if (t.id !== thread.id) return t;
-                      const msgs = (t.messages ?? []).map((msg) =>
-                        msg.ts === placeholderTs && msg.modelId === m.id
-                          ? ({
-                              ...msg,
-                              provider: (res as any)?.provider,
-                              usedKeyType: (res as any)?.usedKeyType,
-                              tokens: (res as any)?.tokens,
-                            } as ChatMessage)
-                          : msg,
-                      );
-                      return { ...t, messages: msgs };
-                    }),
-                  );
-                }
-              }, 24);
-            }
+          const res = await callMistral({ apiKey: keys['mistral'] || undefined, model: m.model, messages: prepareMessages(nextHistory), imageDataUrl });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...t, messages: msgs };
+            }));
           } else {
-            const placeholderTs = Date.now();
-            const initialText = 'Thinking…';
-            const placeholder: ChatMessage = {
-              role: 'assistant',
-              content: initialText,
-              modelId: m.id,
-              ts: placeholderTs,
-            };
-            setThreads((prev) =>
-              prev.map((t) =>
-                t.id === thread.id
-                  ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] }
-                  : t,
-              ),
-            );
+            // typewriter effect for mistral models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...t, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(t => {
+                  if (t.id !== thread.id) return t;
+                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...t, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'ollama') {
+          // create placeholder for typing animation
+          const placeholderTs = Date.now();
+          const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
+          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
+
+          const res = await callOllama({ baseUrl: keys['ollama'] || undefined, model: m.model, messages: prepareMessages(nextHistory), signal: controller.signal });
+          const full = String(extractText(res) || '').trim();
+          // Check for empty response or literal "No response"
+          if (!full || full === 'No response') {
+            setThreads(prev => prev.map(t => {
+              if (t.id !== thread.id) return t;
+              const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...t, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for ollama models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(t => {
+                if (t.id !== thread.id) return t;
+                const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...t, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(t => {
+                  if (t.id !== thread.id) return t;
+                  const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...t, messages: msgs };
+                }));
+              }
+            }, 24);
+            
+            // Clear interval on abort to avoid leaks
+            controller.signal.addEventListener('abort', () => {
+              window.clearInterval(timer);
+            });
+          }
+        } else {
+          const placeholderTs = Date.now();
+          const initialText = 'Thinking…';
+          const placeholder: ChatMessage = { role: 'assistant', content: initialText, modelId: m.id, ts: placeholderTs };
+          setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
             let buffer = '';
             let flushTimer: number | null = null;
@@ -708,393 +707,256 @@ export function createChatActions({
 
     const baseHistory = updated.slice(0, userIdx + 1);
 
-    setLoadingIdsInit(selectedModels.map((m) => m.id));
-    Promise.allSettled(
-      selectedModels.map(async (m) => {
-        const controller = new AbortController();
-        abortControllers[m.id] = controller;
-        const ph = placeholders.find((p) => p.model.id === m.id);
-        if (!ph) {
-          setLoadingIds((prev) => prev.filter((x) => x !== m.id));
-          return;
-        }
-        const placeholderTs = ph.ts;
-        try {
-          if (m.provider === 'gemini') {
-            const res = await callGemini({
-              apiKey: keys.gemini || undefined,
-              model: m.model,
-              messages: baseHistory,
-              signal: controller.signal,
-            });
-            const full = String(extractText(res) || '').trim();
-            if (!full) {
-              setThreads((prev) =>
-                prev.map((tt) => {
-                  if (tt.id !== t.id) return tt;
-                  const msgs = (tt.messages ?? []).map((msg) =>
-                    msg.ts === placeholderTs && msg.modelId === m.id
-                      ? { ...msg, content: 'No response' }
-                      : msg,
-                  );
-                  return { ...tt, messages: msgs };
-                }),
-              );
-            } else {
-              // typewriter effect
-              let i = 0;
-              const step = Math.max(2, Math.ceil(full.length / 80));
-              const timer = window.setInterval(() => {
-                i = Math.min(full.length, i + step);
-                const chunk = full.slice(0, i);
-                setThreads((prev) =>
-                  prev.map((tt) => {
-                    if (tt.id !== t.id) return tt;
-                    const msgs = (tt.messages ?? []).map((msg) =>
-                      msg.ts === placeholderTs && msg.modelId === m.id
-                        ? { ...msg, content: chunk }
-                        : msg,
-                    );
-                    return { ...tt, messages: msgs };
-                  }),
-                );
-                if (i >= full.length) window.clearInterval(timer);
-              }, 24);
-            }
-          } else if (m.provider === 'open-provider') {
-            const res = await callOpenProvider({
-              apiKey: keys['open-provider'] || undefined,
-              model: m.model,
-              messages: baseHistory,
-              voice: selectedVoice,
-            });
-            const full = String(extractText(res) || '').trim();
-            if (!full) {
-              setThreads((prev) =>
-                prev.map((tt) => {
-                  if (tt.id !== t.id) return tt;
-                  const msgs = (tt.messages ?? []).map((msg) =>
-                    msg.ts === placeholderTs && msg.modelId === m.id
-                      ? ({
-                          ...msg,
-                          content: 'No response',
-                          provider: (res as any)?.provider,
-                          usedKeyType: (res as any)?.usedKeyType,
-                          tokens: (res as any)?.tokens,
-                        } as ChatMessage)
-                      : msg,
-                  );
-                  return { ...tt, messages: msgs };
-                }),
-              );
-            } else {
-              // typewriter effect for all models (image models already have markdown in the response)
-              let i = 0;
-              const step = Math.max(2, Math.ceil(full.length / 80));
-              const timer = window.setInterval(() => {
-                i = Math.min(full.length, i + step);
-                const chunk = full.slice(0, i);
-                setThreads((prev) =>
-                  prev.map((tt) => {
-                    if (tt.id !== t.id) return tt;
-                    const msgs = (tt.messages ?? []).map((msg) =>
-                      msg.ts === placeholderTs && msg.modelId === m.id
-                        ? { ...msg, content: chunk }
-                        : msg,
-                    );
-                    return { ...tt, messages: msgs };
-                  }),
-                );
-                if (i >= full.length) {
-                  window.clearInterval(timer);
-                  // attach provider meta and token info once complete
-                  setThreads((prev) =>
-                    prev.map((tt) => {
-                      if (tt.id !== t.id) return tt;
-                      const msgs = (tt.messages ?? []).map((msg) =>
-                        msg.ts === placeholderTs && msg.modelId === m.id
-                          ? ({
-                              ...msg,
-                              provider: (res as any)?.provider,
-                              usedKeyType: (res as any)?.usedKeyType,
-                              tokens: (res as any)?.tokens,
-                            } as ChatMessage)
-                          : msg,
-                      );
-                      return { ...tt, messages: msgs };
-                    }),
-                  );
-                }
-              }, 24);
-            }
-          } else if (m.provider === 'unstable') {
-            const res = await callUnstable({
-              apiKey: keys['unstable'] || undefined,
-              model: m.model,
-              messages: baseHistory,
-            });
-            if (res && typeof (res as any)?.error === 'string') {
-              const errText = String((res as any).error).trim();
-              setThreads((prev) =>
-                prev.map((tt) => {
-                  if (tt.id !== t.id) return tt;
-                  const msgs = (tt.messages ?? []).map((msg) =>
-                    msg.ts === placeholderTs && msg.modelId === m.id
-                      ? ({
-                          ...msg,
-                          content: errText,
-                          provider: (res as any)?.provider,
-                          usedKeyType: (res as any)?.usedKeyType,
-                          code: (res as any)?.code,
-                        } as ChatMessage)
-                      : msg,
-                  );
-                  return { ...tt, messages: msgs };
-                }),
-              );
-              return;
-            }
-            const full = String(extractText(res) || '').trim();
-            if (!full) {
-              setThreads((prev) =>
-                prev.map((tt) => {
-                  if (tt.id !== t.id) return tt;
-                  const msgs = (tt.messages ?? []).map((msg) =>
-                    msg.ts === placeholderTs && msg.modelId === m.id
-                      ? ({
-                          ...msg,
-                          content: 'No response',
-                          provider: (res as any)?.provider,
-                          usedKeyType: (res as any)?.usedKeyType,
-                          tokens: (res as any)?.tokens,
-                        } as ChatMessage)
-                      : msg,
-                  );
-                  return { ...tt, messages: msgs };
-                }),
-              );
-            } else {
-              // typewriter effect for unstable models
-              let i = 0;
-              const step = Math.max(2, Math.ceil(full.length / 80));
-              const timer = window.setInterval(() => {
-                i = Math.min(full.length, i + step);
-                const chunk = full.slice(0, i);
-                setThreads((prev) =>
-                  prev.map((tt) => {
-                    if (tt.id !== t.id) return tt;
-                    const msgs = (tt.messages ?? []).map((msg) =>
-                      msg.ts === placeholderTs && msg.modelId === m.id
-                        ? { ...msg, content: chunk }
-                        : msg,
-                    );
-                    return { ...tt, messages: msgs };
-                  }),
-                );
-                if (i >= full.length) {
-                  window.clearInterval(timer);
-                  // attach provider meta and token info once complete
-                  setThreads((prev) =>
-                    prev.map((tt) => {
-                      if (tt.id !== t.id) return tt;
-                      const msgs = (tt.messages ?? []).map((msg) =>
-                        msg.ts === placeholderTs && msg.modelId === m.id
-                          ? ({
-                              ...msg,
-                              provider: (res as any)?.provider,
-                              usedKeyType: (res as any)?.usedKeyType,
-                              tokens: (res as any)?.tokens,
-                            } as ChatMessage)
-                          : msg,
-                      );
-                      return { ...tt, messages: msgs };
-                    }),
-                  );
-                }
-              }, 24);
-            }
-          } else if (m.provider === 'mistral') {
-            const res = await callMistral({
-              apiKey: keys['mistral'] || undefined,
-              model: m.model,
-              messages: baseHistory,
-            });
-            const full = String(extractText(res) || '').trim();
-            if (!full) {
-              setThreads((prev) =>
-                prev.map((tt) => {
-                  if (tt.id !== t.id) return tt;
-                  const msgs = (tt.messages ?? []).map((msg) =>
-                    msg.ts === placeholderTs && msg.modelId === m.id
-                      ? ({
-                          ...msg,
-                          content: 'No response',
-                          provider: (res as any)?.provider,
-                          usedKeyType: (res as any)?.usedKeyType,
-                          tokens: (res as any)?.tokens,
-                        } as ChatMessage)
-                      : msg,
-                  );
-                  return { ...tt, messages: msgs };
-                }),
-              );
-            } else {
-              // typewriter effect for mistral models
-              let i = 0;
-              const step = Math.max(2, Math.ceil(full.length / 80));
-              const timer = window.setInterval(() => {
-                i = Math.min(full.length, i + step);
-                const chunk = full.slice(0, i);
-                setThreads((prev) =>
-                  prev.map((tt) => {
-                    if (tt.id !== t.id) return tt;
-                    const msgs = (tt.messages ?? []).map((msg) =>
-                      msg.ts === placeholderTs && msg.modelId === m.id
-                        ? { ...msg, content: chunk }
-                        : msg,
-                    );
-                    return { ...tt, messages: msgs };
-                  }),
-                );
-                if (i >= full.length) {
-                  window.clearInterval(timer);
-                  // attach provider meta and token info once complete
-                  setThreads((prev) =>
-                    prev.map((tt) => {
-                      if (tt.id !== t.id) return tt;
-                      const msgs = (tt.messages ?? []).map((msg) =>
-                        msg.ts === placeholderTs && msg.modelId === m.id
-                          ? ({
-                              ...msg,
-                              provider: (res as any)?.provider,
-                              usedKeyType: (res as any)?.usedKeyType,
-                              tokens: (res as any)?.tokens,
-                            } as ChatMessage)
-                          : msg,
-                      );
-                      return { ...tt, messages: msgs };
-                    }),
-                  );
-                }
-              }, 24);
-            }
+    setLoadingIdsInit(selectedModels.map(m => m.id));
+    Promise.allSettled(selectedModels.map(async (m) => {
+      const controller = new AbortController();
+      abortControllers[m.id] = controller;
+      const ph = placeholders.find(p => p.model.id === m.id);
+      if (!ph) { setLoadingIds(prev => prev.filter(x => x !== m.id)); return; }
+      const placeholderTs = ph.ts;
+      try {
+        if (m.provider === 'gemini') {
+          const res = await callGemini({ apiKey: keys.gemini || undefined, model: m.model, messages: baseHistory, signal: controller.signal });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: 'No response' } : msg);
+              return { ...tt, messages: msgs };
+            }));
           } else {
-            let buffer = '';
-            let flushTimer: number | null = null;
-            let gotAny = false;
-            const flush = () => {
-              if (!buffer) return;
-              const chunk = buffer;
-              buffer = '';
-              setThreads((prev) =>
-                prev.map((tt) => {
-                  if (tt.id !== t.id) return tt;
-                  const msgs = (tt.messages ?? []).map((msg) => {
-                    if (!(msg.ts === placeholderTs && msg.modelId === m.id)) return msg;
-                    const cur = msg.content || '';
-                    const next = cur === 'Thinking…' ? chunk : cur + chunk;
-                    return { ...msg, content: next };
-                  });
-                  return { ...tt, messages: msgs };
-                }),
-              );
-            };
-            await streamOpenRouter(
-              {
-                apiKey: keys.openrouter || undefined,
-                model: m.model,
-                messages: baseHistory,
-                signal: controller.signal,
-              },
-              {
-                onToken: (delta) => {
-                  gotAny = true;
-                  buffer += delta;
-                  if (flushTimer == null)
-                    flushTimer = window.setTimeout(() => {
-                      flushTimer = null;
-                      flush();
-                    }, 24);
-                },
-                onMeta: (meta) => {
-                  setThreads((prev) =>
-                    prev.map((tt) => {
-                      if (tt.id !== t.id) return tt;
-                      const msgs = (tt.messages ?? []).map((msg) =>
-                        msg.ts === placeholderTs && msg.modelId === m.id
-                          ? ({
-                              ...msg,
-                              provider: meta.provider,
-                              usedKeyType: meta.usedKeyType,
-                            } as ChatMessage)
-                          : msg,
-                      );
-                      return { ...tt, messages: msgs };
-                    }),
-                  );
-                },
-                onError: (err) => {
-                  if (flushTimer != null) {
-                    window.clearTimeout(flushTimer);
-                    flushTimer = null;
-                  }
-                  const text = err.error || 'Error';
-                  setThreads((prev) =>
-                    prev.map((tt) => {
-                      if (tt.id !== t.id) return tt;
-                      const msgs = (tt.messages ?? []).map((msg) =>
-                        msg.ts === placeholderTs && msg.modelId === m.id
-                          ? ({
-                              ...msg,
-                              content: text,
-                              code: err.code,
-                              provider: err.provider,
-                              usedKeyType: err.usedKeyType,
-                            } as ChatMessage)
-                          : msg,
-                      );
-                      return { ...tt, messages: msgs };
-                    }),
-                  );
-                },
-                onDone: async () => {
-                  if (flushTimer != null) {
-                    window.clearTimeout(flushTimer);
-                    flushTimer = null;
-                  }
-                  flush();
-                  if (!gotAny) {
-                    try {
-                      const res = await callOpenRouter({
-                        apiKey: keys.openrouter || undefined,
-                        model: m.model,
-                        messages: baseHistory,
-                        signal: controller.signal,
-                      });
-                      const text = extractText(res);
-                      setThreads((prev) =>
-                        prev.map((tt) => {
-                          if (tt.id !== t.id) return tt;
-                          const msgs = (tt.messages ?? []).map((msg) =>
-                            msg.ts === placeholderTs && msg.modelId === m.id
-                              ? { ...msg, content: String(text).trim() }
-                              : msg,
-                          );
-                          return { ...tt, messages: msgs };
-                        }),
-                      );
-                    } catch {}
-                  }
-                },
-              },
-            );
+            // typewriter effect
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) window.clearInterval(timer);
+            }, 24);
           }
-        } finally {
-          delete abortControllers[m.id];
-          setLoadingIds((prev) => prev.filter((x) => x !== m.id));
+        } else if (m.provider === 'open-provider') {
+          const res = await callOpenProvider({ apiKey: keys['open-provider'] || undefined, model: m.model, messages: baseHistory, voice: selectedVoice });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for all models (image models already have markdown in the response)
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'unstable') {
+          const res = await callUnstable({ apiKey: keys['unstable'] || undefined, model: m.model, messages: baseHistory });
+          if (res && typeof (res as any)?.error === 'string') {
+            const errText = String((res as any).error).trim();
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: errText, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, code: (res as any)?.code } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+            return;
+          }
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for unstable models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'mistral') {
+          const res = await callMistral({ apiKey: keys['mistral'] || undefined, model: m.model, messages: baseHistory });
+          const full = String(extractText(res) || '').trim();
+          if (!full) {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for mistral models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else if (m.provider === 'ollama') {
+          const res = await callOllama({ baseUrl: keys['ollama'] || undefined, model: m.model, messages: baseHistory });
+          const full = String(extractText(res) || '').trim();
+          // Check for empty response or literal "No response"
+          if (!full || full === 'No response') {
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                : msg);
+              return { ...tt, messages: msgs };
+            }));
+          } else {
+            // typewriter effect for ollama models
+            let i = 0;
+            const step = Math.max(2, Math.ceil(full.length / 80));
+            const timer = window.setInterval(() => {
+              i = Math.min(full.length, i + step);
+              const chunk = full.slice(0, i);
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: chunk } : msg);
+                return { ...tt, messages: msgs };
+              }));
+              if (i >= full.length) {
+                window.clearInterval(timer);
+                // attach provider meta and token info once complete
+                setThreads(prev => prev.map(tt => {
+                  if (tt.id !== t.id) return tt;
+                  const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
+                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    : msg);
+                  return { ...tt, messages: msgs };
+                }));
+              }
+            }, 24);
+          }
+        } else {
+          let buffer = '';
+          let flushTimer: number | null = null;
+          let gotAny = false;
+          const flush = () => {
+            if (!buffer) return;
+            const chunk = buffer; buffer = '';
+            setThreads(prev => prev.map(tt => {
+              if (tt.id !== t.id) return tt;
+              const msgs = (tt.messages ?? []).map(msg => {
+                if (!(msg.ts === placeholderTs && msg.modelId === m.id)) return msg;
+                const cur = msg.content || '';
+                const next = cur === 'Thinking…' ? chunk : cur + chunk;
+                return { ...msg, content: next };
+              });
+              return { ...tt, messages: msgs };
+            }));
+          };
+          await streamOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory, signal: controller.signal }, {
+            onToken: (delta) => {
+              gotAny = true;
+              buffer += delta;
+              if (flushTimer == null) flushTimer = window.setTimeout(() => { flushTimer = null; flush(); }, 24);
+            },
+            onMeta: (meta) => {
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, provider: meta.provider, usedKeyType: meta.usedKeyType } as ChatMessage : msg);
+                return { ...tt, messages: msgs };
+              }));
+            },
+            onError: (err) => {
+              if (flushTimer != null) { window.clearTimeout(flushTimer); flushTimer = null; }
+              const text = err.error || 'Error';
+              setThreads(prev => prev.map(tt => {
+                if (tt.id !== t.id) return tt;
+                const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: text, code: err.code, provider: err.provider, usedKeyType: err.usedKeyType } as ChatMessage : msg);
+                return { ...tt, messages: msgs };
+              }));
+            },
+            onDone: async () => {
+              if (flushTimer != null) { window.clearTimeout(flushTimer); flushTimer = null; }
+              flush();
+              if (!gotAny) {
+                try {
+                  const res = await callOpenRouter({ apiKey: keys.openrouter || undefined, model: m.model, messages: baseHistory, signal: controller.signal });
+                  const text = extractText(res);
+                  setThreads(prev => prev.map(tt => {
+                    if (tt.id !== t.id) return tt;
+                    const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id) ? { ...msg, content: String(text).trim() } : msg);
+                    return { ...tt, messages: msgs };
+                  }));
+                } catch {}
+              }
+            }
+          });
         }
-      }),
-    );
+      } finally {
+        delete abortControllers[m.id];
+        setLoadingIds(prev => prev.filter(x => x !== m.id));
+      }
+    }));
   }
 
   function onDeleteUser(turnIndex: number) {

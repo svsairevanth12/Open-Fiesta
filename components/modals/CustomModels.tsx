@@ -62,6 +62,49 @@ export default function CustomModels({ compact }: CustomModelsProps) {
       setErr('Enter a Model ID to validate.');
       return;
     }
+
+    // Check if it's an Ollama model (no slash in the name)
+    if (!s.includes('/')) {
+      // For Ollama models, validate against the Ollama instance
+      try {
+        setValidating(true);
+        const res = await fetch("/api/ollama/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug: s, apiKey: keys?.ollama }),
+        });
+        const data = await res.json();
+        if (!data?.ok) {
+          const errorMsg = `Validation error${data?.status ? ` (status ${data.status})` : ""}${data?.details ? `: ${data.details}` : ""}`;
+          setValidMsg(errorMsg);
+          setValidState("error");
+          return;
+        }
+        if (data.exists) {
+          setValidMsg("Ollama model found.");
+          setValidState("ok");
+        } else {
+          let message = "Ollama model not found. Make sure this model is available in your Ollama instance.";
+          if (data.availableModels && data.availableModels.length > 0) {
+            message += ` Available models: ${data.availableModels.slice(0, 5).join(", ")}`;
+            if (data.availableModels.length > 5) {
+              message += ` and ${data.availableModels.length - 5} more`;
+            }
+          }
+          setValidMsg(message);
+          setValidState("fail");
+        }
+      } catch (e: unknown) {
+        const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+        setValidMsg(`Could not validate Ollama model: ${errorMsg}`);
+        setValidState("error");
+      } finally {
+        setValidating(false);
+      }
+      return;
+    }
+
+    // For OpenRouter models, use the existing validation
     try {
       setValidating(true);
       const res = await fetch('/api/openrouter/validate', {
@@ -71,8 +114,9 @@ export default function CustomModels({ compact }: CustomModelsProps) {
       });
       const data = await res.json();
       if (!data?.ok) {
-        setValidMsg(`Validation error${data?.status ? ` (status ${data.status})` : ''}.`);
-        setValidState('error');
+        const errorMsg = `Validation error${data?.status ? ` (status ${data.status})` : ""}`;
+        setValidMsg(errorMsg);
+        setValidState("error");
         return;
       }
       if (data.exists) {
@@ -82,9 +126,10 @@ export default function CustomModels({ compact }: CustomModelsProps) {
         setValidMsg('Model not found. Check the exact slug on OpenRouter.');
         setValidState('fail');
       }
-    } catch {
-      setValidMsg('Could not validate right now.');
-      setValidState('error');
+    } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+      setValidMsg(`Could not validate: ${errorMsg}`);
+      setValidState("error");
     } finally {
       setValidating(false);
     }
@@ -116,11 +161,11 @@ export default function CustomModels({ compact }: CustomModelsProps) {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-base md:text-lg lg:text-xl font-semibold tracking-wide">
-                    Add custom OpenRouter models
+                    Add custom models
                   </h3>
                   <p className="text-xs md:text-sm text-zinc-400 mt-1">
-                    Add any model slug from OpenRouter. Selection is still capped at 5 in the
-                    picker.
+                    Add any model from OpenRouter or Ollama. Selection is still
+                    capped at 5 in the picker.
                   </p>
                 </div>
                 <button
@@ -150,7 +195,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
                       setValidState(null);
                       setValidMsg(null);
                     }}
-                    placeholder="provider/model:variant (e.g., deepseek/deepseek-r1:free)"
+                    placeholder="provider/model:variant (e.g., deepseek/deepseek-r1:free) or Ollama model name (e.g., llama3)"
                     className="w-full bg-black/40 border border-white/10 rounded-md px-3.5 py-2.5 text-sm md:text-base focus:outline-none focus:ring-1 focus:ring-white/30"
                   />
                 </div>

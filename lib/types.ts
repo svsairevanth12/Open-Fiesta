@@ -24,7 +24,7 @@ export type ChatMessage = {
 export type AiModel = {
   id: string; // unique key in UI
   label: string; // display name
-  provider: 'gemini' | 'openrouter' | 'open-provider' | 'unstable' | 'mistral';
+  provider: 'gemini' | 'openrouter' | 'open-provider' | 'unstable' | 'mistral' | 'ollama';
   model: string; // provider-specific model id
   free?: boolean;
   good?: boolean; // highlight as recommended
@@ -35,8 +35,10 @@ export type ApiKeys = {
   gemini?: string;
   openrouter?: string;
   'open-provider'?: string; // Optional API key for open-provider (currently free)
-  unstable?: string; // API key for unstable provider (inference.quran.lat)
-  mistral?: string; // API key for Mistral AI (api.mistral.ai)
+  'unstable'?: string; // API key for unstable provider (inference.quran.lat)
+  'mistral'?: string; // API key for Mistral AI (api.mistral.ai)
+  'ollama'?: string; // Base URL for Ollama API
+  'ollamaModel'?: string; // Model name for Ollama
 };
 
 export type ChatThread = {
