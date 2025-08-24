@@ -28,9 +28,11 @@ interface HealthCheckResponse {
   };
 }
 
-async function checkRedisConnection(): Promise<{ status: 'ok' | 'error'; connection?: string }> {
-  if (!process.env.REDIS_ENABLED || process.env.REDIS_ENABLED !== 'true') {
-    return { status: 'ok' };
+async function checkRedisConnection(): Promise<{ enabled: boolean; status: 'ok' | 'error'; connection?: string }> {
+  const enabled = process.env.REDIS_ENABLED === 'true';
+  
+  if (!enabled) {
+    return { enabled, status: 'ok' };
   }
 
   try {
@@ -38,15 +40,16 @@ async function checkRedisConnection(): Promise<{ status: 'ok' | 'error'; connect
     // For now, we'll simulate based on environment variables
     const redisUrl = process.env.REDIS_URL;
     if (!redisUrl) {
-      return { status: 'error' };
+      return { enabled, status: 'error' };
     }
     
     return { 
+      enabled,
       status: 'ok',
       connection: redisUrl.replace(/\/\/.*@/, '//***@') // Hide credentials
     };
   } catch (error) {
-    return { status: 'error' };
+    return { enabled, status: 'error' };
   }
 }
 

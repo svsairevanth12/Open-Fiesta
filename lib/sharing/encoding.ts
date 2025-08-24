@@ -55,9 +55,9 @@ export function decodeShareData(encoded: string): SharedChatData | null {
     // Validate the decoded data structure
     if (!isValidSharedChatData(data)) {
       console.warn('Invalid shared chat data structure', {
-        hasTitle: typeof data?.title === 'string',
-        hasMessages: Array.isArray(data?.messages),
-        version: data?.version
+        hasTitle: typeof (data as any)?.title === 'string',
+        hasMessages: Array.isArray((data as any)?.messages),
+        version: (data as any)?.version
       });
       return null;
     }

@@ -43,8 +43,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
               background: "#10b981",
               color: "#fff",
             },
-            role: "status",
-            "aria-live": "polite" as any,
           });
         } else {
           // Show manual copy fallback
@@ -55,8 +53,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
               background: "#f59e0b",
               color: "#fff",
             },
-            role: "alert",
-            "aria-live": "assertive" as any,
           });
         }
       } else {
@@ -66,8 +62,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
             background: "#ef4444",
             color: "#fff",
           },
-          role: "alert",
-          "aria-live": "assertive" as any,
         });
         
         // Log error for debugging (but don't use console.error to avoid the hydration error)
@@ -80,8 +74,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
           background: "#ef4444",
           color: "#fff",
         },
-        role: "alert",
-        "aria-live": "assertive" as any,
       });
       
       // Log error for debugging (but don't use console.error to avoid the hydration error)
@@ -108,8 +100,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
             background: "#10b981",
             color: "#fff",
           },
-          role: "status",
-          "aria-live": "polite" as any,
         });
       } else {
         // Fallback to execCommand
@@ -121,8 +111,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
               background: "#10b981",
               color: "#fff",
             },
-            role: "status",
-            "aria-live": "polite" as any,
           });
         } else {
           toast.info("Please manually copy the selected text", {
@@ -130,8 +118,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
               background: "#3b82f6",
               color: "#fff",
             },
-            role: "status",
-            "aria-live": "polite" as any,
           });
         }
       }
@@ -142,8 +128,6 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
           background: "#3b82f6",
           color: "#fff",
         },
-        role: "status",
-        "aria-live": "polite" as any,
       });
     }
     
