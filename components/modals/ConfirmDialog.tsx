@@ -1,6 +1,6 @@
-"use client";
-import { X } from "lucide-react";
-import React from "react";
+'use client';
+import { X } from 'lucide-react';
+import React from 'react';
 
 export type ConfirmDialogProps = {
   open: boolean;
@@ -14,10 +14,10 @@ export type ConfirmDialogProps = {
 
 export default function ConfirmDialog({
   open,
-  title = "Are you sure?",
-  message = "This action cannot be undone.",
-  confirmText = "Delete",
-  cancelText = "Cancel",
+  title = 'Are you sure?',
+  message = 'This action cannot be undone.',
+  confirmText = 'Delete',
+  cancelText = 'Cancel',
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -25,10 +25,7 @@ export default function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onCancel}
-      />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative w-full max-w-sm mx-3 rounded-2xl border border-white/10 bg-zinc-900/90 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-base font-semibold tracking-wide">{title}</h3>

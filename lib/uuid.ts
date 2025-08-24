@@ -4,7 +4,11 @@ export function safeUUID(): string {
   const g = globalThis as unknown as { crypto?: { randomUUID?: () => string } };
   const rnd = g.crypto?.randomUUID;
   if (typeof rnd === 'function') {
-    try { return rnd(); } catch { /* ignore and fall through */ }
+    try {
+      return rnd();
+    } catch {
+      /* ignore and fall through */
+    }
   }
   // Fallback (not cryptographically strong)
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {

@@ -12,29 +12,47 @@ function getTTSPrefix(text: string): string {
   const lowerText = text.toLowerCase().trim();
 
   // For questions
-  if (lowerText.includes('?') || lowerText.startsWith('what') || lowerText.startsWith('how') ||
-      lowerText.startsWith('why') || lowerText.startsWith('when') || lowerText.startsWith('where') ||
-      lowerText.startsWith('who') || lowerText.startsWith('which') || lowerText.startsWith('can you')) {
-    return 'Here\'s what you asked:';
+  if (
+    lowerText.includes('?') ||
+    lowerText.startsWith('what') ||
+    lowerText.startsWith('how') ||
+    lowerText.startsWith('why') ||
+    lowerText.startsWith('when') ||
+    lowerText.startsWith('where') ||
+    lowerText.startsWith('who') ||
+    lowerText.startsWith('which') ||
+    lowerText.startsWith('can you')
+  ) {
+    return "Here's what you asked:";
   }
 
   // For greetings
-  if (lowerText.includes('hello') || lowerText.includes('hi ') || lowerText.includes('hey') ||
-      lowerText.startsWith('good morning') || lowerText.startsWith('good afternoon') ||
-      lowerText.startsWith('good evening')) {
+  if (
+    lowerText.includes('hello') ||
+    lowerText.includes('hi ') ||
+    lowerText.includes('hey') ||
+    lowerText.startsWith('good morning') ||
+    lowerText.startsWith('good afternoon') ||
+    lowerText.startsWith('good evening')
+  ) {
     return 'You said:';
   }
 
   // For commands or requests
-  if (lowerText.startsWith('please') || lowerText.startsWith('can you') ||
-      lowerText.startsWith('could you') || lowerText.startsWith('tell me') ||
-      lowerText.startsWith('explain') || lowerText.startsWith('describe')) {
+  if (
+    lowerText.startsWith('please') ||
+    lowerText.startsWith('can you') ||
+    lowerText.startsWith('could you') ||
+    lowerText.startsWith('tell me') ||
+    lowerText.startsWith('explain') ||
+    lowerText.startsWith('describe')
+  ) {
     return 'Your request was:';
   }
 
   // For statements or stories
   if (lowerText.length > 50) {
-    return 'Here\'s your text:';
+    return "Here's your text:";
   }
 
   // Default for short phrases
@@ -45,21 +63,27 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, model, apiKey: apiKeyFromBody, imageDataUrl, voice } = await req.json();
     // Use the provided token or fallback to environment variables or default token
-    const apiKey = apiKeyFromBody ||
-                   process.env.OPEN_PROVIDER_API_KEY ||
-                   process.env.OPEN_PROVIDER_API_KEY_BACKUP ||
-                   'EKfz9oU-FsP-Kz4w';
-    const usedKeyType = apiKeyFromBody ? 'user' :
-                       (process.env.OPEN_PROVIDER_API_KEY ? 'shared-primary' :
-                       (process.env.OPEN_PROVIDER_API_KEY_BACKUP ? 'shared-backup' : 'default'));
-    
+    const apiKey =
+      apiKeyFromBody ||
+      process.env.OPEN_PROVIDER_API_KEY ||
+      process.env.OPEN_PROVIDER_API_KEY_BACKUP ||
+      'EKfz9oU-FsP-Kz4w';
+    const usedKeyType = apiKeyFromBody
+      ? 'user'
+      : process.env.OPEN_PROVIDER_API_KEY
+        ? 'shared-primary'
+        : process.env.OPEN_PROVIDER_API_KEY_BACKUP
+          ? 'shared-backup'
+          : 'default';
+
     if (!model) return new Response(JSON.stringify({ error: 'Missing model id' }), { status: 400 });
 
     // Sanitize and validate messages
     type InMsg = { role?: unknown; content?: unknown };
     type OutMsg = { role: 'user' | 'assistant' | 'system'; content: string };
 
-    const isRole = (r: unknown): r is OutMsg['role'] => r === 'user' || r === 'assistant' || r === 'system';
+    const isRole = (r: unknown): r is OutMsg['role'] =>
+      r === 'user' || r === 'assistant' || r === 'system';
     const sanitize = (msgs: unknown[]): OutMsg[] =>
       (Array.isArray(msgs) ? (msgs as InMsg[]) : [])
         .map((m) => {
@@ -70,12 +94,13 @@ export async function POST(req: NextRequest) {
         .filter((m) => isRole(m.role));
 
     const sanitizedMessages = sanitize((messages as unknown[]) || []);
-    
+
     // Keep last 8 messages to avoid overly long histories
-    const trimmedMessages = sanitizedMessages.length > 8 ? sanitizedMessages.slice(-8) : sanitizedMessages;
+    const trimmedMessages =
+      sanitizedMessages.length > 8 ? sanitizedMessages.slice(-8) : sanitizedMessages;
 
     // Extract the last user message as the prompt for image generation
-    const lastUserMessage = trimmedMessages.filter(msg => msg.role === 'user').pop();
+    const lastUserMessage = trimmedMessages.filter((msg) => msg.role === 'user').pop();
     let prompt = lastUserMessage ? lastUserMessage.content : 'A beautiful image';
 
     // Handle different model categories
@@ -84,7 +109,6 @@ export async function POST(req: NextRequest) {
     const isReasoningModel = ['deepseek-reasoning'].includes(model);
 
     const isGpt5Nano = model === 'gpt-5-nano';
-
 
     // For audio models, add natural TTS prefix to make it feel more conversational
     if (isAudioModel && prompt) {
@@ -109,8 +133,8 @@ export async function POST(req: NextRequest) {
         tokens: {
           by: 'prompt',
           total: promptTokensEstimate,
-          model
-        }
+          model,
+        },
       });
     }
 
@@ -123,7 +147,8 @@ export async function POST(req: NextRequest) {
       // Check if text is too long for URL (conservative limit: 800 chars for reliable audio)
       if (prompt.length > 800) {
         // For very long text, truncate with a note
-        const truncatedPrompt = prompt.substring(0, 750) + "... [Audio truncated due to length limit]";
+        const truncatedPrompt =
+          prompt.substring(0, 750) + '... [Audio truncated due to length limit]';
         const encodedPrompt = encodeURIComponent(truncatedPrompt);
         const selectedVoice = voice || 'alloy';
         textUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai-audio&voice=${selectedVoice}&token=${encodeURIComponent(apiKey)}`;
@@ -146,23 +171,23 @@ export async function POST(req: NextRequest) {
       index: idx,
       role: m.role,
       chars: m.content.length,
-      tokens: estimateTokens(m.content)
+      tokens: estimateTokens(m.content),
     }));
     const totalTokensEstimate = messageTokenDetails.reduce((sum, x) => sum + x.tokens, 0);
-    const requestBody = isAudioModel ? null : {
-      // For text models, use chat format
-      messages: trimmedMessages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      })),
-      model: model,
-      stream: false,
-      // Add defaults and reasoning parameters
-      // Note: Omit `temperature` entirely to satisfy Azure models that only accept the default (1)
-      ...(isReasoningModel
-        ? { max_tokens: 4000 }
-        : { max_tokens: 2048 })
-    };
+    const requestBody = isAudioModel
+      ? null
+      : {
+          // For text models, use chat format
+          messages: trimmedMessages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+          model: model,
+          stream: false,
+          // Add defaults and reasoning parameters
+          // Note: Omit `temperature` entirely to satisfy Azure models that only accept the default (1)
+          ...(isReasoningModel ? { max_tokens: 4000 } : { max_tokens: 2048 }),
+        };
 
     // Longer timeout for reasoning models as they take more time
     const timeoutMs = isReasoningModel ? 180000 : 120000; // 180s for reasoning, 120s for others
@@ -170,31 +195,37 @@ export async function POST(req: NextRequest) {
     const timeoutId = setTimeout(() => aborter.abort(), timeoutMs);
 
     try {
-      const messageCount = !isAudioModel && (requestBody as any)?.messages ? ((requestBody as any).messages.length || 0) : 0;
+      const messageCount =
+        !isAudioModel && (requestBody as any)?.messages
+          ? (requestBody as any).messages.length || 0
+          : 0;
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
-        bodyPreview: isAudioModel ? {
-          method: 'GET',
-          model: 'openai-audio',
-          voice: voice || 'alloy',
-          isAudio: true,
-          originalLength: prompt?.length || 0,
-          truncated: prompt.length > 800,
-          finalLength: prompt.length > 800 ? 750 : prompt.length
-        } : {
-          model: requestBody?.model || model,
-          messageCount: requestBody && 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
-          isReasoning: isReasoningModel,
-          endpoint: 'openai-compatible',
-          tokensEstimate: totalTokensEstimate
-        }
+        bodyPreview: isAudioModel
+          ? {
+              method: 'GET',
+              model: 'openai-audio',
+              voice: voice || 'alloy',
+              isAudio: true,
+              originalLength: prompt?.length || 0,
+              truncated: prompt.length > 800,
+              finalLength: prompt.length > 800 ? 750 : prompt.length,
+            }
+          : {
+              model: requestBody?.model || model,
+              messageCount:
+                requestBody && 'messages' in requestBody ? requestBody.messages?.length || 0 : 0,
+              isReasoning: isReasoningModel,
+              endpoint: 'openai-compatible',
+              tokensEstimate: totalTokensEstimate,
+            },
       });
 
       // For reasoning models, try both token methods
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'User-Agent': 'Open-Fiesta/1.0',
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       };
 
       // Add additional headers for reasoning models
@@ -205,10 +236,12 @@ export async function POST(req: NextRequest) {
 
       const resp = await fetch(textUrl, {
         method: isAudioModel ? 'GET' : 'POST',
-        headers: isAudioModel ? {
-          'User-Agent': 'Open-Fiesta/1.0',
-          'Authorization': `Bearer ${apiKey}`,
-        } : headers,
+        headers: isAudioModel
+          ? {
+              'User-Agent': 'Open-Fiesta/1.0',
+              Authorization: `Bearer ${apiKey}`,
+            }
+          : headers,
         ...(isAudioModel ? {} : { body: JSON.stringify(requestBody) }),
         signal: aborter.signal,
       });
@@ -221,7 +254,7 @@ export async function POST(req: NextRequest) {
           status: resp.status,
           statusText: resp.statusText,
           errorText,
-          headers: Object.fromEntries(resp.headers.entries())
+          headers: Object.fromEntries(resp.headers.entries()),
         });
 
         const friendlyError = (() => {
@@ -244,22 +277,25 @@ export async function POST(req: NextRequest) {
         })();
 
         if (resp.status === 429) {
-          return Response.json({ 
-            text: friendlyError, 
-            error: errorText, 
-            code: 429, 
-            provider: 'open-provider', 
-            usedKeyType 
+          return Response.json({
+            text: friendlyError,
+            error: errorText,
+            code: 429,
+            provider: 'open-provider',
+            usedKeyType,
           });
         }
 
-        return Response.json({ 
-          text: friendlyError, 
-          error: errorText, 
-          code: resp.status, 
-          provider: 'open-provider', 
-          usedKeyType 
-        }, { status: resp.status });
+        return Response.json(
+          {
+            text: friendlyError,
+            error: errorText,
+            code: resp.status,
+            provider: 'open-provider',
+            usedKeyType,
+          },
+          { status: resp.status },
+        );
       }
 
       // Handle different response types based on model
@@ -300,10 +336,14 @@ export async function POST(req: NextRequest) {
                   for (const c of contents) {
                     const audioObj = c?.audio || c?.output_audio || c?.data?.audio;
                     const type = c?.type;
-                    if ((type === 'output_audio' || type === 'audio' || audioObj) && (audioObj?.data || c?.data)) {
+                    if (
+                      (type === 'output_audio' || type === 'audio' || audioObj) &&
+                      (audioObj?.data || c?.data)
+                    ) {
                       const b64 = audioObj?.data || c?.data;
                       const fmt = (audioObj?.format || 'mp3').toLowerCase();
-                      const mime = fmt === 'wav' ? 'audio/wav' : fmt === 'm4a' ? 'audio/mp4' : 'audio/mpeg';
+                      const mime =
+                        fmt === 'wav' ? 'audio/wav' : fmt === 'm4a' ? 'audio/mp4' : 'audio/mpeg';
                       audioUrl = `data:${mime};base64,${b64}`;
                       console.log('Constructed data URL from Responses payload');
                       break;
@@ -317,18 +357,27 @@ export async function POST(req: NextRequest) {
             if (!audioUrl && Array.isArray((data as any).choices)) {
               const ch0 = (data as any).choices[0];
               const msg = ch0?.message || {};
-              const audioNode = msg?.audio || msg?.content?.find?.((x: any) => x?.type === 'audio' || x?.type === 'output_audio')?.audio;
+              const audioNode =
+                msg?.audio ||
+                msg?.content?.find?.((x: any) => x?.type === 'audio' || x?.type === 'output_audio')
+                  ?.audio;
               const b64 = audioNode?.data;
               const fmt = (audioNode?.format || 'mp3').toLowerCase();
               if (b64) {
-                const mime = fmt === 'wav' ? 'audio/wav' : fmt === 'm4a' ? 'audio/mp4' : 'audio/mpeg';
+                const mime =
+                  fmt === 'wav' ? 'audio/wav' : fmt === 'm4a' ? 'audio/mp4' : 'audio/mpeg';
                 audioUrl = `data:${mime};base64,${b64}`;
                 console.log('Constructed data URL from choices.message.audio');
               }
             }
           } catch {
             // If response looks like a URL, use it as audio URL
-            if (responseText.startsWith('http') && (responseText.includes('.mp3') || responseText.includes('.wav') || responseText.includes('.m4a'))) {
+            if (
+              responseText.startsWith('http') &&
+              (responseText.includes('.mp3') ||
+                responseText.includes('.wav') ||
+                responseText.includes('.m4a'))
+            ) {
               audioUrl = responseText.trim();
               data = { audio_url: audioUrl };
               console.log('Using response text as audio URL:', audioUrl);
@@ -376,9 +425,11 @@ export async function POST(req: NextRequest) {
         } else if (data && typeof (data as any).content === 'string') {
           text = (data as any).content;
         } else if (data && Array.isArray((data as any).choices)) {
-          const choices = (data as any).choices as Array<{ message?: { content?: string } | { role?: string; content?: string } }>;
+          const choices = (data as any).choices as Array<{
+            message?: { content?: string } | { role?: string; content?: string };
+          }>;
           const all = choices
-            .map(c => (typeof c?.message?.content === 'string' ? c.message!.content : ''))
+            .map((c) => (typeof c?.message?.content === 'string' ? c.message!.content : ''))
             .filter(Boolean);
           text = all.join('\n\n') || '';
         } else {
@@ -402,37 +453,44 @@ export async function POST(req: NextRequest) {
         raw: data,
         provider: 'open-provider',
         usedKeyType,
-        tokens: tokensPayload
+        tokens: tokensPayload,
       });
-
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error instanceof Error && error.name === 'AbortError') {
-        return Response.json({ 
-          text: 'Request timed out. Please try again with a shorter prompt.', 
-          error: 'Timeout', 
-          code: 408, 
-          provider: 'open-provider', 
-          usedKeyType 
-        }, { status: 408 });
+        return Response.json(
+          {
+            text: 'Request timed out. Please try again with a shorter prompt.',
+            error: 'Timeout',
+            code: 408,
+            provider: 'open-provider',
+            usedKeyType,
+          },
+          { status: 408 },
+        );
       }
 
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      return Response.json({ 
-        text: 'Failed to generate response. Please try again.', 
-        error: errorMsg, 
-        code: 500, 
-        provider: 'open-provider', 
-        usedKeyType 
-      }, { status: 500 });
+      return Response.json(
+        {
+          text: 'Failed to generate response. Please try again.',
+          error: errorMsg,
+          code: 500,
+          provider: 'open-provider',
+          usedKeyType,
+        },
+        { status: 500 },
+      );
     }
-
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error';
-    return new Response(JSON.stringify({ 
-      error: message, 
-      provider: 'open-provider' 
-    }), { status: 500 });
+    return new Response(
+      JSON.stringify({
+        error: message,
+        provider: 'open-provider',
+      }),
+      { status: 500 },
+    );
   }
 }

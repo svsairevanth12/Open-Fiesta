@@ -26,10 +26,7 @@ export function generateProjectId(): string {
   });
 }
 
-export function createProject(
-  name: string, 
-  systemPrompt: string = ''
-): Project {
+export function createProject(name: string, systemPrompt: string = ''): Project {
   const now = Date.now();
   return {
     id: generateProjectId(),
@@ -42,8 +39,8 @@ export function createProject(
 }
 
 export function updateProject(
-  project: Project, 
-  updates: Partial<Pick<Project, 'name' | 'systemPrompt' | 'isActive'>>
+  project: Project,
+  updates: Partial<Pick<Project, 'name' | 'systemPrompt' | 'isActive'>>,
 ): Project {
   return {
     ...project,

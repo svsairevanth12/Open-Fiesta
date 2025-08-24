@@ -8,15 +8,27 @@ function sseEncode(obj: unknown) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model, apiKey: apiKeyFromBody, referer, title, imageDataUrl } = await req.json();
+    const {
+      messages,
+      model,
+      apiKey: apiKeyFromBody,
+      referer,
+      title,
+      imageDataUrl,
+    } = await req.json();
     const apiKey = apiKeyFromBody || process.env.OPENROUTER_API_KEY;
-    const usedKeyType = apiKeyFromBody ? 'user' : (process.env.OPENROUTER_API_KEY ? 'shared' : 'none');
+    const usedKeyType = apiKeyFromBody
+      ? 'user'
+      : process.env.OPENROUTER_API_KEY
+        ? 'shared'
+        : 'none';
     if (!apiKey) return new Response('Missing OpenRouter API key', { status: 400 });
     if (!model) return new Response('Missing model id', { status: 400 });
 
     type InMsg = { role?: unknown; content?: unknown };
     type OutMsg = { role: 'user' | 'assistant' | 'system'; content: string };
-    const isRole = (r: unknown): r is OutMsg['role'] => r === 'user' || r === 'assistant' || r === 'system';
+    const isRole = (r: unknown): r is OutMsg['role'] =>
+      r === 'user' || r === 'assistant' || r === 'system';
     const sanitize = (msgs: unknown[]): OutMsg[] =>
       (Array.isArray(msgs) ? (msgs as InMsg[]) : [])
         .map((m) => {
@@ -29,7 +41,10 @@ export async function POST(req: NextRequest) {
     const toUpstreamMessages = (msgs: OutMsg[]) => {
       const arr = trimmed(msgs);
       if (!imageDataUrl || !arr.length) return arr;
-      const lastIdx = [...arr].map((m, i) => ({ m, i })).reverse().find(p => p.m.role === 'user')?.i;
+      const lastIdx = [...arr]
+        .map((m, i) => ({ m, i }))
+        .reverse()
+        .find((p) => p.m.role === 'user')?.i;
       if (lastIdx == null) return arr;
       const m = arr[lastIdx];
       const [meta, base64] = String(imageDataUrl).split(',');
@@ -39,14 +54,18 @@ export async function POST(req: NextRequest) {
           { type: 'text', text: m.content },
           { type: 'image_url', image_url: { url: String(imageDataUrl) } },
         ];
-        return arr.map((mm, idx) => (idx === lastIdx ? ({ role: mm.role, content } as unknown as OutMsg) : mm));
+        return arr.map((mm, idx) =>
+          idx === lastIdx ? ({ role: mm.role, content } as unknown as OutMsg) : mm,
+        );
       }
       if (/^text\/plain$/i.test(mt) && base64) {
         try {
           const decoded = atob(base64);
           const clipped = decoded.slice(0, 20000);
           const appended = `${m.content}\n\n[Attached text file contents:]\n${clipped}`;
-          return arr.map((mm, idx) => (idx === lastIdx ? { role: mm.role, content: appended } : mm));
+          return arr.map((mm, idx) =>
+            idx === lastIdx ? { role: mm.role, content: appended } : mm,
+          );
         } catch {}
       }
       const noted = `${m.content}\n\n[Attached file: ${mt || 'unknown'} provided as Data URL. If your model supports reading this type via data URLs, use it.]`;
@@ -67,7 +86,7 @@ export async function POST(req: NextRequest) {
     const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'HTTP-Referer': referer || 'http://localhost',
         'X-Title': title || 'Open Source Fiesta',
         'Content-Type': 'application/json',
@@ -79,7 +98,7 @@ export async function POST(req: NextRequest) {
     const headers = new Headers({
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
 
@@ -88,13 +107,17 @@ export async function POST(req: NextRequest) {
       const code = upstream.status || 500;
       const stream = new ReadableStream({
         start(controller) {
-          const isGLMPaid = code === 402 && (typeof model === 'string' && /z-ai\s*\/\s*glm-4\.5-air(?!:free)/i.test(model));
+          const isGLMPaid =
+            code === 402 &&
+            typeof model === 'string' &&
+            /z-ai\s*\/\s*glm-4\.5-air(?!:free)/i.test(model);
           const friendly402 = isGLMPaid
             ? 'The model GLM 4.5 Air is a paid model on OpenRouter. Please add your own OpenRouter API key with credit, or select the FREE pool variant "GLM 4.5 Air (FREE)".'
             : 'Provider returned 402 (payment required / insufficient credit). Add your own OpenRouter API key with credit, or pick a free model variant if available.';
-          const payload = code === 402
-            ? { error: friendly402, code, provider: 'openrouter', usedKeyType }
-            : { error: errText || 'Upstream error', code, provider: 'openrouter', usedKeyType };
+          const payload =
+            code === 402
+              ? { error: friendly402, code, provider: 'openrouter', usedKeyType }
+              : { error: errText || 'Upstream error', code, provider: 'openrouter', usedKeyType };
           controller.enqueue(new TextEncoder().encode(sseEncode(payload)));
           controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
           controller.close();
@@ -161,15 +184,18 @@ export async function POST(req: NextRequest) {
                 if (typeof delta?.content === 'string') {
                   text = delta.content;
                 } else if (Array.isArray(delta?.content)) {
-                  text = (delta.content as unknown[]).map((c: unknown) => {
-                    if (!c) return '';
-                    if (typeof c === 'string') return c;
-                    const obj = c as { text?: unknown; content?: unknown; value?: unknown };
-                    if (typeof obj.text === 'string') return obj.text;
-                    if (typeof obj.content === 'string') return obj.content;
-                    if (typeof obj.value === 'string') return obj.value;
-                    return '';
-                  }).filter(Boolean).join('');
+                  text = (delta.content as unknown[])
+                    .map((c: unknown) => {
+                      if (!c) return '';
+                      if (typeof c === 'string') return c;
+                      const obj = c as { text?: unknown; content?: unknown; value?: unknown };
+                      if (typeof obj.text === 'string') return obj.text;
+                      if (typeof obj.content === 'string') return obj.content;
+                      if (typeof obj.value === 'string') return obj.value;
+                      return '';
+                    })
+                    .filter(Boolean)
+                    .join('');
                 }
                 if (text) {
                   const cleaned = sanitizeDelta(text);
@@ -177,13 +203,22 @@ export async function POST(req: NextRequest) {
                 }
                 if (json?.error) {
                   const code = json.error?.code;
-                  const isGLMPaid = code === 402 && (typeof model === 'string' && /z-ai\s*\/\s*glm-4\.5-air(?!:free)/i.test(model));
+                  const isGLMPaid =
+                    code === 402 &&
+                    typeof model === 'string' &&
+                    /z-ai\s*\/\s*glm-4\.5-air(?!:free)/i.test(model);
                   const friendly402 = isGLMPaid
                     ? 'The model GLM 4.5 Air is a paid model on OpenRouter. Please add your own OpenRouter API key with credit, or select the FREE pool variant "GLM 4.5 Air (FREE)".'
                     : 'Provider returned 402 (payment required / insufficient credit). Add your own OpenRouter API key with credit, or pick a free model variant if available.';
-                  const payload = code === 402
-                    ? { error: friendly402, code, provider: 'openrouter', usedKeyType }
-                    : { error: json.error?.message || 'error', code, provider: 'openrouter', usedKeyType };
+                  const payload =
+                    code === 402
+                      ? { error: friendly402, code, provider: 'openrouter', usedKeyType }
+                      : {
+                          error: json.error?.message || 'error',
+                          code,
+                          provider: 'openrouter',
+                          usedKeyType,
+                        };
                   controller.enqueue(encoder.encode(sseEncode(payload)));
                 }
               } catch {
@@ -195,7 +230,16 @@ export async function POST(req: NextRequest) {
             const aborted = (err as Error)?.name === 'AbortError';
             const errorMsg = aborted ? `Request timed out after ${timeoutMs}ms` : 'Stream error';
             try {
-              controller.enqueue(encoder.encode(sseEncode({ error: errorMsg, code: aborted ? 408 : 500, provider: 'openrouter', usedKeyType })));
+              controller.enqueue(
+                encoder.encode(
+                  sseEncode({
+                    error: errorMsg,
+                    code: aborted ? 408 : 500,
+                    provider: 'openrouter',
+                    usedKeyType,
+                  }),
+                ),
+              );
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
             } finally {
               clearTimeout(timeoutId);
@@ -206,9 +250,11 @@ export async function POST(req: NextRequest) {
         push();
       },
       cancel() {
-        try { reader.cancel(); } catch {}
+        try {
+          reader.cancel();
+        } catch {}
         clearTimeout(timeoutId);
-      }
+      },
     });
 
     return new Response(stream, { status: 200, headers });

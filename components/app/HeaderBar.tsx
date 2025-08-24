@@ -1,11 +1,11 @@
-"use client";
-import Image from "next/image";
-import GithubStar from "@/components/app/GithubStar";
-import ThemeToggle from "@/components/ThemeToggle";
-import CustomModels from "@/components/modals/CustomModels";
-import Settings from "@/components/app/Settings";
-import { Layers } from "lucide-react";
-import { Menu as MenuIcon } from "lucide-react";
+'use client';
+import Image from 'next/image';
+import GithubStar from '@/components/app/GithubStar';
+import ThemeToggle from '@/components/ThemeToggle';
+import CustomModels from '@/components/modals/CustomModels';
+import Settings from '@/components/app/Settings';
+import { Layers } from 'lucide-react';
+import { Menu as MenuIcon } from 'lucide-react';
 
 type Props = {
   onOpenMenu: () => void;
@@ -21,19 +21,17 @@ type Props = {
 
 export default function HeaderBar({
   onOpenMenu,
-  title = "Open Fiesta",
-  authorName = "Niladri",
-  authorImageSrc = "/image.png",
-  authorLink = "https://x.com/byteHumi",
+  title = 'Open Fiesta',
+  authorName = 'Niladri',
+  authorImageSrc = '/image.png',
+  authorLink = 'https://x.com/byteHumi',
   githubOwner,
   githubRepo,
   className,
   onOpenModelsModal,
 }: Props) {
   return (
-    <div
-      className={["flex items-center mb-3 gap-2 w-full", className || ""].join(" ")}
-    >
+    <div className={['flex items-center mb-3 gap-2 w-full', className || ''].join(' ')}>
       {/* Left: author + menu */}
       <div className="flex items-center gap-2 min-w-0">
         <button
@@ -59,10 +57,7 @@ export default function HeaderBar({
             className="h-5 w-5 rounded-full object-cover"
           />
           <span className="opacity-90 hidden sm:inline text-sm">
-            Made by{" "}
-            <span className="font-semibold underline decoration-dotted">
-              {authorName}
-            </span>
+            Made by <span className="font-semibold underline decoration-dotted">{authorName}</span>
           </span>
         </a>
       </div>

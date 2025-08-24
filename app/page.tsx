@@ -1,23 +1,23 @@
-"use client";
-import { useEffect, useMemo, useState } from "react";
+'use client';
+import { useEffect, useMemo, useState } from 'react';
 
-import HeaderBar from "@/components/app/HeaderBar";
-import SelectedModelsBar from "@/components/chat/SelectedModelsBar";
-import VoiceSelector from "@/components/modals/VoiceSelector";
-import { useLocalStorage } from "@/lib/useLocalStorage";
-import { mergeModels, useCustomModels } from "@/lib/customModels";
-import { ChatMessage, ApiKeys, ChatThread, AiModel } from "@/lib/types";
-import { createChatActions } from "@/lib/chatActions";
-import { useProjects } from "@/lib/useProjects";
-import ModelsModal from "@/components/modals/ModelsModal";
-import FirstVisitNote from "@/components/app/FirstVisitNote";
-import FixedInputBar from "@/components/chat/FixedInputBar";
-import ThreadSidebar from "@/components/chat/ThreadSidebar";
-import ChatGrid from "@/components/chat/ChatGrid";
-import { useTheme } from "@/lib/themeContext";
-import { BACKGROUND_STYLES } from "@/lib/themes";
-import { safeUUID } from "@/lib/uuid";
-import LaunchScreen from "@/components/ui/LaunchScreen";
+import HeaderBar from '@/components/app/HeaderBar';
+import SelectedModelsBar from '@/components/chat/SelectedModelsBar';
+import VoiceSelector from '@/components/modals/VoiceSelector';
+import { useLocalStorage } from '@/lib/useLocalStorage';
+import { mergeModels, useCustomModels } from '@/lib/customModels';
+import { ChatMessage, ApiKeys, ChatThread, AiModel } from '@/lib/types';
+import { createChatActions } from '@/lib/chatActions';
+import { useProjects } from '@/lib/useProjects';
+import ModelsModal from '@/components/modals/ModelsModal';
+import FirstVisitNote from '@/components/app/FirstVisitNote';
+import FixedInputBar from '@/components/chat/FixedInputBar';
+import ThreadSidebar from '@/components/chat/ThreadSidebar';
+import ChatGrid from '@/components/chat/ChatGrid';
+import { useTheme } from '@/lib/themeContext';
+import { BACKGROUND_STYLES } from '@/lib/themes';
+import { safeUUID } from '@/lib/uuid';
+import LaunchScreen from '@/components/ui/LaunchScreen';
 
 export default function Home() {
   const { theme } = useTheme();
@@ -25,34 +25,22 @@ export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
   const backgroundClass = BACKGROUND_STYLES[theme.background].className;
 
-  const [selectedIds, setSelectedIds] = useLocalStorage<string[]>(
-    "ai-fiesta:selected-models",
-    [
-      "unstable-gpt-5-chat",
-      "unstable-claude-sonnet-4",
-      "gemini-2.5-pro",
-      "unstable-grok-4",
-      "open-evil",
-    ]
-  );
-  const [keys] = useLocalStorage<ApiKeys>("ai-fiesta:keys", {});
-  const [threads, setThreads] = useLocalStorage<ChatThread[]>(
-    "ai-fiesta:threads",
-    []
-  );
-  const [activeId, setActiveId] = useLocalStorage<string | null>(
-    "ai-fiesta:active-thread",
-    null
-  );
-  const [sidebarOpen, setSidebarOpen] = useLocalStorage<boolean>(
-    "ai-fiesta:sidebar-open",
-    true
-  );
+  const [selectedIds, setSelectedIds] = useLocalStorage<string[]>('ai-fiesta:selected-models', [
+    'unstable-gpt-5-chat',
+    'unstable-claude-sonnet-4',
+    'gemini-2.5-pro',
+    'unstable-grok-4',
+    'open-evil',
+  ]);
+  const [keys] = useLocalStorage<ApiKeys>('ai-fiesta:keys', {});
+  const [threads, setThreads] = useLocalStorage<ChatThread[]>('ai-fiesta:threads', []);
+  const [activeId, setActiveId] = useLocalStorage<string | null>('ai-fiesta:active-thread', null);
+  const [sidebarOpen, setSidebarOpen] = useLocalStorage<boolean>('ai-fiesta:sidebar-open', true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [modelsModalOpen, setModelsModalOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useLocalStorage<string>(
-    "ai-fiesta:selected-voice",
-    "alloy"
+    'ai-fiesta:selected-voice',
+    'alloy',
   );
 
   const [customModels] = useCustomModels();
@@ -71,12 +59,12 @@ export default function Home() {
 
   const activeThread = useMemo(
     () => threads.find((t) => t.id === activeId) || null,
-    [threads, activeId]
+    [threads, activeId],
   );
   // Only show chats for the active project (or all if none selected)
   const visibleThreads = useMemo(
     () => (activeProjectId ? threads.filter((t) => t.projectId === activeProjectId) : threads),
-    [threads, activeProjectId]
+    [threads, activeProjectId],
   );
   const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
 
@@ -84,27 +72,27 @@ export default function Home() {
   // Allow collapsing a model column without unselecting it
   const [collapsedIds, setCollapsedIds] = useState<string[]>([]);
   const selectedModels = useMemo(
-    () => selectedIds.map(id => allModels.find(m => m.id === id)).filter(Boolean) as AiModel[],
-    [selectedIds, allModels]
+    () => selectedIds.map((id) => allModels.find((m) => m.id === id)).filter(Boolean) as AiModel[],
+    [selectedIds, allModels],
   );
   // Build grid template: collapsed => fixed narrow, expanded => normal
   const headerTemplate = useMemo(() => {
-    if (selectedModels.length === 0) return "";
+    if (selectedModels.length === 0) return '';
     const parts = selectedModels.map((m) =>
-      collapsedIds.includes(m.id) ? "72px" : "minmax(280px, 1fr)"
+      collapsedIds.includes(m.id) ? '72px' : 'minmax(280px, 1fr)',
     );
-    return parts.join(" ");
+    return parts.join(' ');
   }, [selectedModels, collapsedIds]);
 
   const anyLoading = loadingIds.length > 0;
   const [copiedAllIdx, setCopiedAllIdx] = useState<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [firstNoteDismissed, setFirstNoteDismissed] = useLocalStorage<boolean>(
-    "ai-fiesta:first-visit-note-dismissed",
-    false
+    'ai-fiesta:first-visit-note-dismissed',
+    false,
   );
-  const showFirstVisitNote = isHydrated &&
-    !firstNoteDismissed && (!keys?.openrouter || !keys?.gemini);
+  const showFirstVisitNote =
+    isHydrated && !firstNoteDismissed && (!keys?.openrouter || !keys?.gemini);
 
   // Copy helper with fallback when navigator.clipboard is unavailable
   const copyToClipboard = async (text: string) => {
@@ -112,14 +100,14 @@ export default function Home() {
       await navigator.clipboard.writeText(text);
     } catch {
       try {
-        const ta = document.createElement("textarea");
+        const ta = document.createElement('textarea');
         ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.left = "-9999px";
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
         document.body.appendChild(ta);
         ta.focus();
         ta.select();
-        document.execCommand("copy");
+        document.execCommand('copy');
         document.body.removeChild(ta);
       } catch {
         // ignore
@@ -161,7 +149,7 @@ export default function Home() {
       setActiveId,
       activeProject,
       selectedVoice,
-    ]
+    ],
   );
 
   // group assistant messages by turn for simple compare view
@@ -169,10 +157,10 @@ export default function Home() {
     const rows: { user: ChatMessage; answers: ChatMessage[] }[] = [];
     let currentUser: ChatMessage | null = null;
     for (const m of messages) {
-      if (m.role === "user") {
+      if (m.role === 'user') {
         currentUser = m;
         rows.push({ user: m, answers: [] });
-      } else if (m.role === "assistant" && currentUser) {
+      } else if (m.role === 'assistant' && currentUser) {
         rows[rows.length - 1]?.answers.push(m);
       }
     }
@@ -187,13 +175,13 @@ export default function Home() {
         if (t.id !== activeThread.id) return t;
         const msgs = t.messages;
         const userStarts: number[] = [];
-        for (let i = 0; i < msgs.length; i++) if (msgs[i].role === "user") userStarts.push(i);
+        for (let i = 0; i < msgs.length; i++) if (msgs[i].role === 'user') userStarts.push(i);
         const start = userStarts[turnIndex];
         if (start === undefined) return t;
         const end = userStarts[turnIndex + 1] ?? msgs.length; // exclusive
         const nextMsgs = msgs.filter((_, idx) => idx < start || idx >= end);
         return { ...t, messages: nextMsgs };
-      })
+      }),
     );
   };
 
@@ -205,21 +193,21 @@ export default function Home() {
         if (t.id !== activeThread.id) return t;
         const msgs = t.messages;
         const userStarts: number[] = [];
-        for (let i = 0; i < msgs.length; i++) if (msgs[i].role === "user") userStarts.push(i);
+        for (let i = 0; i < msgs.length; i++) if (msgs[i].role === 'user') userStarts.push(i);
         const start = userStarts[turnIndex];
         if (start === undefined) return t;
         const end = userStarts[turnIndex + 1] ?? msgs.length; // exclusive
         let removed = false;
         const nextMsgs = msgs.filter((m, idx) => {
           if (idx <= start || idx >= end) return true;
-          if (!removed && m.role === "assistant" && m.modelId === modelId) {
+          if (!removed && m.role === 'assistant' && m.modelId === modelId) {
             removed = true;
             return false;
           }
           return true;
         });
         return { ...t, messages: nextMsgs };
-      })
+      }),
     );
   };
 
@@ -250,7 +238,7 @@ export default function Home() {
             onNewChat={() => {
               const t: ChatThread = {
                 id: safeUUID(),
-                title: "New Chat",
+                title: 'New Chat',
                 messages: [],
                 createdAt: Date.now(),
                 projectId: activeProjectId || undefined,
@@ -265,9 +253,9 @@ export default function Home() {
               setThreads((prev) => {
                 const next = prev.filter((t) => t.id !== id);
                 if (activeId === id) {
-                  const nextInScope = (activeProjectId
-                    ? next.find((t) => t.projectId === activeProjectId)
-                    : next[0])?.id ?? null;
+                  const nextInScope =
+                    (activeProjectId ? next.find((t) => t.projectId === activeProjectId) : next[0])
+                      ?.id ?? null;
                   setActiveId(nextInScope);
                 }
                 return next;
@@ -302,7 +290,7 @@ export default function Home() {
             <SelectedModelsBar selectedModels={selectedModels} onToggle={toggle} />
 
             {/* Voice selector for audio models */}
-            {isHydrated && selectedModels.some((m) => m.category === "audio") && (
+            {isHydrated && selectedModels.some((m) => m.category === 'audio') && (
               <div className="mb-3 px-4">
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-zinc-500 dark:text-zinc-400">Voice:</span>
@@ -321,7 +309,10 @@ export default function Home() {
             />
 
             {isHydrated && (
-              <FirstVisitNote open={showFirstVisitNote} onClose={() => setFirstNoteDismissed(true)} />
+              <FirstVisitNote
+                open={showFirstVisitNote}
+                onClose={() => setFirstNoteDismissed(true)}
+              />
             )}
 
             {isHydrated && (

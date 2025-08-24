@@ -25,7 +25,7 @@ class PageErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Page Error Boundary caught an error:', error, errorInfo);
-    
+
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
@@ -45,7 +45,8 @@ class PageErrorBoundary extends Component<Props, State> {
             Something went wrong with this section
           </h2>
           <p className="text-muted-foreground mb-4 max-w-md">
-            There was an error loading this part of the page. You can try refreshing or continue using other features.
+            There was an error loading this part of the page. You can try refreshing or continue
+            using other features.
           </p>
           <button
             onClick={() => this.setState({ hasError: false, error: undefined })}

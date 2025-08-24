@@ -1,9 +1,9 @@
-"use client";
-import { useEffect, useState } from "react";
-import { X, Star, StarOff } from "lucide-react";
-import type { AiModel } from "@/lib/types";
-import { MODEL_CATALOG } from "@/lib/models";
-import { useLocalStorage } from "@/lib/useLocalStorage";
+'use client';
+import { useEffect, useState } from 'react';
+import { X, Star, StarOff } from 'lucide-react';
+import type { AiModel } from '@/lib/types';
+import { MODEL_CATALOG } from '@/lib/models';
+import { useLocalStorage } from '@/lib/useLocalStorage';
 
 export type ModelsModalProps = {
   open: boolean;
@@ -23,23 +23,23 @@ export default function ModelsModal({
   onToggle,
 }: ModelsModalProps) {
   const [activeProvider, setActiveProvider] = useState<string>('all');
-  const [favoriteIds, setFavoriteIds] = useLocalStorage<string[]>("ai-fiesta:favorite-models", [
-    "unstable-gpt-5-chat",
-    "unstable-claude-sonnet-4",
-    "gemini-2.5-pro",
-    "unstable-grok-4",
-    "open-evil",
+  const [favoriteIds, setFavoriteIds] = useLocalStorage<string[]>('ai-fiesta:favorite-models', [
+    'unstable-gpt-5-chat',
+    'unstable-claude-sonnet-4',
+    'gemini-2.5-pro',
+    'unstable-grok-4',
+    'open-evil',
   ]);
 
   // Lock background scroll while modal is open
   useEffect(() => {
     if (open) {
-      document.body.classList.add("modal-open");
+      document.body.classList.add('modal-open');
       return () => {
-        document.body.classList.remove("modal-open");
+        document.body.classList.remove('modal-open');
       };
     } else {
-      document.body.classList.remove("modal-open");
+      document.body.classList.remove('modal-open');
     }
   }, [open]);
 
@@ -65,13 +65,16 @@ export default function ModelsModal({
     return m.provider === 'openrouter' || m.provider === 'gemini' || m.provider === 'mistral';
   };
   const isUnc = (m: AiModel) =>
-    /uncensored/i.test(m.label) || /venice/i.test(m.model) ||
-    m.model === 'evil' || m.model === 'unity';
-  const isFav = (m: AiModel) =>
-    favoriteIds.includes(m.id);
+    /uncensored/i.test(m.label) ||
+    /venice/i.test(m.model) ||
+    m.model === 'evil' ||
+    m.model === 'unity';
+  const isFav = (m: AiModel) => favoriteIds.includes(m.id);
 
   // Brand classifier for text models
-  const getBrand = (m: AiModel): 'OpenAI' | 'Google' | 'Anthropic' | 'Grok' | 'Open Source Models' => {
+  const getBrand = (
+    m: AiModel,
+  ): 'OpenAI' | 'Google' | 'Anthropic' | 'Grok' | 'Open Source Models' => {
     const id = m.id.toLowerCase();
     const model = m.model.toLowerCase();
     const label = m.label.toLowerCase();
@@ -82,9 +85,11 @@ export default function ModelsModal({
       model.startsWith('o4') ||
       model.includes('openai') ||
       /gpt\b/.test(label)
-    ) return 'OpenAI';
+    )
+      return 'OpenAI';
     // Google family: gemini*, gemma*
-    if (model.includes('gemini') || model.includes('gemma') || id.includes('gemini')) return 'Google';
+    if (model.includes('gemini') || model.includes('gemma') || id.includes('gemini'))
+      return 'Google';
     // Anthropic family: claude*
     if (model.includes('claude') || id.includes('claude')) return 'Anthropic';
     // Grok family
@@ -96,37 +101,36 @@ export default function ModelsModal({
   // External SVG icons for brand headings (monochrome, reliable)
   // Using Simple Icons CDN
   const BRAND_ICONS: Record<string, { url: string; alt: string }> = {
-    'OpenAI': { url: 'https://cdn.simpleicons.org/openai/ffffff', alt: 'OpenAI' },
-    'Google': { url: 'https://cdn.simpleicons.org/google/ffffff', alt: 'Google' },
-    'Anthropic': { url: 'https://cdn.simpleicons.org/anthropic/ffffff', alt: 'Anthropic' },
+    OpenAI: { url: 'https://cdn.simpleicons.org/openai/ffffff', alt: 'OpenAI' },
+    Google: { url: 'https://cdn.simpleicons.org/google/ffffff', alt: 'Google' },
+    Anthropic: { url: 'https://cdn.simpleicons.org/anthropic/ffffff', alt: 'Anthropic' },
     // Grok icon not separate in Simple Icons; using xAI brand
-    'Grok': { url: 'https://cdn.simpleicons.org/xai/ffffff', alt: 'xAI Grok' },
+    Grok: { url: 'https://cdn.simpleicons.org/xai/ffffff', alt: 'xAI Grok' },
   };
 
   const toggleFavorite = (modelId: string) => {
-    setFavoriteIds(prev =>
-      prev.includes(modelId)
-        ? prev.filter(id => id !== modelId)
-        : [...prev, modelId]
+    setFavoriteIds((prev) =>
+      prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId],
     );
   };
   const pick = (m: AiModel) => {
-    if (isFav(m)) return "Favorites";
-    if (m.category === 'image') return "Image Models";
-    if (m.category === 'audio') return "Audio Models";
-    if (m.category === 'text' || m.provider === 'open-provider') return "Text Models";
-    if (isUnc(m)) return "Uncensored";
-    if (isFree(m)) return "Free";
-    if (m.good) return "Good";
-    return "Others";
+    if (isFav(m)) return 'Favorites';
+    if (m.category === 'image') return 'Image Models';
+    if (m.category === 'audio') return 'Audio Models';
+    if (m.category === 'text' || m.provider === 'open-provider') return 'Text Models';
+    if (isUnc(m)) return 'Uncensored';
+    if (isFree(m)) return 'Free';
+    if (m.good) return 'Good';
+    return 'Others';
   };
 
   // Filter models by provider if a specific provider is selected
-  const filteredModels = activeProvider === 'all'
-    ? MODEL_CATALOG
-    : activeProvider === 'pro'
-    ? MODEL_CATALOG.filter(m => m.provider === 'unstable' || m.provider === 'mistral')
-    : MODEL_CATALOG.filter(m => m.provider === activeProvider);
+  const filteredModels =
+    activeProvider === 'all'
+      ? MODEL_CATALOG
+      : activeProvider === 'pro'
+        ? MODEL_CATALOG.filter((m) => m.provider === 'unstable' || m.provider === 'mistral')
+        : MODEL_CATALOG.filter((m) => m.provider === activeProvider);
 
   filteredModels.forEach((m) => {
     const key = pick(m as AiModel);
@@ -156,7 +160,9 @@ export default function ModelsModal({
             src={iconUrl}
             alt={iconAlt || title}
             className="h-4 w-4 object-contain opacity-90"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+            }}
           />
         )}
         <span>{title}</span>
@@ -172,26 +178,26 @@ export default function ModelsModal({
             <div
               key={m.id}
               className={`model-chip flex items-center justify-between gap-2 w-full h-10 sm:h-9 md:h-9 px-3 sm:px-3 md:px-3 text-xs sm:text-[11px] md:text-sm ${
-                disabled ? "opacity-60 cursor-not-allowed text-zinc-500" : ""
+                disabled ? 'opacity-60 cursor-not-allowed text-zinc-500' : ''
               } ${
                 selected
                   ? m.good
-                    ? "model-chip-pro"
+                    ? 'model-chip-pro'
                     : free
-                    ? "model-chip-free"
-                    : byok
-                    ? "border-blue-400/30 bg-blue-500/10"
-                    : "border-white/20 bg-white/10"
+                      ? 'model-chip-free'
+                      : byok
+                        ? 'border-blue-400/30 bg-blue-500/10'
+                        : 'border-white/20 bg-white/10'
                   : m.good
-                  ? "model-chip-pro"
-                  : free
-                  ? "model-chip-free"
-                  : byok
-                  ? "border-blue-400/20 bg-blue-500/5 hover:bg-blue-500/10"
-                  : "border-white/10 bg-white/5 hover:bg-white/10"
+                    ? 'model-chip-pro'
+                    : free
+                      ? 'model-chip-free'
+                      : byok
+                        ? 'border-blue-400/20 bg-blue-500/5 hover:bg-blue-500/10'
+                        : 'border-white/10 bg-white/5 hover:bg-white/10'
               }`}
               data-selected={selected || undefined}
-              data-type={m.good ? "pro" : free ? "free" : byok ? "byok" : unc ? "unc" : "other"}
+              data-type={m.good ? 'pro' : free ? 'free' : byok ? 'byok' : unc ? 'unc' : 'other'}
             >
               {/* Model content - clickable area for selection */}
               <button
@@ -199,11 +205,7 @@ export default function ModelsModal({
                 className="flex-1 flex items-center gap-1.5 min-w-0 text-left h-full"
                 disabled={disabled}
                 title={
-                  selected
-                    ? "Click to unselect"
-                    : disabled
-                    ? "Limit reached"
-                    : "Click to select"
+                  selected ? 'Click to unselect' : disabled ? 'Limit reached' : 'Click to select'
                 }
               >
                 {showBadges && m.good && (
@@ -242,9 +244,7 @@ export default function ModelsModal({
                     <span className="hidden sm:inline">Audio</span>
                   </span>
                 )}
-                <span className="truncate max-w-full">
-                  {m.label}
-                </span>
+                <span className="truncate max-w-full">{m.label}</span>
               </button>
 
               {/* Action buttons - separate from selection */}
@@ -260,7 +260,7 @@ export default function ModelsModal({
                       ? 'text-yellow-400 hover:text-yellow-300 bg-yellow-400/10 hover:bg-yellow-400/20'
                       : 'text-zinc-400 hover:text-zinc-300 hover:bg-white/10'
                   }`}
-                  title={isFav(m) ? "Remove from favorites" : "Add to favorites"}
+                  title={isFav(m) ? 'Remove from favorites' : 'Add to favorites'}
                 >
                   {isFav(m) ? <Star size={14} fill="currentColor" /> : <StarOff size={14} />}
                 </button>
@@ -269,15 +269,11 @@ export default function ModelsModal({
                 <button
                   onClick={() => !disabled && onToggle(m.id)}
                   className="model-toggle-pill"
-                  data-type={m.good ? "pro" : free ? "free" : byok ? "byok" : "other"}
+                  data-type={m.good ? 'pro' : free ? 'free' : byok ? 'byok' : 'other'}
                   data-active={selected || undefined}
                   disabled={disabled}
                   title={
-                    selected
-                      ? "Click to unselect"
-                      : disabled
-                      ? "Limit reached"
-                      : "Click to select"
+                    selected ? 'Click to unselect' : disabled ? 'Limit reached' : 'Click to select'
                   }
                 >
                   <span className="model-toggle-thumb" />
@@ -291,35 +287,37 @@ export default function ModelsModal({
   );
 
   const order: Array<keyof typeof buckets> = [
-    "Favorites",
-    "Text Models",
-    "Image Models",
-    "Audio Models",
-    "Uncensored",
-    "Free",
-    "Good",
-    "Others",
+    'Favorites',
+    'Text Models',
+    'Image Models',
+    'Audio Models',
+    'Uncensored',
+    'Free',
+    'Good',
+    'Others',
   ];
   // Build sections; for Text Models, group into branded subsections
   const builtInSections = order
     .filter((k) => buckets[k].length > 0)
     .flatMap((k) => {
       if (k !== 'Text Models') return <Section key={k} title={k} models={buckets[k]} />;
-      const textModels = buckets[k].filter(m => (m.category === 'text') || m.provider === 'open-provider');
+      const textModels = buckets[k].filter(
+        (m) => m.category === 'text' || m.provider === 'open-provider',
+      );
       const grouped: Record<string, AiModel[]> = {
-        'OpenAI': [],
-        'Google': [],
-        'Anthropic': [],
-        'Grok': [],
+        OpenAI: [],
+        Google: [],
+        Anthropic: [],
+        Grok: [],
         'Open Source Models': [],
       };
-      textModels.forEach(m => {
+      textModels.forEach((m) => {
         grouped[getBrand(m)].push(m);
       });
       const brandOrder = ['OpenAI', 'Google', 'Anthropic', 'Grok', 'Open Source Models'] as const;
       return brandOrder
-        .filter(name => grouped[name].length > 0)
-        .map(name => (
+        .filter((name) => grouped[name].length > 0)
+        .map((name) => (
           <Section
             key={`Text-${name}`}
             title={name}
@@ -331,20 +329,12 @@ export default function ModelsModal({
     });
 
   const customSection = (
-    <Section
-      key="Custom models"
-      title="Custom models"
-      models={customModels}
-      showBadges={false}
-    />
+    <Section key="Custom models" title="Custom models" models={customModels} showBadges={false} />
   );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
@@ -370,13 +360,39 @@ export default function ModelsModal({
         <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-white/10">
           {[
             { id: 'all', label: 'All Models', count: MODEL_CATALOG.length },
-            { id: 'pro', label: 'Pro Models', count: MODEL_CATALOG.filter(m => m.provider === 'unstable' || m.provider === 'mistral').length },
-            { id: 'gemini', label: 'Gemini', count: MODEL_CATALOG.filter(m => m.provider === 'gemini').length },
-            { id: 'openrouter', label: 'OpenRouter', count: MODEL_CATALOG.filter(m => m.provider === 'openrouter').length },
-            { id: 'open-provider', label: 'Open Provider', count: MODEL_CATALOG.filter(m => m.provider === 'open-provider').length },
-            { id: 'unstable', label: 'Unstable', count: MODEL_CATALOG.filter(m => m.provider === 'unstable').length },
-            { id: 'mistral', label: 'Mistral', count: MODEL_CATALOG.filter(m => m.provider === 'mistral').length },
-          ].map(provider => (
+            {
+              id: 'pro',
+              label: 'Pro Models',
+              count: MODEL_CATALOG.filter(
+                (m) => m.provider === 'unstable' || m.provider === 'mistral',
+              ).length,
+            },
+            {
+              id: 'gemini',
+              label: 'Gemini',
+              count: MODEL_CATALOG.filter((m) => m.provider === 'gemini').length,
+            },
+            {
+              id: 'openrouter',
+              label: 'OpenRouter',
+              count: MODEL_CATALOG.filter((m) => m.provider === 'openrouter').length,
+            },
+            {
+              id: 'open-provider',
+              label: 'Open Provider',
+              count: MODEL_CATALOG.filter((m) => m.provider === 'open-provider').length,
+            },
+            {
+              id: 'unstable',
+              label: 'Unstable',
+              count: MODEL_CATALOG.filter((m) => m.provider === 'unstable').length,
+            },
+            {
+              id: 'mistral',
+              label: 'Mistral',
+              count: MODEL_CATALOG.filter((m) => m.provider === 'mistral').length,
+            },
+          ].map((provider) => (
             <button
               key={provider.id}
               onClick={() => setActiveProvider(provider.id)}
