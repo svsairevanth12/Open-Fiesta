@@ -15,8 +15,9 @@ export async function POST(req: NextRequest) {
     const ollamaUrl = ollamaUrlFromBody || process.env.OLLAMA_URL || 'http://localhost:11434';
 
     // First, test basic connectivity to the Ollama instance
+    let pingTimeoutId: NodeJS.Timeout | null = null;
     const pingController = new AbortController();
-    const pingTimeoutId = setTimeout(() => pingController.abort(), 5000); // 5 second timeout for ping
+    pingTimeoutId = setTimeout(() => pingController.abort(), 5000); // 5 second timeout for ping
     
     try {
       let pingResponse;
@@ -25,10 +26,10 @@ export async function POST(req: NextRequest) {
           method: 'GET',
           signal: pingController.signal,
         });
-        clearTimeout(pingTimeoutId);
+        if (pingTimeoutId) clearTimeout(pingTimeoutId);
         console.log(`Ollama ping response status: ${pingResponse.status}`);
       } catch (pingError) {
-        clearTimeout(pingTimeoutId);
+        if (pingTimeoutId) clearTimeout(pingTimeoutId);
         console.log(`Ollama ping failed:`, pingError);
         return NextResponse.json({ 
           ok: false, 
@@ -38,8 +39,9 @@ export async function POST(req: NextRequest) {
       }
       
       // Query Ollama models endpoint to check if the model exists
+      let timeoutId: NodeJS.Timeout | null = null;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       const res = await fetch(`${ollamaUrl}/api/tags`, {
         headers: {
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
         signal: controller.signal,
       });
       
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       
       console.log(`Ollama API response status: ${res.status}`);
       

@@ -3,6 +3,8 @@ import { NextRequest } from 'next/server';
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
+  let timeoutId: NodeJS.Timeout | null = null;
+  
   try {
     const { messages, model, apiKey: ollamaUrlFromBody } = await req.json();
     // For Ollama, we get the base URL from the request body (user settings) or environment or default to localhost
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
     console.log(`Ollama request body:`, JSON.stringify(requestBody, null, 2));
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
       signal: controller.signal,
     });
     
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
     
     console.log(`Ollama response status: ${response.status}`);
 
@@ -65,9 +67,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ text, raw: data });
   } catch (e: unknown) {
     // Clear timeout if it exists
-    if (typeof clearTimeout !== 'undefined' && typeof timeoutId !== 'undefined') {
-      clearTimeout(timeoutId);
-    }
+    if (timeoutId) clearTimeout(timeoutId);
     
     const message = e instanceof Error ? e.message : 'Unknown error';
     console.log(`Ollama error:`, message);
