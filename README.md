@@ -72,7 +72,31 @@ Set only those you need; others can be provided per-request from the UI:
 
 - `OPENROUTER_API_KEY` — required for OpenRouter models.
 - `GEMINI_API_KEY` — required for Gemini models with images/web.
-- 
+- `OLLAMA_URL` — base URL for Ollama API (e.g., http://localhost:11434 or http://host.docker.internal:11434)
+
+## Ollama Support
+
+Open-Fiesta supports local Ollama models. To use Ollama:
+
+1. **Configure Ollama**:
+   - Ensure Ollama is running and accessible: `ollama serve`
+   - Make sure Ollama is configured to accept external connections by setting:
+     ```bash
+     export OLLAMA_HOST=0.0.0.0:11434
+     ```
+
+2. **Add Ollama Models**:
+   - Go to the "Custom Models" section in the app (wrench icon)
+   - Add Ollama models by entering the model name (e.g., "llama3", "mistral", "gemma")
+   - The system will validate that the model exists in your Ollama instance
+
+3. **Docker Networking**:
+   - If running Open-Fiesta in Docker, use `http://host.docker.internal:11434` as the Ollama URL
+   - This allows the Docker container to communicate with Ollama running on your host machine
+
+4. **Select and Use**:
+   - Select your Ollama models in the model picker
+   - Start chatting with your locally running models
 
 ## Docker Support
 
