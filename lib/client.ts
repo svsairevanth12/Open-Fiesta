@@ -48,6 +48,15 @@ export async function callMistral(args: { apiKey?: string; model: string; messag
   return res.json();
 }
 
+export async function callOllama(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }) {
+  const res = await fetch('/api/ollama', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  return res.json();
+}
+
 export type ORStreamHandlers = {
   onToken: (chunk: string) => void;
   onMeta?: (meta: { provider?: string; usedKeyType?: 'user' | 'shared' | 'none' }) => void;

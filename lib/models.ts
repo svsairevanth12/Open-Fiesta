@@ -690,4 +690,14 @@ export const MODEL_CATALOG: AiModel[] = [
     category: 'text',
   },
 
+  // Ollama Models
+  {
+    id: 'ollama-custom',
+    label: 'Ollama (Custom Model)',
+    provider: 'ollama',
+    model: 'custom', // This will be replaced by user's model choice
+    free: true,
+    category: 'text',
+  },
+
 ];
