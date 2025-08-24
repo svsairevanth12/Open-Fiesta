@@ -38,6 +38,7 @@ export type ApiKeys = {
   'unstable'?: string; // API key for unstable provider (inference.quran.lat)
   'mistral'?: string; // API key for Mistral AI (api.mistral.ai)
   'ollama'?: string; // Base URL for Ollama API
+  'ollamaModel'?: string; // Model name for Ollama
 };
 
 export type ChatThread = {

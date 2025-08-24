@@ -14,6 +14,7 @@ export default function Settings({ compact }: SettingsProps) {
   const [openrouter, setOpenrouter] = useState(keys.openrouter || "");
   const [mistral, setMistral] = useState(keys['mistral'] || "");
   const [ollama, setOllama] = useState(keys['ollama'] || "");
+  const [ollamaModel, setOllamaModel] = useState(keys['ollamaModel'] || "");
 
   // hide/show toggle states
   const [showGemini, setShowGemini] = useState(false);
@@ -25,6 +26,7 @@ export default function Settings({ compact }: SettingsProps) {
       openrouter: openrouter.trim() || undefined,
       'mistral': mistral.trim() || undefined,
       'ollama': ollama.trim() || undefined,
+      'ollamaModel': ollamaModel.trim() || undefined,
     };
     setKeys(next);
     setOpen(false);
@@ -40,6 +42,7 @@ export default function Settings({ compact }: SettingsProps) {
     setOpenrouter(keys.openrouter || "");
     setMistral(keys['mistral'] || "");
     setOllama(keys['ollama'] || "");
+    setOllamaModel(keys['ollamaModel'] || "");
   }, [keys]);
 
   // Allow programmatic open from anywhere (e.g., rate-limit CTA)
@@ -198,6 +201,22 @@ export default function Settings({ compact }: SettingsProps) {
                   />
                   <p className="text-xs text-zinc-400 mt-1">
                     Base URL for your local Ollama instance. Default is http://localhost:11434
+                  </p>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-sm md:text-base font-medium">
+                      Ollama Model Name
+                    </label>
+                  </div>
+                  <input
+                    value={ollamaModel}
+                    onChange={(e) => setOllamaModel(e.target.value)}
+                    placeholder="llama3, mistral, etc."
+                    className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20"
+                  />
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Name of the model to use with Ollama (e.g., llama3, mistral, gemma)
                   </p>
                 </div>
               </div>

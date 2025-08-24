@@ -15,8 +15,13 @@ export async function POST(req: NextRequest) {
       content: msg.content
     }));
 
-    // For Ollama, we need to use the actual model name, not 'custom'
-    const ollamaModel = model === 'custom' ? 'llama3' : model; // Default to llama3 if custom
+    // For Ollama, if model is 'custom', we should use the model name from the configuration
+    // Otherwise, use the model name directly
+    let ollamaModel = model;
+    if (model === 'custom') {
+      // Try to get the model name from environment variable or default to llama3
+      ollamaModel = process.env.OLLAMA_MODEL || 'llama3';
+    }
 
     const requestBody = {
       model: ollamaModel,
