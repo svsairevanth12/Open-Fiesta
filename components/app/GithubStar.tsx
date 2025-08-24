@@ -1,6 +1,6 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { Github, Star } from "lucide-react";
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import { Github, Star } from 'lucide-react';
 
 type Props = {
   owner: string;
@@ -18,7 +18,9 @@ export default function GithubStar({ owner, repo, className }: Props) {
     let cancelled = false;
     const load = async () => {
       try {
-        const res = await fetch(`/api/github/stars?owner=${owner}&repo=${repo}`, { cache: 'no-store' });
+        const res = await fetch(`/api/github/stars?owner=${owner}&repo=${repo}`, {
+          cache: 'no-store',
+        });
         const data = await res.json();
         if (cancelled) return;
         if (data?.ok && typeof data.stars === 'number') {
@@ -32,7 +34,10 @@ export default function GithubStar({ owner, repo, className }: Props) {
     };
     load();
     const id = setInterval(load, 300000);
-    return () => { cancelled = true; clearInterval(id); };
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, [owner, repo]);
 
   useEffect(() => {
@@ -62,7 +67,9 @@ export default function GithubStar({ owner, repo, className }: Props) {
     };
 
     animRef.current = requestAnimationFrame(tick);
-    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+    return () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    };
   }, [targetCount]);
 
   const countText = targetCount == null ? '—' : displayCount.toLocaleString();
@@ -73,10 +80,10 @@ export default function GithubStar({ owner, repo, className }: Props) {
       target="_blank"
       rel="noopener noreferrer"
       className={[
-        "group inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-white/15",
-        "text-xs md:text-sm",
-        className || "",
-      ].join(" ")}
+        'group inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-white/15',
+        'text-xs md:text-sm',
+        className || '',
+      ].join(' ')}
       title="Star on GitHub"
     >
       {/* Left: circular chip with GitHub icon */}

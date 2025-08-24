@@ -1,7 +1,13 @@
-"use client";
-import { useState, useEffect } from "react";
-import { X } from "lucide-react";
-import { Project, createProject, updateProject, validateProjectName, validateSystemPrompt } from "@/lib/projects";
+'use client';
+import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+import {
+  Project,
+  createProject,
+  updateProject,
+  validateProjectName,
+  validateSystemPrompt,
+} from '@/lib/projects';
 
 interface ProjectModalProps {
   open: boolean;
@@ -10,20 +16,15 @@ interface ProjectModalProps {
   project?: Project | null; // null for create, Project for edit
 }
 
-export default function ProjectModal({
-  open,
-  onClose,
-  onSave,
-  project = null,
-}: ProjectModalProps) {
-  const [name, setName] = useState("");
-  const [systemPrompt, setSystemPrompt] = useState("");
+export default function ProjectModal({ open, onClose, onSave, project = null }: ProjectModalProps) {
+  const [name, setName] = useState('');
+  const [systemPrompt, setSystemPrompt] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [promptError, setPromptError] = useState<string | null>(null);
 
   const isEditing = project !== null;
-  const title = isEditing ? "Edit project" : "Create new project";
-  const buttonText = isEditing ? "Save changes" : "Create project";
+  const title = isEditing ? 'Edit project' : 'Create new project';
+  const buttonText = isEditing ? 'Save changes' : 'Create project';
 
   // Reset form when modal opens/closes or project changes
   useEffect(() => {
@@ -32,8 +33,8 @@ export default function ProjectModal({
         setName(project.name);
         setSystemPrompt(project.systemPrompt);
       } else {
-        setName("");
-        setSystemPrompt("");
+        setName('');
+        setSystemPrompt('');
       }
       setNameError(null);
       setPromptError(null);
@@ -87,13 +88,10 @@ export default function ProjectModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
-        onClick={onClose}
-      />
-      
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
       {/* Modal */}
-      <div 
+      <div
         className="relative w-full max-w-md bg-zinc-900/95 border border-white/20 rounded-lg shadow-2xl"
         onKeyDown={handleKeyDown}
       >
@@ -112,7 +110,8 @@ export default function ProjectModal({
         {/* Body */}
         <div className="p-4 space-y-4">
           <p className="text-sm text-white/70">
-            Fill in the details below to {isEditing ? 'update' : 'create'} {isEditing ? 'this' : 'a new'} project.
+            Fill in the details below to {isEditing ? 'update' : 'create'}{' '}
+            {isEditing ? 'this' : 'a new'} project.
           </p>
 
           {/* Project Name */}
@@ -127,16 +126,14 @@ export default function ProjectModal({
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="Enter a name for your project (max 50 characters)"
               className={`w-full px-3 py-2 bg-white/5 border rounded-md text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-colors ${
-                nameError 
-                  ? 'border-red-400 focus:ring-red-400/50' 
+                nameError
+                  ? 'border-red-400 focus:ring-red-400/50'
                   : 'border-white/20 focus:border-white/30 focus:ring-[var(--accent-interactive-primary)]/50'
               }`}
               maxLength={50}
               autoFocus
             />
-            {nameError && (
-              <p className="mt-1 text-xs text-red-400">{nameError}</p>
-            )}
+            {nameError && <p className="mt-1 text-xs text-red-400">{nameError}</p>}
             <p className="mt-1 text-xs text-white/50">{name.length}/50 characters</p>
           </div>
 
@@ -152,17 +149,17 @@ export default function ProjectModal({
               placeholder="Enter a system prompt for chats in this project (max 1000 characters)"
               rows={6}
               className={`w-full px-3 py-2 bg-white/5 border rounded-md text-white placeholder-white/40 resize-none focus:outline-none focus:ring-2 transition-colors ${
-                promptError 
-                  ? 'border-red-400 focus:ring-red-400/50' 
+                promptError
+                  ? 'border-red-400 focus:ring-red-400/50'
                   : 'border-white/20 focus:border-white/30 focus:ring-[var(--accent-interactive-primary)]/50'
               }`}
               maxLength={1000}
             />
-            {promptError && (
-              <p className="mt-1 text-xs text-red-400">{promptError}</p>
-            )}
+            {promptError && <p className="mt-1 text-xs text-red-400">{promptError}</p>}
             <div className="mt-1 flex justify-between text-xs text-white/50">
-              <span>All chats in this project will use this as the system prompt sent to the AI model.</span>
+              <span>
+                All chats in this project will use this as the system prompt sent to the AI model.
+              </span>
               <span>{systemPrompt.length}/1000</span>
             </div>
           </div>

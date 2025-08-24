@@ -1,6 +1,12 @@
 import { ChatMessage } from './types';
 
-export async function callGemini(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string, signal?: AbortSignal }) {
+export async function callGemini(args: {
+  apiKey?: string;
+  model: string;
+  messages: ChatMessage[];
+  imageDataUrl?: string;
+  signal?: AbortSignal;
+}) {
   const endpoint = args.model === 'gemini-2.5-pro' ? '/api/gemini-pro' : '/api/gemini';
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -11,17 +17,33 @@ export async function callGemini(args: { apiKey?: string; model: string; message
   return res.json();
 }
 
-export async function callOpenRouter(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string, signal?: AbortSignal }) {
+export async function callOpenRouter(args: {
+  apiKey?: string;
+  model: string;
+  messages: ChatMessage[];
+  imageDataUrl?: string;
+  signal?: AbortSignal;
+}) {
   const res = await fetch('/api/openrouter', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...args, referer: typeof window !== 'undefined' ? window.location.origin : undefined, title: 'AI Fiesta' }),
+    body: JSON.stringify({
+      ...args,
+      referer: typeof window !== 'undefined' ? window.location.origin : undefined,
+      title: 'AI Fiesta',
+    }),
     signal: args.signal,
   });
   return res.json();
 }
 
-export async function callOpenProvider(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string; voice?: string }) {
+export async function callOpenProvider(args: {
+  apiKey?: string;
+  model: string;
+  messages: ChatMessage[];
+  imageDataUrl?: string;
+  voice?: string;
+}) {
   const res = await fetch('/api/open-provider', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -30,7 +52,12 @@ export async function callOpenProvider(args: { apiKey?: string; model: string; m
   return res.json();
 }
 
-export async function callUnstable(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }) {
+export async function callUnstable(args: {
+  apiKey?: string;
+  model: string;
+  messages: ChatMessage[];
+  imageDataUrl?: string;
+}) {
   const res = await fetch('/api/unstable', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -39,7 +66,12 @@ export async function callUnstable(args: { apiKey?: string; model: string; messa
   return res.json();
 }
 
-export async function callMistral(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string }) {
+export async function callMistral(args: {
+  apiKey?: string;
+  model: string;
+  messages: ChatMessage[];
+  imageDataUrl?: string;
+}) {
   const res = await fetch('/api/mistral', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -51,16 +83,34 @@ export async function callMistral(args: { apiKey?: string; model: string; messag
 export type ORStreamHandlers = {
   onToken: (chunk: string) => void;
   onMeta?: (meta: { provider?: string; usedKeyType?: 'user' | 'shared' | 'none' }) => void;
-  onError?: (err: { error?: string; code?: number; provider?: string; usedKeyType?: 'user' | 'shared' | 'none' }) => void;
+  onError?: (err: {
+    error?: string;
+    code?: number;
+    provider?: string;
+    usedKeyType?: 'user' | 'shared' | 'none';
+  }) => void;
   onDone?: () => void;
 };
 
-export async function streamOpenRouter(args: { apiKey?: string; model: string; messages: ChatMessage[]; imageDataUrl?: string, signal?: AbortSignal }, handlers: ORStreamHandlers) {
+export async function streamOpenRouter(
+  args: {
+    apiKey?: string;
+    model: string;
+    messages: ChatMessage[];
+    imageDataUrl?: string;
+    signal?: AbortSignal;
+  },
+  handlers: ORStreamHandlers,
+) {
   try {
     const res = await fetch('/api/openrouter/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...args, referer: typeof window !== 'undefined' ? window.location.origin : undefined, title: 'AI Fiesta' }),
+      body: JSON.stringify({
+        ...args,
+        referer: typeof window !== 'undefined' ? window.location.origin : undefined,
+        title: 'AI Fiesta',
+      }),
       signal: args.signal,
     });
     if (!res.body) {
@@ -92,7 +142,13 @@ export async function streamOpenRouter(args: { apiKey?: string; model: string; m
           const json = JSON.parse(payload);
           if (typeof json?.delta === 'string' && json.delta) handlers.onToken(json.delta);
           if (json?.provider || json?.usedKeyType) handlers.onMeta?.(json);
-          if (json?.error) handlers.onError?.({ error: json.error, code: json.code, provider: json.provider, usedKeyType: json.usedKeyType });
+          if (json?.error)
+            handlers.onError?.({
+              error: json.error,
+              code: json.code,
+              provider: json.provider,
+              usedKeyType: json.usedKeyType,
+            });
         } catch {
           // ignore individual event parse errors
         }

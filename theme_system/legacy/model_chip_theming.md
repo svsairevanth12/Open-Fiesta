@@ -31,16 +31,11 @@ These map into chip + toggle styling; Pro inherits the `--badge-pro-*` trio, Fre
 Chips & toggles expose semantic type & state for styling and future logic:
 
 ```html
-<button
-  class="model-chip model-chip-pro"
-  data-type="pro"
-  data-selected="true"
->
-  ...
-</button>
+<button class="model-chip model-chip-pro" data-type="pro" data-selected="true">...</button>
 ```
 
 Toggle:
+
 ```html
 <span class="model-toggle-pill" data-type="pro" data-active="true">
   <span class="model-toggle-thumb"></span>
@@ -60,9 +55,15 @@ In `ModelsModal` and `SelectedModelsBar` the selection state drives `data-select
 3. In `globals.css` extend:
 
 ```css
-.model-chip[data-type="unc"] { /* border/background */ }
-.model-toggle-pill[data-type="unc"][data-active="true"] { /* active track */ }
-.model-toggle-pill[data-type="unc"][data-active="true"] .model-toggle-thumb { /* thumb */ }
+.model-chip[data-type='unc'] {
+  /* border/background */
+}
+.model-toggle-pill[data-type='unc'][data-active='true'] {
+  /* active track */
+}
+.model-toggle-pill[data-type='unc'][data-active='true'] .model-toggle-thumb {
+  /* thumb */
+}
 ```
 
 1. (Optional) Provide badge variables if it uses a dedicated color trio.
@@ -92,7 +93,9 @@ const isUnc = /uncensored/i.test(m.label);
   ...
 </button>
 ```
+
 Add selectors in CSS referencing either the class (`.model-chip-unc`) or the attribute (`.model-chip[data-type="unc"]`).
 
 ## Summary
+
 A single variable-backed system (badge pairs) feeds: badges, model chips, and toggles. Data attributes express semantic intent. Utilities encapsulate structural + transitional concerns. This minimizes duplication and keeps new model category additions low-effort.
