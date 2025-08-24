@@ -4,9 +4,9 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model } = await req.json();
-    // For Ollama, we get the base URL from the environment or default to localhost
-    const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
+    const { messages, model, apiKey: ollamaUrlFromBody } = await req.json();
+    // For Ollama, we get the base URL from the request body (user settings) or environment or default to localhost
+    const ollamaUrl = ollamaUrlFromBody || process.env.OLLAMA_URL || 'http://localhost:11434';
     
     // Convert messages to Ollama format
     const ollamaMessages = messages.map((msg: any) => ({

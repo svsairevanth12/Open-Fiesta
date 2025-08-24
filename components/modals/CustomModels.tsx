@@ -67,10 +67,35 @@ export default function CustomModels({ compact }: CustomModelsProps) {
     
     // Check if it's an Ollama model (no slash in the name)
     if (!s.includes('/')) {
-      // For Ollama models, we just assume they're valid since we can't easily validate them
-      // Users will need to ensure the model is available in their Ollama instance
-      setValidMsg("Ollama model name (validation skipped). Make sure this model is available in your Ollama instance.");
-      setValidState("ok");
+      // For Ollama models, validate against the Ollama instance
+      try {
+        setValidating(true);
+        const res = await fetch("/api/ollama/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug: s, apiKey: keys?.ollama }),
+        });
+        const data = await res.json();
+        if (!data?.ok) {
+          setValidMsg(
+            `Validation error${data?.status ? ` (status ${data.status})` : ""}.`
+          );
+          setValidState("error");
+          return;
+        }
+        if (data.exists) {
+          setValidMsg("Ollama model found.");
+          setValidState("ok");
+        } else {
+          setValidMsg("Ollama model not found. Make sure this model is available in your Ollama instance.");
+          setValidState("fail");
+        }
+      } catch {
+        setValidMsg("Could not validate Ollama model right now.");
+        setValidState("error");
+      } finally {
+        setValidating(false);
+      }
       return;
     }
     

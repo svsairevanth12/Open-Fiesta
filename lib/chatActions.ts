@@ -292,7 +292,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
-          const res = await callOllama({ model: m.model, messages: prepareMessages(nextHistory) });
+          const res = await callOllama({ apiKey: keys['ollama'] || undefined, model: m.model, messages: prepareMessages(nextHistory) });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(t => {
@@ -604,7 +604,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             }, 24);
           }
         } else if (m.provider === 'ollama') {
-          const res = await callOllama({ model: m.model, messages: baseHistory });
+          const res = await callOllama({ apiKey: keys['ollama'] || undefined, model: m.model, messages: baseHistory });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(tt => {
