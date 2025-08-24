@@ -464,7 +464,8 @@ export function createChatActions({
 
           const res = await callOllama({ baseUrl: keys['ollama'] || undefined, model: m.model, messages: prepareMessages(nextHistory), signal: controller.signal });
           const full = String(extractText(res) || '').trim();
-          if (!full) {
+          // Check for empty response or literal "No response"
+          if (!full || full === 'No response') {
             setThreads(prev => prev.map(t => {
               if (t.id !== thread.id) return t;
               const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
@@ -496,6 +497,11 @@ export function createChatActions({
                 }));
               }
             }, 24);
+            
+            // Clear interval on abort to avoid leaks
+            controller.signal.addEventListener('abort', () => {
+              window.clearInterval(timer);
+            });
           }
         } else {
           const placeholderTs = Date.now();
@@ -855,7 +861,8 @@ export function createChatActions({
         } else if (m.provider === 'ollama') {
           const res = await callOllama({ baseUrl: keys['ollama'] || undefined, model: m.model, messages: baseHistory });
           const full = String(extractText(res) || '').trim();
-          if (!full) {
+          // Check for empty response or literal "No response"
+          if (!full || full === 'No response') {
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
               const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
