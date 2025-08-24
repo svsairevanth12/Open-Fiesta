@@ -40,11 +40,23 @@ npm i
 ```
 
 2. Configure environment
-   Copy `.env.example` to `.env.local` and add your API keys:
+   Copy the example environment file:
 
 ```bash
-cp .env.example .env.local
-# Edit .env.local with your actual API keys
+cp .env.example .env
+```
+
+Then set the environment variables you plan to use. You can also enter keys at runtime in the app's Settings.
+
+```bash
+# OpenRouter (wide catalog of community models)
+OPENROUTER_API_KEY=your_openrouter_key
+
+# Google Gemini (Gemini 2.5 Flash/Pro)
+GEMINI_API_KEY=your_gemini_key
+
+# Unstable Inference endpoint (custom provider)
+
 ```
 
 3. Run dev server
@@ -54,44 +66,14 @@ npm run dev
 # open http://localhost:3000
 ```
 
-### Option 2: Docker Development
-
-1. Build and run with Docker Compose (recommended for development):
-
-```bash
-npm run docker:dev
-# or
-docker-compose up ai_fiesta_dev
-```
-
-2. For production build with Docker:
-
-```bash
-npm run docker:build
-npm run docker:run
-# or
-docker-compose up ai_fiesta
-```
-
-### Option 3: Manual Docker Commands
-
-```bash
-# Build the image
-docker build -t ai_fiesta .
-
-# Run the container
-docker run -p 3000:3000 -e OPENROUTER_API_KEY=your_key_here ai_fiesta
-
-# Run with environment file
-docker run -p 3000:3000 --env-file .env.local ai_fiesta
-```
 
 ## Environment Variables
 
-- `OPENROUTER_API_KEY`: API key from https://openrouter.ai (required for OpenRouter models)
-- `GOOGLE_GENERATIVE_AI_API_KEY`: API key from Google AI Studio (required for Gemini models)
+Set only those you need; others can be provided per-request from the UI:
 
-You can also provide an API key at runtime in the UI's Settings panel.
+- `OPENROUTER_API_KEY` — required for OpenRouter models.
+- `GEMINI_API_KEY` — required for Gemini models with images/web.
+- 
 
 ## Docker Support
 

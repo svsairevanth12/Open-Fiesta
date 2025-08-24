@@ -204,8 +204,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className={`min-h-screen w-full ${backgroundClass} relative text-white`}>
-
+    <div className={`min-h-screen w-full ${backgroundClass} relative text-black dark:text-white`}>
       {showSplash && (
         <div className="fixed inset-0 z-[9999]">
           <LaunchScreen backgroundClass={backgroundClass} dismissed={isHydrated} />
