@@ -25,24 +25,14 @@ export class ShareService {
   /**
    * Generates a shareable URL for a chat thread
    */
-  async generateShareableUrl(thread: ChatThread, projectName?: string, context?: LogContext): Promise<ShareResult> {
+  async generateShareableUrl(thread: ChatThread, projectName?: string): Promise<ShareResult> {
     const startTime = Date.now();
     const shareId = Math.random().toString(36).substring(7);
-    
-    const logContext: LogContext = {
-      ...context,
-      feature: 'chat-sharing',
-      shareId,
-      threadId: thread.id,
-      messageCount: thread.messages?.length || 0
-    };
 
     try {
-      logger.info('Starting share URL generation', logContext);
 
       // Validate input
       if (!thread || !thread.messages || thread.messages.length === 0) {
-        logger.warn('Share attempt with empty conversation', logContext);
         return {
           success: false,
           error: 'Cannot share empty conversation'
@@ -50,7 +40,6 @@ export class ShareService {
       }
 
       if (!validateMessagesForSharing(thread.messages)) {
-        logger.warn('Share attempt with invalid message format', logContext);
         return {
           success: false,
           error: 'Invalid message format'
@@ -62,7 +51,6 @@ export class ShareService {
 
       // Validate sanitized data
       if (!validateSanitizedData(sharedData)) {
-        logger.error('Data sanitization failed', logContext);
         return {
           success: false,
           error: 'Data sanitization failed'
@@ -71,10 +59,6 @@ export class ShareService {
 
       // Check URL length
       if (isUrlTooLong(sharedData, this.config.baseUrl, this.config.maxUrlLength)) {
-        logger.warn('Share URL too long', {
-          ...logContext,
-          urlLength: encodeShareData(sharedData).length
-        });
         return {
           success: false,
           error: 'Conversation too large to share. Try sharing a shorter conversation.'
@@ -87,29 +71,7 @@ export class ShareService {
       
       const duration = Date.now() - startTime;
 
-      // Log successful share creation
-      logger.shareCreated(shareId, {
-        ...logContext,
-        messageCount: sharedData.messages.length,
-        truncated: sharedData.truncated || false,
-        originalMessageCount: sharedData.originalMessageCount,
-        urlLength: encoded.length,
-        projectName
-      });
-
-      logger.performance('share_url_generation', duration, logContext);
-
-      // Send metrics to monitoring endpoint
-      if (process.env.METRICS_ENABLED === 'true') {
-        this.sendShareMetrics('share_created', {
-          messageCount: sharedData.messages.length,
-          truncated: sharedData.truncated || false,
-          duration,
-          projectName
-        }).catch(error => {
-          logger.warn('Failed to send share metrics', logContext, error);
-        });
-      }
+      // Share created successfully
 
       return {
         success: true,
@@ -118,23 +80,10 @@ export class ShareService {
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      
-      logger.shareError('Failed to generate shareable URL', logContext, error as Error);
-      logger.performance('share_url_generation_failed', duration, logContext);
-
-      // Send error metrics
-      if (process.env.METRICS_ENABLED === 'true') {
-        this.sendShareMetrics('share_error', {
-          error: (error as Error).message,
-          duration
-        }).catch(metricsError => {
-          logger.warn('Failed to send error metrics', logContext, metricsError);
-        });
-      }
 
       return {
         success: false,
-        error: 'Failed to generate shareable URL: ' + (error as Error).message
+        error: 'An unexpected error occurred while sharing'
       };
     }
   }
@@ -260,29 +209,5 @@ export class ShareService {
     return 'Clipboard access failed. Please copy the link manually.';
   }
 
-  /**
-   * Sends metrics to the monitoring endpoint
-   */
-  private async sendShareMetrics(event: string, data: any): Promise<void> {
-    if (typeof window === 'undefined' || process.env.METRICS_ENABLED !== 'true') {
-      return;
-    }
 
-    try {
-      await fetch('/api/metrics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          event,
-          data,
-          timestamp: new Date().toISOString()
-        })
-      });
-    } catch (error) {
-      // Silently fail metrics - don't impact user experience
-      console.warn('Failed to send metrics:', error);
-    }
-  }
 }
