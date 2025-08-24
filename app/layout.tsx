@@ -61,7 +61,25 @@ export default function RootLayout({
             <Analytics />
           </>
         )}
-        <Script src="https://scripts.simpleanalyticscdn.com/latest.js" />
+        <Script
+          src="https://scripts.simpleanalyticscdn.com/latest.js"
+          strategy="afterInteractive"
+        />
+
+        {/* Production debugging script */}
+        {process.env.NODE_ENV === 'production' && (
+          <Script id="production-debug" strategy="afterInteractive">
+            {`
+              console.log('🚀 App loaded in production mode');
+              window.addEventListener('error', function(e) {
+                console.error('Production error:', e.error);
+              });
+              window.addEventListener('unhandledrejection', function(e) {
+                console.error('Production unhandled rejection:', e.reason);
+              });
+            `}
+          </Script>
+        )}
       </body>
     </html>
   );
