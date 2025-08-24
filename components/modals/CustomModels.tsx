@@ -64,6 +64,17 @@ export default function CustomModels({ compact }: CustomModelsProps) {
       setErr("Enter a Model ID to validate.");
       return;
     }
+    
+    // Check if it's an Ollama model (no slash in the name)
+    if (!s.includes('/')) {
+      // For Ollama models, we just assume they're valid since we can't easily validate them
+      // Users will need to ensure the model is available in their Ollama instance
+      setValidMsg("Ollama model name (validation skipped). Make sure this model is available in your Ollama instance.");
+      setValidState("ok");
+      return;
+    }
+    
+    // For OpenRouter models, use the existing validation
     try {
       setValidating(true);
       const res = await fetch("/api/openrouter/validate", {
@@ -119,10 +130,10 @@ export default function CustomModels({ compact }: CustomModelsProps) {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-base md:text-lg lg:text-xl font-semibold tracking-wide">
-                    Add custom OpenRouter models
+                    Add custom models
                   </h3>
                   <p className="text-xs md:text-sm text-zinc-400 mt-1">
-                    Add any model slug from OpenRouter. Selection is still
+                    Add any model from OpenRouter or Ollama. Selection is still
                     capped at 5 in the picker.
                   </p>
                 </div>
@@ -157,7 +168,7 @@ export default function CustomModels({ compact }: CustomModelsProps) {
                       setValidState(null);
                       setValidMsg(null);
                     }}
-                    placeholder="provider/model:variant (e.g., deepseek/deepseek-r1:free)"
+                    placeholder="provider/model:variant (e.g., deepseek/deepseek-r1:free) or Ollama model name (e.g., llama3)"
                     className="w-full bg-black/40 border border-white/10 rounded-md px-3.5 py-2.5 text-sm md:text-base focus:outline-none focus:ring-1 focus:ring-white/30"
                   />
                 </div>

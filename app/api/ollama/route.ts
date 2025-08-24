@@ -4,10 +4,9 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model, apiKey: ollamaUrlFromBody } = await req.json();
-    const ollamaUrl = ollamaUrlFromBody || process.env.OLLAMA_URL || 'http://localhost:11434';
-    
-    if (!ollamaUrl) return new Response(JSON.stringify({ error: 'Missing Ollama URL' }), { status: 400 });
+    const { messages, model } = await req.json();
+    // For Ollama, we get the base URL from the environment or default to localhost
+    const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
     
     // Convert messages to Ollama format
     const ollamaMessages = messages.map((msg: any) => ({
@@ -15,16 +14,8 @@ export async function POST(req: NextRequest) {
       content: msg.content
     }));
 
-    // For Ollama, if model is 'custom', we should use the model name from the configuration
-    // Otherwise, use the model name directly
-    let ollamaModel = model;
-    if (model === 'custom') {
-      // Try to get the model name from environment variable or default to llama3
-      ollamaModel = process.env.OLLAMA_MODEL || 'llama3';
-    }
-
     const requestBody = {
-      model: ollamaModel,
+      model: model,
       messages: ollamaMessages,
       stream: false
     };

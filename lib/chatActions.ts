@@ -292,10 +292,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
           const placeholder: ChatMessage = { role: 'assistant', content: '', modelId: m.id, ts: placeholderTs };
           setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, messages: [...(t.messages ?? nextHistory), placeholder] } : t));
 
-          // For Ollama, if model is 'custom', use the model name from the configuration
-          const modelName = m.model === 'custom' ? (keys['ollamaModel'] || 'llama3') : m.model;
-
-          const res = await callOllama({ apiKey: keys['ollama'] || undefined, model: modelName, messages: prepareMessages(nextHistory), imageDataUrl });
+          const res = await callOllama({ model: m.model, messages: prepareMessages(nextHistory) });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(t => {
@@ -607,10 +604,7 @@ export function createChatActions({ selectedModels, keys, threads, activeThread,
             }, 24);
           }
         } else if (m.provider === 'ollama') {
-          // For Ollama, if model is 'custom', use the model name from the configuration
-          const modelName = m.model === 'custom' ? (keys['ollamaModel'] || 'llama3') : m.model;
-
-          const res = await callOllama({ apiKey: keys['ollama'] || undefined, model: modelName, messages: baseHistory });
+          const res = await callOllama({ model: m.model, messages: baseHistory });
           const full = String(extractText(res) || '').trim();
           if (!full) {
             setThreads(prev => prev.map(tt => {
