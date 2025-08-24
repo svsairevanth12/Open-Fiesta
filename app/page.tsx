@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import HeaderBar from '@/components/app/HeaderBar';
 import SelectedModelsBar from '@/components/chat/SelectedModelsBar';
@@ -85,35 +85,13 @@ export default function Home() {
   }, [selectedModels, collapsedIds]);
 
   const anyLoading = loadingIds.length > 0;
-  const [copiedAllIdx, setCopiedAllIdx] = useState<number | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
   const [firstNoteDismissed, setFirstNoteDismissed] = useLocalStorage<boolean>(
     'ai-fiesta:first-visit-note-dismissed',
     false,
   );
   const showFirstVisitNote =
     isHydrated && !firstNoteDismissed && (!keys?.openrouter || !keys?.gemini);
-
-  // Copy helper with fallback when navigator.clipboard is unavailable
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      } catch {
-        // ignore
-      }
-    }
-  };
 
   const toggle = (id: string) => {
     setSelectedIds((prev) => {
@@ -323,11 +301,6 @@ export default function Home() {
                 setCollapsedIds={setCollapsedIds}
                 loadingIds={loadingIds}
                 pairs={pairs}
-                copyToClipboard={copyToClipboard}
-                copiedAllIdx={copiedAllIdx}
-                setCopiedAllIdx={setCopiedAllIdx}
-                copiedKey={copiedKey}
-                setCopiedKey={setCopiedKey}
                 onEditUser={onEditUser}
                 onDeleteUser={onDeleteUser}
                 onDeleteAnswer={onDeleteAnswer}

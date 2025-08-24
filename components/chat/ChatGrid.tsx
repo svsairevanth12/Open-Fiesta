@@ -1,22 +1,11 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Eye,
-  EyeOff,
-  Check,
-  Loader2,
-  Copy as CopyIcon,
-  Pencil,
-  Save,
-  X,
-  Star,
-  Trash,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import MarkdownLite from './MarkdownLite';
 import ConfirmDialog from '@/components/modals/ConfirmDialog';
 import type { AiModel, ChatMessage } from '@/lib/types';
+import { ChevronDown, ChevronUp, Eye, Loader2, Pencil, Star, Trash } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import MarkdownLite from './MarkdownLite';
+import { CopyToClipboard } from '../ui/CopyToClipboard';
+import { estimateTokens, sanitizeContent } from '@/lib/utils';
 
 export type ChatGridProps = {
   selectedModels: AiModel[];
@@ -25,11 +14,6 @@ export type ChatGridProps = {
   setCollapsedIds: (updater: (prev: string[]) => string[]) => void;
   loadingIds: string[];
   pairs: { user: ChatMessage; answers: ChatMessage[] }[];
-  copyToClipboard: (text: string) => Promise<void> | void;
-  copiedAllIdx: number | null;
-  setCopiedAllIdx: (v: number | null) => void;
-  copiedKey: string | null;
-  setCopiedKey: (v: string | null | ((prev: string | null) => string | null)) => void;
   onEditUser: (turnIndex: number, newText: string) => void;
   onDeleteUser: (turnIndex: number) => void;
   onDeleteAnswer: (turnIndex: number, modelId: string) => void;
@@ -42,11 +26,6 @@ export default function ChatGrid({
   setCollapsedIds,
   loadingIds,
   pairs,
-  copyToClipboard,
-  copiedAllIdx,
-  setCopiedAllIdx,
-  copiedKey,
-  setCopiedKey,
   onEditUser,
   onDeleteUser,
   onDeleteAnswer,
@@ -56,26 +35,6 @@ export default function ChatGrid({
     | { type: 'answer'; turnIndex: number; modelId: string }
     | null
   >(null);
-  // Sanitize certain provider-specific XML-ish wrappers (e.g., <answer>, <think>)
-  const sanitizeContent = (s: string): string => {
-    try {
-      let t = String(s ?? '');
-      t = t.replace(/<\/?answer[^>]*>/gi, '');
-      t = t.replace(/<\/?think[^>]*>/gi, '');
-      return t.trim();
-    } catch {
-      return s;
-    }
-  };
-  // Approximate token estimator (~4 chars/token), for display only
-  const estimateTokens = (text: string): number => {
-    try {
-      const t = (text || '').replace(/\s+/g, ' ').trim();
-      return t.length > 0 ? Math.ceil(t.length / 4) : 0;
-    } catch {
-      return 0;
-    }
-  };
   const headerCols = useMemo(
     () => headerTemplate || `repeat(${selectedModels.length}, minmax(260px, 1fr))`,
     [headerTemplate, selectedModels.length],
@@ -107,7 +66,7 @@ export default function ChatGrid({
           <div className="min-w-full space-y-3">
             {/* Header row: model labels */}
             <div
-              className="relative grid min-w-full gap-3 items-center overflow-visible mt-0 sticky top-0 left-0 right-0 z-30 -mx-3 px-3 lg:-mx-4 lg:px-4 py-1 rounded-t-lg shadow-[0_1px_0_rgba(0,0,0,0.4)] bg-transparent border-0 sm:bg-black/40 dark:sm:bg-black/40 sm:backdrop-blur-sm sm:border-b sm:border-black/10 dark:sm:border-white/10"
+              className="grid min-w-full gap-3 items-center overflow-visible mt-0 sticky top-0 left-0 right-0 z-30 -mx-3 px-3 lg:-mx-4 lg:px-4 py-1 rounded-t-lg shadow-[0_1px_0_rgba(0,0,0,0.4)] bg-transparent border-0 sm:bg-black/40 dark:sm:bg-black/40 sm:backdrop-blur-sm sm:border-b sm:border-black/10 dark:sm:border-white/10"
               style={{ gridTemplateColumns: headerCols }}
             >
               {selectedModels.map((m) => {
@@ -204,13 +163,8 @@ export default function ChatGrid({
                     >
                       <Trash size={14} />
                     </button>
-                    <button
-                      onClick={() => copyToClipboard(row.user.content)}
-                      className="icon-btn h-7 w-7 accent-focus"
-                      title="Copy message"
-                    >
-                      <CopyIcon size={14} />
-                    </button>
+
+                    <CopyToClipboard getText={() => row.user.content} />
                   </div>
                 </div>
 
@@ -257,32 +211,10 @@ export default function ChatGrid({
                               >
                                 <Trash size={12} />
                               </button>
-                              <button
-                                onClick={() => {
-                                  copyToClipboard(sanitizeContent(ans.content));
-                                  const key = `${i}:${m.id}`;
-                                  setCopiedKey(key);
-                                  window.setTimeout(
-                                    () =>
-                                      setCopiedKey((prev) =>
-                                        typeof prev === 'string' && prev === key ? null : prev,
-                                      ),
-                                    1200,
-                                  );
-                                }}
-                                className={`icon-btn h-7 w-7 ${
-                                  copiedKey === `${i}:${m.id}`
-                                    ? 'bg-emerald-500/15 border-emerald-300/30 text-emerald-100'
-                                    : ''
-                                } accent-focus`}
+                              <CopyToClipboard
+                                getText={() => sanitizeContent(ans.content)}
                                 title={`Copy ${m.label} response`}
-                              >
-                                {copiedKey === `${i}:${m.id}` ? (
-                                  <Check size={12} />
-                                ) : (
-                                  <CopyIcon size={12} />
-                                )}
-                              </button>
+                              />
                             </div>
                           )}
                           <div
