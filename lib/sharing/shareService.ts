@@ -3,7 +3,6 @@ import type { SharedChatData, ShareResult } from './types';
 import { truncateMessages, validateMessagesForSharing } from './truncation';
 import { sanitizeMessages, sanitizeThreadForSharing, validateSanitizedData } from './sanitization';
 import { encodeShareData, isUrlTooLong } from './encoding';
-import { logger, type LogContext } from '@/lib/logger';
 
 export interface ShareServiceConfig {
   baseUrl?: string;
