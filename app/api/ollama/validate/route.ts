@@ -17,41 +17,63 @@ export async function POST(req: NextRequest) {
     // First, test basic connectivity to the Ollama instance
     let pingTimeoutId: NodeJS.Timeout | null = null;
     const pingController = new AbortController();
-    pingTimeoutId = setTimeout(() => pingController.abort(), 15000); // 15 seconds for debugging
     
     try {
-      let pingResponse;
-      try {
-        console.log(`Testing connectivity to Ollama at: ${ollamaUrl}`);
-        pingResponse = await fetch(`${ollamaUrl}/`, {
-          method: 'GET',
-          signal: pingController.signal,
-        });
-        if (pingTimeoutId) clearTimeout(pingTimeoutId);
-        console.log(`Ollama ping response status: ${pingResponse.status}`);
-      } catch (pingError) {
-        if (pingTimeoutId) clearTimeout(pingTimeoutId);
-        const err = pingError as Error;
-        if (err?.name === 'AbortError') {
-          if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama ping timed out');
-          return NextResponse.json({ 
-            ok: false, 
-            error: 'Cannot connect to Ollama instance', 
-            details: 'Connection timeout - Ollama instance not responding. Check network connectivity and Ollama configuration.'
-          }, { status: 504 });
-        }
-        console.log(`Ollama ping failed:`, err);
+      if (process.env.DEBUG_OLLAMA === '1') console.log(`Testing connectivity to Ollama at: ${ollamaUrl}`);
+      
+      pingTimeoutId = setTimeout(() => {
+        if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama ping timeout triggered');
+        pingController.abort();
+      }, 15000); // 15 seconds for debugging
+
+      const pingResponse = await fetch(`${ollamaUrl}/`, {
+        method: 'GET',
+        signal: pingController.signal,
+      });
+      
+      if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama ping response status: ${pingResponse.status}`);
+      
+      if (!pingResponse.ok) {
+        const errorText = await pingResponse.text();
+        if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama ping error response: ${errorText}`);
         return NextResponse.json({ 
           ok: false, 
           error: 'Cannot connect to Ollama instance', 
-          details: err instanceof Error ? err.message : 'Unknown connection error'
-        }, { status: 200 });
+          details: `Ollama returned HTTP ${pingResponse.status}: ${errorText || pingResponse.statusText}`
+        }, { status: 502 });
       }
+    } catch (pingError) {
+      const err = pingError as Error;
+      if (err?.name === 'AbortError') {
+        if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama ping timed out');
+        return NextResponse.json({ 
+          ok: false, 
+          error: 'Cannot connect to Ollama instance', 
+          details: 'Connection timeout - Ollama instance not responding. Check network connectivity and Ollama configuration.'
+        }, { status: 504 });
+      }
+      if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama ping failed:`, err);
+      return NextResponse.json({ 
+        ok: false, 
+        error: 'Cannot connect to Ollama instance', 
+        details: err instanceof Error ? err.message : 'Unknown connection error'
+      }, { status: 502 });
+    } finally {
+      // Always clear the ping timeout
+      if (pingTimeoutId) {
+        clearTimeout(pingTimeoutId);
+      }
+    }
       
-      // Query Ollama models endpoint to check if the model exists
-      let timeoutId: NodeJS.Timeout | null = null;
-      const controller = new AbortController();
-      timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds for debugging
+    // Query Ollama models endpoint to check if the model exists
+    let timeoutId: NodeJS.Timeout | null = null;
+    const controller = new AbortController();
+    
+    try {
+      timeoutId = setTimeout(() => {
+        if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama models fetch timeout triggered');
+        controller.abort();
+      }, 15000); // 15 seconds for debugging
       
       const res = await fetch(`${ollamaUrl}/api/tags`, {
         headers: {
@@ -62,9 +84,7 @@ export async function POST(req: NextRequest) {
         signal: controller.signal,
       });
       
-      if (timeoutId) clearTimeout(timeoutId);
-      
-      console.log(`Ollama API response status: ${res.status}`);
+      if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama API response status: ${res.status}`);
       
       if (!res.ok) {
         // Try to get error details
@@ -72,31 +92,31 @@ export async function POST(req: NextRequest) {
         try {
           const errorText = await res.text();
           errorDetails = ` (${res.status}: ${errorText})`;
-          console.log(`Ollama API error details: ${errorText}`);
+          if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama API error details: ${errorText}`);
         } catch (e) {
           errorDetails = ` (HTTP ${res.status})`;
-          console.log(`Failed to read error details: ${e}`);
+          if (process.env.DEBUG_OLLAMA === '1') console.log(`Failed to read error details: ${e}`);
         }
         return NextResponse.json({ 
           ok: false, 
           error: `Ollama connection error${errorDetails}`, 
           status: res.status 
-        }, { status: 200 });
+        }, { status: 502 });
       }
 
       const textData = await res.text();
-      console.log(`Ollama API response text:`, textData.substring(0, 500));
+      if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama API response text:`, textData.substring(0, 500));
       
       let data;
       try {
         data = JSON.parse(textData);
       } catch (parseError) {
-        console.log(`Failed to parse JSON:`, parseError);
+        if (process.env.DEBUG_OLLAMA === '1') console.log(`Failed to parse JSON:`, parseError);
         return NextResponse.json({ 
           ok: false, 
           error: 'Invalid JSON response from Ollama API', 
           details: textData.substring(0, 200) 
-        }, { status: 200 });
+        }, { status: 502 });
       }
       
       // Handle different response formats
@@ -112,9 +132,9 @@ export async function POST(req: NextRequest) {
         }
       }
       
-      console.log(`Parsed model list:`, modelList);
+      if (process.env.DEBUG_OLLAMA === '1') console.log(`Parsed model list:`, modelList);
       const found = modelList.find((m) => m && typeof m.name === 'string' && m.name === slug);
-      console.log(`Found model:`, found);
+      if (process.env.DEBUG_OLLAMA === '1') console.log(`Found model:`, found);
       
       // Prepare response with available models for better UX
       const response: { ok: true; exists: boolean; availableModels?: string[] } = { ok: true, exists: !!found };
@@ -129,7 +149,6 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(response);
     } catch (fetchError: unknown) {
-      // Note: timeoutId is already cleared in the successful path above
       const err = fetchError as Error;
       if (err?.name === 'AbortError') {
         return NextResponse.json({ 
@@ -140,17 +159,22 @@ export async function POST(req: NextRequest) {
       }
       
       const errorMessage = err?.message || 'Unknown error';
-      console.log(`Fetch error: ${errorMessage}`);
+      if (process.env.DEBUG_OLLAMA === '1') console.log(`Fetch error: ${errorMessage}`);
       
       return NextResponse.json({ 
         ok: false, 
         error: `Failed to connect to Ollama instance`, 
         details: errorMessage 
-      }, { status: 200 });
+      }, { status: 502 });
+    } finally {
+      // Always clear the timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
   } catch (e: unknown) {
     const message = typeof e === 'object' && e && 'message' in e ? String((e as { message?: unknown }).message) : 'Unknown error';
-    console.log(`General error: ${message}`);
-    return NextResponse.json({ ok: false, error: message }, { status: 200 });
+    if (process.env.DEBUG_OLLAMA === '1') console.log(`General error: ${message}`);
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
