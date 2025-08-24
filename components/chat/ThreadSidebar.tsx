@@ -6,6 +6,8 @@ import type { Project } from '@/lib/projects';
 import ConfirmDialog from '@/components/modals/ConfirmDialog';
 import ProjectsSection from '@/components/app/ProjectsSection';
 import DownloadMenu from './DownloadMenu';
+import { useTheme } from '@/lib/themeContext';
+import { ACCENT_COLORS } from '@/lib/themes';
 
 type Props = {
   sidebarOpen: boolean;
