@@ -8,6 +8,8 @@ export async function POST(req: NextRequest) {
     // For Ollama, we get the base URL from the request body (user settings) or environment or default to localhost
     const ollamaUrl = ollamaUrlFromBody || process.env.OLLAMA_URL || 'http://localhost:11434';
     
+    console.log(`Calling Ollama model: ${model} at ${ollamaUrl}`);
+    
     // Convert messages to Ollama format
     const ollamaMessages = messages.map((msg: any) => ({
       role: msg.role,
@@ -20,16 +22,27 @@ export async function POST(req: NextRequest) {
       stream: false
     };
 
+    console.log(`Ollama request body:`, JSON.stringify(requestBody, null, 2));
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
+    
+    console.log(`Ollama response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.log(`Ollama error response:`, errorText);
       return new Response(JSON.stringify({ 
         error: `Ollama API error: ${response.status} ${response.statusText}`, 
         details: errorText 
@@ -37,6 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
+    console.log(`Ollama response data:`, JSON.stringify(data, null, 2));
     
     // Extract the response text
     let text = '';
@@ -51,6 +65,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ text, raw: data });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error';
+    console.log(`Ollama error:`, message);
     return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
 }

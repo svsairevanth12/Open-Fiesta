@@ -77,9 +77,8 @@ export default function CustomModels({ compact }: CustomModelsProps) {
         });
         const data = await res.json();
         if (!data?.ok) {
-          setValidMsg(
-            `Validation error${data?.status ? ` (status ${data.status})` : ""}.`
-          );
+          const errorMsg = `Validation error${data?.status ? ` (status ${data.status})` : ""}${data?.details ? `: ${data.details}` : ""}`;
+          setValidMsg(errorMsg);
           setValidState("error");
           return;
         }
@@ -87,11 +86,19 @@ export default function CustomModels({ compact }: CustomModelsProps) {
           setValidMsg("Ollama model found.");
           setValidState("ok");
         } else {
-          setValidMsg("Ollama model not found. Make sure this model is available in your Ollama instance.");
+          let message = "Ollama model not found. Make sure this model is available in your Ollama instance.";
+          if (data.availableModels && data.availableModels.length > 0) {
+            message += ` Available models: ${data.availableModels.slice(0, 5).join(", ")}`;
+            if (data.availableModels.length > 5) {
+              message += ` and ${data.availableModels.length - 5} more`;
+            }
+          }
+          setValidMsg(message);
           setValidState("fail");
         }
-      } catch {
-        setValidMsg("Could not validate Ollama model right now.");
+      } catch (e: unknown) {
+        const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+        setValidMsg(`Could not validate Ollama model: ${errorMsg}`);
         setValidState("error");
       } finally {
         setValidating(false);
@@ -109,9 +116,8 @@ export default function CustomModels({ compact }: CustomModelsProps) {
       });
       const data = await res.json();
       if (!data?.ok) {
-        setValidMsg(
-          `Validation error${data?.status ? ` (status ${data.status})` : ""}.`
-        );
+        const errorMsg = `Validation error${data?.status ? ` (status ${data.status})` : ""}`;
+        setValidMsg(errorMsg);
         setValidState("error");
         return;
       }
@@ -122,8 +128,9 @@ export default function CustomModels({ compact }: CustomModelsProps) {
         setValidMsg("Model not found. Check the exact slug on OpenRouter.");
         setValidState("fail");
       }
-    } catch {
-      setValidMsg("Could not validate right now.");
+    } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+      setValidMsg(`Could not validate: ${errorMsg}`);
       setValidState("error");
     } finally {
       setValidating(false);
