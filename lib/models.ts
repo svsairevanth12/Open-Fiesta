@@ -689,5 +689,4 @@ export const MODEL_CATALOG: AiModel[] = [
     free: true,
     category: 'text',
   },
-
 ];

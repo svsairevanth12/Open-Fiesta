@@ -11,17 +11,17 @@ export default function GlobalErrorHandler({ children }: GlobalErrorHandlerProps
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('Unhandled promise rejection:', event.reason);
-      
+
       if (process.env.NODE_ENV === 'production') {
         toast.error('Something went wrong. Please try again.');
       }
-      
+
       event.preventDefault();
     };
 
     const handleGlobalError = (event: ErrorEvent) => {
       console.error('Global JavaScript error:', event.error || event.message);
-      
+
       if (process.env.NODE_ENV === 'production') {
         toast.error('An unexpected error occurred.');
       }

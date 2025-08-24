@@ -1,59 +1,56 @@
-"use client"
+'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import Image from "next/image"
-import { AnimatePresence, motion } from "framer-motion"
-import { Globe, Paperclip, Send, Loader2, X, FileText } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Globe, Paperclip, Send, Loader2, X, FileText } from 'lucide-react';
 
-import { cn } from "@/lib/utils"
-import { Textarea } from "@/components/ui/textarea"
+import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 interface UseAutoResizeTextareaProps {
-  minHeight: number
-  maxHeight?: number
+  minHeight: number;
+  maxHeight?: number;
 }
 
-function useAutoResizeTextarea({
-  minHeight,
-  maxHeight,
-}: UseAutoResizeTextareaProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+function useAutoResizeTextarea({ minHeight, maxHeight }: UseAutoResizeTextareaProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const adjustHeight = useCallback(
     (reset?: boolean) => {
-      const textarea = textareaRef.current
-      if (!textarea) return
+      const textarea = textareaRef.current;
+      if (!textarea) return;
 
       if (reset) {
-        textarea.style.height = `${minHeight}px`
-        return
+        textarea.style.height = `${minHeight}px`;
+        return;
       }
 
-      textarea.style.height = `${minHeight}px`
+      textarea.style.height = `${minHeight}px`;
       const newHeight = Math.max(
         minHeight,
-        Math.min(textarea.scrollHeight, maxHeight ?? Number.POSITIVE_INFINITY)
-      )
+        Math.min(textarea.scrollHeight, maxHeight ?? Number.POSITIVE_INFINITY),
+      );
 
-      textarea.style.height = `${newHeight}px`
+      textarea.style.height = `${newHeight}px`;
     },
-    [minHeight, maxHeight]
-  )
+    [minHeight, maxHeight],
+  );
 
   useEffect(() => {
-    const textarea = textareaRef.current
+    const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = `${minHeight}px`
+      textarea.style.height = `${minHeight}px`;
     }
-  }, [minHeight])
+  }, [minHeight]);
 
   useEffect(() => {
-    const handleResize = () => adjustHeight()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [adjustHeight])
+    const handleResize = () => adjustHeight();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [adjustHeight]);
 
-  return { textareaRef, adjustHeight }
+  return { textareaRef, adjustHeight };
 }
 
 const MIN_HEIGHT = 58;
@@ -62,14 +59,14 @@ const MAX_HEIGHT = 197;
 const AnimatedPlaceholder = ({ showSearch }: { showSearch: boolean }) => (
   <AnimatePresence mode="wait">
     <motion.p
-      key={showSearch ? "search" : "ask"}
+      key={showSearch ? 'search' : 'ask'}
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -5 }}
       transition={{ duration: 0.1 }}
-      className="pointer-events-none w-[150px] text-sm absolute text-black/30 dark:text-white/30 sm:text-black/70 sm:dark:text-white/70 drop-shadow-sm"
+      className="pointer-events-none w-[150px] text-sm absolute text-white/30 sm:dark:text-white/70 drop-shadow-sm"
     >
-      {showSearch ? "Search the web..." : "Ask Anything..."}
+      {showSearch ? 'Search the web...' : 'Ask Anything...'}
     </motion.p>
   </AnimatePresence>
 );
@@ -81,7 +78,7 @@ export function AiInput({
   onSubmit: (text: string, imageDataUrl?: string, webSearch?: boolean) => void;
   loading?: boolean;
 }) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
     minHeight: MIN_HEIGHT,
     maxHeight: MAX_HEIGHT,
@@ -98,7 +95,7 @@ export function AiInput({
     e.preventDefault();
     e.stopPropagation();
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
     setImagePreview(null);
     setAttachedFile(null);
@@ -118,14 +115,14 @@ export function AiInput({
     ];
     const isAllowed = allowed.some((re) => re.test(file.type));
     if (!isAllowed) {
-      setErrorMsg("Unsupported file. Allowed: Images, TXT, PDF, DOC, DOCX.");
+      setErrorMsg('Unsupported file. Allowed: Images, TXT, PDF, DOC, DOCX.');
       setTimeout(() => setErrorMsg(null), 4000);
-      if (fileInputRef.current) fileInputRef.current.value = ""; // reset so same file can be selected later
+      if (fileInputRef.current) fileInputRef.current.value = ''; // reset so same file can be selected later
       return;
     }
 
     setAttachedFile(file);
-    if (file.type.startsWith("image/")) {
+    if (file.type.startsWith('image/')) {
       setImagePreview(URL.createObjectURL(file));
     } else {
       setImagePreview(null);
@@ -142,7 +139,7 @@ export function AiInput({
       });
     }
     onSubmit(value.trim(), dataUrl, showSearch);
-    setValue("");
+    setValue('');
     setAttachedFile(null);
     setImagePreview(null);
     adjustHeight(true);
@@ -171,23 +168,21 @@ export function AiInput({
       }
       lastScrollY.current = y;
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
   return (
     <motion.div
       className="w-full py-4"
       initial={{ y: 0, opacity: 1 }}
       animate={{ y: barVisible ? 0 : 72, opacity: barVisible ? 1 : 0.9 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
       <div className="relative max-w-xl border rounded-[22px] border-black/5 dark:border-white/5 p-1 w-full mx-auto chat-input-shell">
         <div className="relative rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden">
           <div
             className="ai-grow-area"
-            style={
-              { "--ai-input-max": `${MAX_HEIGHT}px` } as React.CSSProperties
-            }
+            style={{ '--ai-input-max': `${MAX_HEIGHT}px` } as React.CSSProperties}
           >
             {/* Content area (textarea + attachments + messages) gets bottom padding to make room for fixed toolbar */}
             <div className="pb-10">
@@ -218,7 +213,7 @@ export function AiInput({
                       className="w-full rounded-xl px-4 py-3 bg-transparent border-none text-white dark:text-white resize-none focus-visible:ring-0 leading-[1.2]"
                       ref={textareaRef}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
+                        if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
                           handleSubmit();
                         }
@@ -244,7 +239,7 @@ export function AiInput({
                     className="w-full rounded-2xl rounded-b-none px-4 py-3 bg-black/90 dark:bg-white/15 border-none text-white resize-none focus-visible:ring-0 leading-[1.2]"
                     ref={textareaRef}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
+                      if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         handleSubmit();
                       }
@@ -299,10 +294,10 @@ export function AiInput({
               <label
                 title="Attach file"
                 className={cn(
-                  "cursor-pointer relative rounded-full p-1.5 bg-black/30 dark:bg-white/10",
+                  'cursor-pointer relative rounded-full p-1.5 bg-black/30 dark:bg-white/10',
                   attachedFile
-                    ? "bg-[var(--accent-interactive-primary)]/15 border border-[var(--accent-interactive-primary)] text-[var(--accent-interactive-primary)]"
-                    : "text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white"
+                    ? 'bg-[var(--accent-interactive-primary)]/15 border border-[var(--accent-interactive-primary)] text-[var(--accent-interactive-primary)]'
+                    : 'text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white',
                 )}
               >
                 <input
@@ -315,10 +310,10 @@ export function AiInput({
                 />
                 <Paperclip
                   className={cn(
-                    "w-3.5 h-3.5 transition-colors",
+                    'w-3.5 h-3.5 transition-colors',
                     attachedFile
-                      ? "text-[var(--accent-interactive-primary)]"
-                      : "text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white"
+                      ? 'text-[var(--accent-interactive-primary)]'
+                      : 'text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white',
                   )}
                 />
               </label>
@@ -326,14 +321,12 @@ export function AiInput({
                 type="button"
                 onClick={() => setShowSearch(!showSearch)}
                 className={cn(
-                  "rounded-full transition-all flex items-center gap-1.5 px-1.5 py-1 h-7 search-toggle"
+                  'rounded-full transition-all flex items-center gap-1.5 px-1.5 py-1 h-7 search-toggle',
                 )}
                 data-active={showSearch}
-                aria-pressed={showSearch ? "true" : "false"}
-                aria-label={
-                  showSearch ? "Disable web search" : "Enable web search"
-                }
-                title={showSearch ? "Disable web search" : "Enable web search"}
+                aria-pressed={showSearch ? 'true' : 'false'}
+                aria-label={showSearch ? 'Disable web search' : 'Enable web search'}
+                title={showSearch ? 'Disable web search' : 'Enable web search'}
               >
                 <div className="w-3.5 h-3.5 flex items-center justify-center flex-shrink-0">
                   <motion.div
@@ -345,23 +338,23 @@ export function AiInput({
                       rotate: showSearch ? 180 : 15,
                       scale: 1.1,
                       transition: {
-                        type: "spring",
+                        type: 'spring',
                         stiffness: 300,
                         damping: 10,
                       },
                     }}
                     transition={{
-                      type: "spring",
+                      type: 'spring',
                       stiffness: 260,
                       damping: 25,
                     }}
                   >
                     <Globe
                       className={cn(
-                        "w-3.5 h-3.5",
+                        'w-3.5 h-3.5',
                         showSearch
-                          ? "text-black dark:text-white"
-                          : "text-black/60 dark:text-white/50"
+                          ? 'text-black dark:text-white'
+                          : 'text-black/60 dark:text-white/50',
                       )}
                     />
                   </motion.div>
@@ -371,7 +364,7 @@ export function AiInput({
                     <motion.span
                       initial={{ width: 0, opacity: 0 }}
                       animate={{
-                        width: "auto",
+                        width: 'auto',
                         opacity: 1,
                       }}
                       exit={{ width: 0, opacity: 0 }}
@@ -387,18 +380,18 @@ export function AiInput({
             <div>
               <button
                 type="button"
-                title={loading ? "Sending..." : "Send message"}
+                title={loading ? 'Sending...' : 'Send message'}
                 onClick={handleSubmit}
                 className={cn(
-                  "rounded-full p-1.5 transition-colors",
+                  'rounded-full p-1.5 transition-colors',
                   loading
-                    ? "bg-[var(--accent-interactive-primary)]/20 text-[var(--accent-interactive-primary)] cursor-not-allowed"
+                    ? 'bg-[var(--accent-interactive-primary)]/20 text-[var(--accent-interactive-primary)] cursor-not-allowed'
                     : value
-                    ? "bg-[var(--accent-interactive-primary)]/15 text-[var(--accent-interactive-primary)]"
-                    : "bg-black/30 dark:bg-white/10 text-black/85 dark:text-white/85 hover:text-black dark:hover:text-white"
+                      ? 'bg-[var(--accent-interactive-primary)]/15 text-[var(--accent-interactive-primary)]'
+                      : 'bg-black/30 dark:bg-white/10 text-black/85 dark:text-white/85 hover:text-black dark:hover:text-white',
                 )}
                 disabled={loading}
-                aria-busy={loading ? "true" : "false"}
+                aria-busy={loading ? 'true' : 'false'}
               >
                 {loading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

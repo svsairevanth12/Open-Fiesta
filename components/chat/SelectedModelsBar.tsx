@@ -1,7 +1,7 @@
-"use client";
-import { Star } from "lucide-react";
-import { useEffect, useState } from "react";
-import type { AiModel } from "@/lib/types";
+'use client';
+import { Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { AiModel } from '@/lib/types';
 
 type Props = {
   selectedModels: AiModel[];
@@ -31,21 +31,20 @@ export default function SelectedModelsBar({ selectedModels, onToggle }: Props) {
       <div className="hidden sm:flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pr-1 pb-2 min-w-0 scroll-stable-gutter">
         {selectedModels.map((m) => {
           const isFree = /(\(|\s)free\)/i.test(m.label);
-          const isUncensored =
-            /uncensored/i.test(m.label) || /venice/i.test(m.model);
+          const isUncensored = /uncensored/i.test(m.label) || /venice/i.test(m.model);
           return (
             <button
               key={m.id}
               onClick={() => onToggle(m.id)}
               className={`model-chip text-black dark:text-white ${
                 m.good
-                  ? "model-chip-pro"
+                  ? 'model-chip-pro'
                   : isFree
-                  ? "model-chip-free"
-                  : "border-black/10 dark:border-white/10"
+                    ? 'model-chip-free'
+                    : 'border-black/10 dark:border-white/10'
               }`}
               data-selected={true}
-              data-type={m.good ? "pro" : isFree ? "free" : "other"}
+              data-type={m.good ? 'pro' : isFree ? 'free' : 'other'}
               title="Click to toggle"
             >
               {m.good && (
@@ -69,7 +68,7 @@ export default function SelectedModelsBar({ selectedModels, onToggle }: Props) {
               <span className="truncate max-w-[180px]">{m.label}</span>
               <span
                 className="model-toggle-pill"
-                data-type={m.good ? "pro" : "free"}
+                data-type={m.good ? 'pro' : 'free'}
                 data-active={true}
               >
                 <span className="model-toggle-thumb" />

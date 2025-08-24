@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import { useState, useEffect } from 'react';
 import { Project } from '@/lib/projects';
 
@@ -10,30 +10,19 @@ export function useProjects() {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Fallback timeout to ensure isLoaded becomes true
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsLoaded(true);
-    }, 500);
-    
-    return () => clearTimeout(timeout);
-  }, []);
-
   // Load projects from localStorage on mount
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        const activeId = localStorage.getItem(ACTIVE_PROJECT_KEY);
-        
-        if (saved) {
-          const parsed = JSON.parse(saved) as Project[];
-          setProjects(Array.isArray(parsed) ? parsed : []);
-        }
-        
-        if (activeId && activeId !== 'null') {
-          setActiveProjectId(activeId);
-        }
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const activeId = localStorage.getItem(ACTIVE_PROJECT_KEY);
+
+      if (saved) {
+        const parsed = JSON.parse(saved) as Project[];
+        setProjects(Array.isArray(parsed) ? parsed : []);
+      }
+
+      if (activeId && activeId !== 'null') {
+        setActiveProjectId(activeId);
       }
     } catch (error) {
       console.warn('Failed to load projects from localStorage:', error);
@@ -69,17 +58,15 @@ export function useProjects() {
   }, [activeProjectId, isLoaded]);
 
   const createProject = (project: Project) => {
-    setProjects(prev => [project, ...prev]);
+    setProjects((prev) => [project, ...prev]);
   };
 
   const updateProject = (updatedProject: Project) => {
-    setProjects(prev => 
-      prev.map(p => p.id === updatedProject.id ? updatedProject : p)
-    );
+    setProjects((prev) => prev.map((p) => (p.id === updatedProject.id ? updatedProject : p)));
   };
 
   const deleteProject = (id: string) => {
-    setProjects(prev => prev.filter(p => p.id !== id));
+    setProjects((prev) => prev.filter((p) => p.id !== id));
     // If deleting the active project, clear active selection
     if (activeProjectId === id) {
       setActiveProjectId(null);
@@ -92,11 +79,11 @@ export function useProjects() {
 
   const getActiveProject = (): Project | null => {
     if (!activeProjectId) return null;
-    return projects.find(p => p.id === activeProjectId) || null;
+    return projects.find((p) => p.id === activeProjectId) || null;
   };
 
   const getProjectById = (id: string): Project | null => {
-    return projects.find(p => p.id === id) || null;
+    return projects.find((p) => p.id === id) || null;
   };
 
   return {

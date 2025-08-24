@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   // Needed for Docker multi-stage build that runs `server.js` from `.next/standalone`

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, {
   createContext,
@@ -7,7 +7,7 @@ import React, {
   useState,
   useCallback,
   ReactNode,
-} from "react";
+} from 'react';
 import {
   ThemeConfig,
   ThemeMode,
@@ -17,14 +17,8 @@ import {
   BadgePair,
   DEFAULT_THEME,
   validateThemeConfig,
-} from "./themes";
-import {
-  applyTheme,
-  saveTheme,
-  loadTheme,
-  loadGoogleFont,
-  logThemeInfo,
-} from "./themeUtils";
+} from './themes';
+import { applyTheme, saveTheme, loadTheme, loadGoogleFont, logThemeInfo } from './themeUtils';
 
 // Theme Context Interface
 interface ThemeContextType {
@@ -78,7 +72,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   }, []);
 
   const setFont = useCallback((font: FontFamily) => {
-    if (font !== "geist") {
+    if (font !== 'geist') {
       loadGoogleFont(font); // Fire and forget - don't wait or catch
     }
     setTheme((currentTheme) => ({ ...currentTheme, font }));
@@ -96,7 +90,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const toggleMode = useCallback(() => {
     setTheme((currentTheme) => ({
       ...currentTheme,
-      mode: currentTheme.mode === "dark" ? "light" : "dark",
+      mode: currentTheme.mode === 'dark' ? 'light' : 'dark',
     }));
   }, []);
 
@@ -105,9 +99,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   }, []);
 
   const updateTheme = useCallback((partial: Partial<ThemeConfig>) => {
-    setTheme((currentTheme) =>
-      validateThemeConfig({ ...currentTheme, ...partial })
-    );
+    setTheme((currentTheme) => validateThemeConfig({ ...currentTheme, ...partial }));
   }, []);
 
   // Apply theme changes via useEffect to avoid side effects in render
@@ -141,12 +133,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
           const baseTheme = savedTheme || { ...DEFAULT_THEME, ...initialTheme };
           const validatedTheme = validateThemeConfig(baseTheme);
 
-          if (validatedTheme.font !== "geist") {
+          if (validatedTheme.font !== 'geist') {
             try {
               await loadGoogleFont(validatedTheme.font);
             } catch (error) {
               if (process.env.NODE_ENV === 'development') {
-                console.warn("Failed to load initial font:", error);
+                console.warn('Failed to load initial font:', error);
               }
             }
           }
@@ -162,7 +154,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
           setTheme(validatedTheme);
         } catch (error) {
           if (process.env.NODE_ENV === 'development') {
-            console.error("Failed to initialize theme:", error);
+            console.error('Failed to initialize theme:', error);
           }
           // Fallback to default theme
           applyTheme(DEFAULT_THEME);
@@ -180,23 +172,22 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   // Handle system theme changes (optional enhancement)
   useEffect(() => {
     // Check if we're in a browser environment (not SSR)
-    if (typeof window === "undefined") {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const handleSystemThemeChange = (e: MediaQueryListEvent) => {
       // Only auto-switch if user hasn't explicitly set a preference
       const savedTheme = loadTheme();
       if (!savedTheme) {
-        setMode(e.matches ? "dark" : "light");
+        setMode(e.matches ? 'dark' : 'light');
       }
     };
 
-    mediaQuery.addEventListener("change", handleSystemThemeChange);
-    return () =>
-      mediaQuery.removeEventListener("change", handleSystemThemeChange);
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, [setMode]);
 
   // Context value
@@ -214,11 +205,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     isInitialized,
   };
 
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 };
 
 // Custom hook to use theme context
@@ -226,7 +213,7 @@ export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
 
   if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
 
   return context;
@@ -246,16 +233,14 @@ export const useThemeInitialized = (): boolean => {
 
 // Higher-order component for theme-aware components
 export const withTheme = <P extends object>(
-  Component: React.ComponentType<P & { theme: ThemeConfig }>
+  Component: React.ComponentType<P & { theme: ThemeConfig }>,
 ) => {
   const ThemedComponent: React.FC<P> = (props) => {
     const { theme } = useTheme();
     return <Component {...props} theme={theme} />;
   };
 
-  ThemedComponent.displayName = `withTheme(${
-    Component.displayName || Component.name
-  })`;
+  ThemedComponent.displayName = `withTheme(${Component.displayName || Component.name})`;
   return ThemedComponent;
 };
 
@@ -263,34 +248,34 @@ export const withTheme = <P extends object>(
 export const ThemeDebugger: React.FC = () => {
   const { theme } = useTheme();
 
-  if (process.env.NODE_ENV !== "development") {
+  if (process.env.NODE_ENV !== 'development') {
     return null;
   }
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 8,
         right: 8,
-        background: "rgba(0, 0, 0, 0.8)",
-        color: "white",
-        padding: "6px",
-        borderRadius: "3px",
-        fontSize: "10px",
+        background: 'rgba(0, 0, 0, 0.8)',
+        color: 'white',
+        padding: '6px',
+        borderRadius: '3px',
+        fontSize: '10px',
         zIndex: 9999,
-        fontFamily: "monospace",
-        lineHeight: "1.2",
+        fontFamily: 'monospace',
+        lineHeight: '1.2',
       }}
     >
-      <div style={{ fontSize: "10px", marginBottom: "2px" }}>
+      <div style={{ fontSize: '10px', marginBottom: '2px' }}>
         <strong>Theme Debug</strong>
       </div>
-      <div style={{ fontSize: "9px" }}>Mode: {theme.mode}</div>
-      <div style={{ fontSize: "9px" }}>Accent: {theme.accent}</div>
-      <div style={{ fontSize: "9px" }}>Font: {theme.font}</div>
-      <div style={{ fontSize: "9px" }}>Background: {theme.background}</div>
-      <div style={{ fontSize: "9px" }}>Badge Pair: {theme.badgePair}</div>
+      <div style={{ fontSize: '9px' }}>Mode: {theme.mode}</div>
+      <div style={{ fontSize: '9px' }}>Accent: {theme.accent}</div>
+      <div style={{ fontSize: '9px' }}>Font: {theme.font}</div>
+      <div style={{ fontSize: '9px' }}>Background: {theme.background}</div>
+      <div style={{ fontSize: '9px' }}>Badge Pair: {theme.badgePair}</div>
     </div>
   );
 };
