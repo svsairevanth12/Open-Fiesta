@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 // Insert table separators and strip leading heading marker before pipe tables
 function normalizeTableLikeMarkdown(lines: string[]): string[] {
@@ -13,8 +13,10 @@ function normalizeTableLikeMarkdown(lines: string[]): string[] {
 
   // 2) If a pipe header is followed by rows but missing a separator, insert one
   const looksLikeSep = (s: string) => {
-    return (/(^\s*\|?\s*(?::?-+\s*\|\s*)*:?-+\s*\|?\s*$)/.test(s)) ||
-           (/^\s*\|?\s*(-+\s*\|\s*)*-+\s*\|?\s*$/.test(s));
+    return (
+      /(^\s*\|?\s*(?::?-+\s*\|\s*)*:?-+\s*\|?\s*$)/.test(s) ||
+      /^\s*\|?\s*(-+\s*\|\s*)*-+\s*\|?\s*$/.test(s)
+    );
   };
 
   let i = 0;
@@ -37,10 +39,10 @@ function normalizeTableLikeMarkdown(lines: string[]): string[] {
   return out;
 }
 
-import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Download } from "lucide-react";
-import { ACCENT_UTILITY_CLASSES } from "../../lib/accentColors";
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Download } from 'lucide-react';
+import { ACCENT_UTILITY_CLASSES } from '../../lib/accentColors';
 
 type Props = { text: string };
 
@@ -105,7 +107,9 @@ function ProgressBar({
       e.preventDefault();
       onScrub(getPos(e));
     };
-    const onUp = () => { dragging = false; };
+    const onUp = () => {
+      dragging = false;
+    };
 
     const onDown = (e: MouseEvent | TouchEvent) => {
       dragging = true;
@@ -148,7 +152,8 @@ function ProgressBar({
           left: `calc(${pct}% - 8px)`,
           background: 'color-mix(in srgb, white 85%, transparent)',
           border: '1px solid color-mix(in srgb, white 35%, transparent)',
-          boxShadow: '0 0 8px color-mix(in srgb, var(--accent-interactive-primary) 40%, transparent)'
+          boxShadow:
+            '0 0 8px color-mix(in srgb, var(--accent-interactive-primary) 40%, transparent)',
         }}
       />
     </div>
@@ -244,11 +249,9 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
         <div className="flex items-center gap-3">
           <div
             className="w-3 h-3 rounded-full animate-pulse"
-            style={{ backgroundColor: "var(--accent-interactive-primary)" }}
+            style={{ backgroundColor: 'var(--accent-interactive-primary)' }}
           ></div>
-          <span
-            className="text-sm font-medium tracking-wide text-zinc-200 dark:text-zinc-100"
-          >
+          <span className="text-sm font-medium tracking-wide text-zinc-200 dark:text-zinc-100">
             Generated Audio
           </span>
         </div>
@@ -256,10 +259,38 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
           <div className="hidden sm:flex items-center gap-2" aria-hidden>
             {isPlaying && (
               <div className="flex items-end gap-0.5 h-4">
-                <span className="w-0.5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-primary)', height: '100%', boxShadow: '0 0 8px var(--accent-highlight-primary)' }} />
-                <span className="w-0.5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-secondary)', height: '70%', boxShadow: '0 0 8px var(--accent-highlight-secondary)' }} />
-                <span className="w-0.5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-interactive-primary)', height: '90%', boxShadow: '0 0 10px var(--accent-interactive-primary)' }} />
-                <span className="w-0.5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-secondary)', height: '60%', boxShadow: '0 0 8px var(--accent-highlight-secondary)' }} />
+                <span
+                  className="w-0.5 rounded-sm animate-pulse"
+                  style={{
+                    backgroundColor: 'var(--accent-highlight-primary)',
+                    height: '100%',
+                    boxShadow: '0 0 8px var(--accent-highlight-primary)',
+                  }}
+                />
+                <span
+                  className="w-0.5 rounded-sm animate-pulse"
+                  style={{
+                    backgroundColor: 'var(--accent-highlight-secondary)',
+                    height: '70%',
+                    boxShadow: '0 0 8px var(--accent-highlight-secondary)',
+                  }}
+                />
+                <span
+                  className="w-0.5 rounded-sm animate-pulse"
+                  style={{
+                    backgroundColor: 'var(--accent-interactive-primary)',
+                    height: '90%',
+                    boxShadow: '0 0 10px var(--accent-interactive-primary)',
+                  }}
+                />
+                <span
+                  className="w-0.5 rounded-sm animate-pulse"
+                  style={{
+                    backgroundColor: 'var(--accent-highlight-secondary)',
+                    height: '60%',
+                    boxShadow: '0 0 8px var(--accent-highlight-secondary)',
+                  }}
+                />
               </div>
             )}
             {duration !== null && (
@@ -270,7 +301,9 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
       </div>
 
       {error ? (
-        <div className="text-sm mb-3" style={{ color: 'var(--accent-error)' }}>{error}</div>
+        <div className="text-sm mb-3" style={{ color: 'var(--accent-error)' }}>
+          {error}
+        </div>
       ) : blobUrl ? (
         <div className="mb-4">
           {/* Hidden audio element */}
@@ -295,9 +328,12 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
           <div
             className="w-full rounded-xl px-3.5 py-2.5 flex items-center gap-3"
             style={{
-              background: 'linear-gradient(180deg, color-mix(in srgb, var(--accent-highlight-subtle) 16%, transparent), color-mix(in srgb, var(--accent-highlight-subtle) 6%, transparent))',
-              border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)',
-              boxShadow: '0 10px 20px color-mix(in srgb, black 22%, transparent), inset 0 1px 0 color-mix(in srgb, var(--accent-highlight-subtle) 18%, transparent)'
+              background:
+                'linear-gradient(180deg, color-mix(in srgb, var(--accent-highlight-subtle) 16%, transparent), color-mix(in srgb, var(--accent-highlight-subtle) 6%, transparent))',
+              border:
+                '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)',
+              boxShadow:
+                '0 10px 20px color-mix(in srgb, black 22%, transparent), inset 0 1px 0 color-mix(in srgb, var(--accent-highlight-subtle) 18%, transparent)',
             }}
           >
             {/* Play/Pause */}
@@ -305,16 +341,28 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
               onClick={() => {
                 const el = audioRef.current;
                 if (!el) return;
-                if (el.paused) { el.play(); } else { el.pause(); }
+                if (el.paused) {
+                  el.play();
+                } else {
+                  el.pause();
+                }
               }}
               className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white transition-transform duration-150 active:scale-95`}
               style={{
-                background: 'radial-gradient(80% 80% at 30% 20%, color-mix(in srgb, white 35%, transparent), transparent 40%), var(--accent-interactive-primary)',
-                boxShadow: '0 8px 18px color-mix(in srgb, var(--accent-interactive-primary) 45%, transparent), inset 0 1px 0 color-mix(in srgb, white 35%, transparent)'
+                background:
+                  'radial-gradient(80% 80% at 30% 20%, color-mix(in srgb, white 35%, transparent), transparent 40%), var(--accent-interactive-primary)',
+                boxShadow:
+                  '0 8px 18px color-mix(in srgb, var(--accent-interactive-primary) 45%, transparent), inset 0 1px 0 color-mix(in srgb, white 35%, transparent)',
               }}
               aria-label={isPlaying ? 'Pause' : 'Play'}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="text-white"
+              >
                 {isPlaying ? (
                   <g>
                     <rect x="6" y="5" width="4" height="14" rx="1"></rect>
@@ -349,10 +397,22 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
         <div className="flex items-center gap-3 text-sm mb-4 text-zinc-600 dark:text-zinc-300">
           {/* Distinct loading equalizer (different from image skeleton) */}
           <div className="flex items-end gap-1 h-6" aria-hidden>
-            <span className="w-1 h-2 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-primary)' }} />
-            <span className="w-1 h-4 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-secondary)' }} />
-            <span className="w-1 h-5 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-interactive-primary)' }} />
-            <span className="w-1 h-3 rounded-sm animate-pulse" style={{ backgroundColor: 'var(--accent-highlight-secondary)' }} />
+            <span
+              className="w-1 h-2 rounded-sm animate-pulse"
+              style={{ backgroundColor: 'var(--accent-highlight-primary)' }}
+            />
+            <span
+              className="w-1 h-4 rounded-sm animate-pulse"
+              style={{ backgroundColor: 'var(--accent-highlight-secondary)' }}
+            />
+            <span
+              className="w-1 h-5 rounded-sm animate-pulse"
+              style={{ backgroundColor: 'var(--accent-interactive-primary)' }}
+            />
+            <span
+              className="w-1 h-3 rounded-sm animate-pulse"
+              style={{ backgroundColor: 'var(--accent-highlight-secondary)' }}
+            />
           </div>
           <span>Preparing audio...</span>
         </div>
@@ -361,7 +421,9 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
       {/* Divider */}
       <div
         className="h-px my-2"
-        style={{ background: 'color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)' }}
+        style={{
+          background: 'color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)',
+        }}
       />
 
       {/* Footer actions */}
@@ -385,7 +447,7 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
       </div>
     </div>
   );
-}
+};
 
 export default function MarkdownLite({ text }: Props) {
   if (!text) return null;
@@ -400,7 +462,9 @@ export default function MarkdownLite({ text }: Props) {
     return (
       <div className="text-zinc-100 leading-relaxed">
         {/* Keep the original marker in DOM but hide it from UI */}
-        <span aria-hidden style={{ display: 'none' }}>{text}</span>
+        <span aria-hidden style={{ display: 'none' }}>
+          {text}
+        </span>
         <AudioPlayer audioUrl={audioUrl} filename={filename} />
       </div>
     );
@@ -412,7 +476,7 @@ export default function MarkdownLite({ text }: Props) {
   return (
     <div className="text-zinc-100 leading-relaxed whitespace-pre-wrap text-[13.5px] sm:text-sm space-y-2 tracking-[0.004em]">
       {blocks.map((b, i) =>
-        b.type === "code" ? (
+        b.type === 'code' ? (
           <pre
             key={i}
             className="my-2 rounded bg-black/40 border border-white/10 p-2 overflow-x-auto text-xs"
@@ -422,26 +486,26 @@ export default function MarkdownLite({ text }: Props) {
         ) : (
           // For non-code text, clean simple math delimiters like \( \) \[ \] and $...$
           <BlockRenderer key={i} text={sanitizeMath(b.content)} />
-        )
+        ),
       )}
     </div>
   );
 }
 
-function splitFencedCodeBlocks(input: string): Array<{ type: "text" | "code"; content: string }> {
-  const parts: Array<{ type: "text" | "code"; content: string }> = [];
+function splitFencedCodeBlocks(input: string): Array<{ type: 'text' | 'code'; content: string }> {
+  const parts: Array<{ type: 'text' | 'code'; content: string }> = [];
   const regex = /```[\w-]*\n([\s\S]*?)\n```/g; // ```lang?\n...\n```
   let lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = regex.exec(input)) !== null) {
     if (m.index > lastIndex) {
-      parts.push({ type: "text", content: input.slice(lastIndex, m.index) });
+      parts.push({ type: 'text', content: input.slice(lastIndex, m.index) });
     }
-    parts.push({ type: "code", content: m[1] });
+    parts.push({ type: 'code', content: m[1] });
     lastIndex = regex.lastIndex;
   }
   if (lastIndex < input.length) {
-    parts.push({ type: "text", content: input.slice(lastIndex) });
+    parts.push({ type: 'text', content: input.slice(lastIndex) });
   }
   return parts;
 }
@@ -458,15 +522,15 @@ function maybeDeescapeJsonish(src: string): string {
 
   let out = src;
   // Normalize common escaped sequences first
-  out = out.replace(/\\r\\n/g, "\n");
-  out = out.replace(/\\n/g, "\n");
-  out = out.replace(/\\t/g, "\t");
+  out = out.replace(/\\r\\n/g, '\n');
+  out = out.replace(/\\n/g, '\n');
+  out = out.replace(/\\t/g, '\t');
   out = out.replace(/\\"/g, '"');
   // Collapse double backslashes that are not forming a usual escape
   // Keep \\n, \\t, \\" and \\\\ sequences intact where meaningful
-  out = out.replace(/\\\\(?![ntr"\\])/g, "\\");
+  out = out.replace(/\\\\(?![ntr"\\])/g, '\\');
   // If we ended up with CRs, normalize
-  out = out.replace(/\r/g, "\n");
+  out = out.replace(/\r/g, '\n');
   return out;
 }
 
@@ -480,13 +544,13 @@ function maybeDeescapeTextish(src: string): string {
   if (!hasEscapes && ratio < 0.04) return src;
 
   let out = src;
-  out = out.replace(/\\r\\n/g, "\n");
-  out = out.replace(/\\n/g, "\n");
-  out = out.replace(/\\t/g, "\t");
+  out = out.replace(/\\r\\n/g, '\n');
+  out = out.replace(/\\n/g, '\n');
+  out = out.replace(/\\t/g, '\t');
   out = out.replace(/\\"/g, '"');
   // Conservatively collapse double backslashes only when not a common escape
-  out = out.replace(/\\\\(?![ntr"\\])/g, "\\");
-  out = out.replace(/\r/g, "\n");
+  out = out.replace(/\\\\(?![ntr"\\])/g, '\\');
+  out = out.replace(/\r/g, '\n');
   return out;
 }
 
@@ -511,47 +575,63 @@ function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; f
     if (!lightboxOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [lightboxOpen]);
 
   return (
     <>
-    <div
-      className="my-3 rounded-2xl overflow-hidden border relative"
-      style={{
-        borderColor: 'color-mix(in srgb, var(--accent-interactive-primary) 22%, transparent)',
-        boxShadow: '0 8px 22px color-mix(in srgb, black 28%, transparent), inset 0 1px 0 color-mix(in srgb, var(--accent-highlight-subtle) 10%, transparent)'
-      }}
-    >
-      {/* Accent stripe */}
       <div
-        className="absolute left-0 top-0 h-full w-[3px]"
+        className="my-3 rounded-2xl overflow-hidden border relative"
         style={{
-          background: 'linear-gradient(180deg, var(--accent-interactive-primary), color-mix(in srgb, var(--accent-interactive-primary) 50%, transparent))',
-          boxShadow: '0 0 8px color-mix(in srgb, var(--accent-interactive-primary) 35%, transparent)'
+          borderColor: 'color-mix(in srgb, var(--accent-interactive-primary) 22%, transparent)',
+          boxShadow:
+            '0 8px 22px color-mix(in srgb, black 28%, transparent), inset 0 1px 0 color-mix(in srgb, var(--accent-highlight-subtle) 10%, transparent)',
         }}
-      />
+      >
+        {/* Accent stripe */}
+        <div
+          className="absolute left-0 top-0 h-full w-[3px]"
+          style={{
+            background:
+              'linear-gradient(180deg, var(--accent-interactive-primary), color-mix(in srgb, var(--accent-interactive-primary) 50%, transparent))',
+            boxShadow:
+              '0 0 8px color-mix(in srgb, var(--accent-interactive-primary) 35%, transparent)',
+          }}
+        />
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 pl-6 border-b"
-        style={{
-          borderColor: 'color-mix(in srgb, var(--accent-highlight-subtle) 18%, transparent)',
-          background: 'linear-gradient(180deg, color-mix(in srgb, var(--accent-highlight-subtle) 12%, transparent), color-mix(in srgb, var(--accent-highlight-subtle) 4%, transparent))'
-        }}>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-interactive-primary)', boxShadow: '0 0 8px var(--accent-interactive-primary)' }} />
-          <span className="text-sm font-medium text-zinc-100">Generated Image</span>
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-4 py-2 pl-6 border-b"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--accent-highlight-subtle) 18%, transparent)',
+            background:
+              'linear-gradient(180deg, color-mix(in srgb, var(--accent-highlight-subtle) 12%, transparent), color-mix(in srgb, var(--accent-highlight-subtle) 4%, transparent))',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{
+                background: 'var(--accent-interactive-primary)',
+                boxShadow: '0 0 8px var(--accent-interactive-primary)',
+              }}
+            />
+            <span className="text-sm font-medium text-zinc-100">Generated Image</span>
+          </div>
+          {dimensions && (
+            <span className="text-[11px] text-zinc-400 tabular-nums">
+              {dimensions.w}×{dimensions.h}px
+            </span>
+          )}
         </div>
-        {dimensions && (
-          <span className="text-[11px] text-zinc-400 tabular-nums">{dimensions.w}×{dimensions.h}px</span>
-        )}
-      </div>
 
-      {/* Stage background */}
-      <div
-        className="relative p-3"
-        style={{
-          background: `
+        {/* Stage background */}
+        <div
+          className="relative p-3"
+          style={{
+            background: `
             linear-gradient(180deg, color-mix(in srgb, var(--accent-highlight-subtle) 5%, transparent), transparent),
             radial-gradient(120% 100% at 100% 0%, color-mix(in srgb, black 14%, transparent), transparent 40%),
             linear-gradient(135deg,
@@ -561,32 +641,35 @@ function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; f
               color-mix(in srgb, var(--accent-highlight-subtle) 4%, transparent) 75%,
               transparent 75%, transparent
             )`,
-          backgroundSize: 'auto, auto, 24px 24px'
-        }}
-      >
-        {/* Inner frame */}
-        <div
-          className="rounded-xl p-1.5"
-          style={{
-            border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 20%, transparent)',
-            boxShadow: 'inset 0 1px 0 color-mix(in srgb, white 8%, transparent), inset 0 0 0 9999px color-mix(in srgb, black 4%, transparent)'
+            backgroundSize: 'auto, auto, 24px 24px',
           }}
         >
-          {/* Unified image container */}
+          {/* Inner frame */}
           <div
-            className="relative w-full rounded-lg overflow-hidden"
+            className="rounded-xl p-1.5"
             style={{
-              border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 20%, transparent)',
-              aspectRatio: !loaded && !failed ? '3 / 2' : undefined
+              border:
+                '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 20%, transparent)',
+              boxShadow:
+                'inset 0 1px 0 color-mix(in srgb, white 8%, transparent), inset 0 0 0 9999px color-mix(in srgb, black 4%, transparent)',
             }}
           >
-            {/* Skeleton layers only while loading */}
-            {!loaded && !failed && (
-              <div className="absolute inset-0">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: `
+            {/* Unified image container */}
+            <div
+              className="relative w-full rounded-lg overflow-hidden"
+              style={{
+                border:
+                  '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 20%, transparent)',
+                aspectRatio: !loaded && !failed ? '3 / 2' : undefined,
+              }}
+            >
+              {/* Skeleton layers only while loading */}
+              {!loaded && !failed && (
+                <div className="absolute inset-0">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `
                       radial-gradient(85% 120% at 50% 30%, color-mix(in srgb, var(--accent-highlight-subtle) 12%, transparent), transparent 65%),
                       linear-gradient(135deg,
                         color-mix(in srgb, var(--accent-highlight-subtle) 2.5%, transparent) 25%,
@@ -595,121 +678,159 @@ function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; f
                         color-mix(in srgb, var(--accent-highlight-subtle) 2.5%, transparent) 75%,
                         transparent 75%, transparent
                       )
-                    `
-                  }}
-                />
-                <div
-                  className="absolute inset-y-0 -left-1/3 w-1/3 img-sweep"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent 0%, color-mix(in srgb, white 10%, transparent) 40%, color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent) 50%, transparent 80%)',
-                    filter: 'blur(6px)'
-                  }}
-                />
-                <div
-                  className="absolute inset-0 rounded-[0.5rem] pointer-events-none img-breathe-strong"
-                  style={{
-                    boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--accent-highlight-subtle) 28%, transparent), inset 0 0 30px color-mix(in srgb, var(--accent-interactive-primary) 10%, transparent)'
-                  }}
-                />
-                {/* center ripple */}
-                <div
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full img-ripple"
-                  style={{
-                    width: '120px',
-                    height: '120px',
-                    background: 'radial-gradient(closest-side, color-mix(in srgb, var(--accent-interactive-primary) 22%, transparent), transparent 70%)',
-                    filter: 'blur(8px)',
-                    opacity: 0.6
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="opacity-70 animate-pulse">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-zinc-400">
-                      <path d="M4 7h3l2-2h6l2 2h3v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" strokeWidth="1.2"/>
-                      <circle cx="12" cy="13" r="3.5" strokeWidth="1.2"/>
-                    </svg>
+                    `,
+                    }}
+                  />
+                  <div
+                    className="absolute inset-y-0 -left-1/3 w-1/3 img-sweep"
+                    style={{
+                      background:
+                        'linear-gradient(90deg, transparent 0%, color-mix(in srgb, white 10%, transparent) 40%, color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent) 50%, transparent 80%)',
+                      filter: 'blur(6px)',
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0 rounded-[0.5rem] pointer-events-none img-breathe-strong"
+                    style={{
+                      boxShadow:
+                        'inset 0 0 0 1px color-mix(in srgb, var(--accent-highlight-subtle) 28%, transparent), inset 0 0 30px color-mix(in srgb, var(--accent-interactive-primary) 10%, transparent)',
+                    }}
+                  />
+                  {/* center ripple */}
+                  <div
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full img-ripple"
+                    style={{
+                      width: '120px',
+                      height: '120px',
+                      background:
+                        'radial-gradient(closest-side, color-mix(in srgb, var(--accent-interactive-primary) 22%, transparent), transparent 70%)',
+                      filter: 'blur(8px)',
+                      opacity: 0.6,
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="opacity-70 animate-pulse">
+                      <svg
+                        width="36"
+                        height="36"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="text-zinc-400"
+                      >
+                        <path
+                          d="M4 7h3l2-2h6l2 2h3v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"
+                          strokeWidth="1.2"
+                        />
+                        <circle cx="12" cy="13" r="3.5" strokeWidth="1.2" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Actual image */}
-            <img
-              src={src}
-              alt={alt}
-              onLoad={(e) => {
-                setLoaded(true);
-                const el = e.currentTarget as HTMLImageElement;
-                setDimensions({ w: el.naturalWidth, h: el.naturalHeight });
-              }}
-              onError={() => setFailed(true)}
-              className={`w-full h-auto rounded-lg ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 shadow-[0_8px_22px_rgba(0,0,0,0.28)] cursor-zoom-in`}
-              style={{
-                display: failed ? 'none' as const : 'block',
-                border: '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)'
-              }}
-              onClick={() => loaded && !failed && setLightboxOpen(true)}
-            />
+              {/* Actual image */}
+              <img
+                src={src}
+                alt={alt}
+                onLoad={(e) => {
+                  setLoaded(true);
+                  const el = e.currentTarget as HTMLImageElement;
+                  setDimensions({ w: el.naturalWidth, h: el.naturalHeight });
+                }}
+                onError={() => setFailed(true)}
+                className={`w-full h-auto rounded-lg ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 shadow-[0_8px_22px_rgba(0,0,0,0.28)] cursor-zoom-in`}
+                style={{
+                  display: failed ? ('none' as const) : 'block',
+                  border:
+                    '1px solid color-mix(in srgb, var(--accent-highlight-subtle) 22%, transparent)',
+                }}
+                onClick={() => loaded && !failed && setLightboxOpen(true)}
+              />
 
-            {/* Status pill removed per request */}
+              {/* Status pill removed per request */}
+            </div>
           </div>
+
+          {/* Error state */}
+          {failed && (
+            <div className="mt-2 text-xs" style={{ color: 'var(--accent-error)' }}>
+              Failed to load image.
+            </div>
+          )}
+
+          {/* Download button after load */}
+          {loaded && !failed && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadImage(src, filename);
+              }}
+              className="absolute top-4 right-4 px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+              style={{
+                color: '#fff',
+                background:
+                  'radial-gradient(80% 80% at 30% 20%, rgba(255,255,255,0.25), rgba(255,255,255,0) 40%), var(--accent-interactive-primary)',
+                boxShadow:
+                  '0 8px 18px color-mix(in srgb, var(--accent-interactive-primary) 40%, transparent)',
+              }}
+              title="Download image"
+            >
+              <Download size={14} />
+              Download
+            </button>
+          )}
         </div>
-
-        {/* Error state */}
-        {failed && (
-          <div className="mt-2 text-xs" style={{ color: 'var(--accent-error)' }}>Failed to load image.</div>
-        )}
-
-        {/* Download button after load */}
-        {loaded && !failed && (
-          <button
-            onClick={(e) => { e.stopPropagation(); downloadImage(src, filename); }}
-            className="absolute top-4 right-4 px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-            style={{
-              color: '#fff',
-              background: 'radial-gradient(80% 80% at 30% 20%, rgba(255,255,255,0.25), rgba(255,255,255,0) 40%), var(--accent-interactive-primary)',
-              boxShadow: '0 8px 18px color-mix(in srgb, var(--accent-interactive-primary) 40%, transparent)'
-            }}
-            title="Download image"
-          >
-            <Download size={14} />
-            Download
-          </button>
-        )}
       </div>
-    </div>
-    {/* Lightbox overlay via Portal to body */}
-    {lightboxOpen && !failed && createPortal(
-      <div
-        className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-        onClick={() => setLightboxOpen(false)}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Image preview"
-      >
-        {/* Close button */}
-        <button
-          aria-label="Close image preview"
-          title="Close"
-          onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
-          className="absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center text-white/90 bg-white/10 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 border border-white/20 shadow-lg"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+      {/* Lightbox overlay via Portal to body */}
+      {lightboxOpen &&
+        !failed &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setLightboxOpen(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image preview"
+          >
+            {/* Close button */}
+            <button
+              aria-label="Close image preview"
+              title="Close"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxOpen(false);
+              }}
+              className="absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center text-white/90 bg-white/10 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 border border-white/20 shadow-lg"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
 
-        <div className="relative max-w-[95vw] max-h-[95vh]" onClick={(e) => e.stopPropagation()}>
-          <img
-            src={src}
-            alt={alt}
-            className="max-w-[95vw] max-h-[95vh] w-auto h-auto rounded-lg shadow-2xl"
-          />
-        </div>
-      </div>,
-      document.body
-    )}
+            <div
+              className="relative max-w-[95vw] max-h-[95vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={src}
+                alt={alt}
+                className="max-w-[95vw] max-h-[95vh] w-auto h-auto rounded-lg shadow-2xl"
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
@@ -717,7 +838,7 @@ function ImageWithSkeleton({ src, alt, filename }: { src: string; alt: string; f
 // Renders a text block with support for paragraphs, simple lists, and tables.
 function BlockRenderer({ text }: { text: string }) {
   // Normalize newlines
-  const rawLines = text.replace(/\r\n?/g, "\n").split("\n");
+  const rawLines = text.replace(/\r\n?/g, '\n').split('\n');
   const lines = normalizeTableLikeMarkdown(rawLines);
   const nodes: React.ReactNode[] = [];
 
@@ -730,13 +851,16 @@ function BlockRenderer({ text }: { text: string }) {
     if (heading) {
       const level = heading[1].length;
       const content = heading[2].trim();
-      const Tag = (`h${Math.min(6, Math.max(1, level))}` as unknown) as React.ElementType;
+      const Tag = `h${Math.min(6, Math.max(1, level))}` as unknown as React.ElementType;
       nodes.push(
-        <Tag key={`h-${i}`} className={`mt-2 mb-1 font-semibold tracking-tight ${
-          level <= 2 ? 'text-base md:text-lg' : level === 3 ? 'text-sm md:text-base' : 'text-sm'
-        }`}>
+        <Tag
+          key={`h-${i}`}
+          className={`mt-2 mb-1 font-semibold tracking-tight ${
+            level <= 2 ? 'text-base md:text-lg' : level === 3 ? 'text-sm md:text-base' : 'text-sm'
+          }`}
+        >
           {renderInline(content)}
-        </Tag>
+        </Tag>,
       );
       i++;
       continue;
@@ -752,7 +876,7 @@ function BlockRenderer({ text }: { text: string }) {
       nodes.push(
         <div key={`q-${i}`} className="my-2 px-3 py-2 rounded-md border border-white/10 bg-white/5">
           <BlockRenderer text={quoteLines.join('\n')} />
-        </div>
+        </div>,
       );
       continue;
     }
@@ -761,9 +885,12 @@ function BlockRenderer({ text }: { text: string }) {
     if (isTableHeader(lines, i)) {
       const { element, nextIndex } = parseTable(lines, i);
       nodes.push(
-        <div key={`tbl-${i}`} className="my-2 overflow-x-auto rounded-lg ring-1 ring-white/20 bg-gradient-to-b from-black/40 to-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] p-2">
+        <div
+          key={`tbl-${i}`}
+          className="my-2 overflow-x-auto rounded-lg ring-1 ring-white/20 bg-gradient-to-b from-black/40 to-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] p-2"
+        >
           {element}
-        </div>
+        </div>,
       );
       i = nextIndex;
       continue;
@@ -775,7 +902,7 @@ function BlockRenderer({ text }: { text: string }) {
       nodes.push(
         <div key={`list-${i}`} className="my-1">
           {element}
-        </div>
+        </div>,
       );
       i = nextIndex;
       continue;
@@ -793,14 +920,21 @@ function BlockRenderer({ text }: { text: string }) {
     const buf: string[] = [];
     while (i < lines.length) {
       const l = lines[i];
-      if (!l.trim() || isTableHeader(lines, i) || isListLine(l) || /^\s{0,3}#{1,6}\s+/.test(l) || /^\s*>\s?/.test(l)) break;
+      if (
+        !l.trim() ||
+        isTableHeader(lines, i) ||
+        isListLine(l) ||
+        /^\s{0,3}#{1,6}\s+/.test(l) ||
+        /^\s*>\s?/.test(l)
+      )
+        break;
       buf.push(l);
       i++;
     }
     nodes.push(
       <p key={`p-${start}`} className="whitespace-pre-wrap my-1">
-        {renderInline(buf.join("\n"))}
-      </p>
+        {renderInline(buf.join('\n'))}
+      </p>,
     );
   }
 
@@ -818,37 +952,44 @@ function sanitizeMath(input: string): string {
 }
 
 function isTableHeader(lines: string[], idx: number): boolean {
-  const header = lines[idx] || "";
-  const sep = lines[idx + 1] || "";
+  const header = lines[idx] || '';
+  const sep = lines[idx + 1] || '';
   // Require some pipes and a separator line like |---|---| (allow spaces/colons)
   if (!/\|/.test(header) || !/\|/.test(sep)) return false;
-  const looksLikeSep = /^\s*\|?\s*(?::?-+\s*\|\s*)*:?-+\s*\|?\s*$/.test(sep) ||
+  const looksLikeSep =
+    /^\s*\|?\s*(?::?-+\s*\|\s*)*:?-+\s*\|?\s*$/.test(sep) ||
     /^\s*\|?\s*(-+\s*\|\s*)*-+\s*\|?\s*$/.test(sep);
   return looksLikeSep;
 }
 
-function parseTable(lines: string[], idx: number): { element: React.ReactElement; nextIndex: number } {
-  const headerLine = lines[idx] || "";
+function parseTable(
+  lines: string[],
+  idx: number,
+): { element: React.ReactElement; nextIndex: number } {
+  const headerLine = lines[idx] || '';
   // skip separator line
   let i = idx + 2;
   const rows: string[] = [];
   while (i < lines.length) {
     const raw = lines[i];
-    if (!raw || raw.trim() === "") break;
+    if (!raw || raw.trim() === '') break;
     // Skip any separator-like row inside body (rows made only/mostly of dashes, mdashes, en-dashes, colons, or spaces)
     const isSepLike = (() => {
-      const core = raw.trim().replace(/^\|/, "").replace(/\|$/, "");
-      const cells = core.split("|").map((s) => s.trim());
+      const core = raw.trim().replace(/^\|/, '').replace(/\|$/, '');
+      const cells = core.split('|').map((s) => s.trim());
       const sepRe = /^[:\-\s—–]+$/;
-      const sepCount = cells.filter((c) => c === "" || sepRe.test(c)).length;
+      const sepCount = cells.filter((c) => c === '' || sepRe.test(c)).length;
       if (cells.length <= 1) return sepCount === 1; // handle lines without pipes
       return sepCount >= Math.ceil(cells.length / 2); // majority separator-like -> skip
     })();
-    if (isSepLike) { i++; continue; }
+    if (isSepLike) {
+      i++;
+      continue;
+    }
     if (!/\|/.test(raw)) {
       // continuation text for previous row
       if (rows.length > 0) {
-        rows[rows.length - 1] = rows[rows.length - 1] + " " + raw.trim();
+        rows[rows.length - 1] = rows[rows.length - 1] + ' ' + raw.trim();
         i++;
         continue;
       } else {
@@ -860,12 +1001,15 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
       // Likely a continuation that begins with a single pipe
       const cont = raw.replace(/^\|?\s*/, '').trim();
       // If the continuation is only separator characters (dashes/colons/mdashes/en-dashes/spaces), skip it
-      if (/^[:\-\s—–]+$/.test(cont)) { i++; continue; }
-      rows[rows.length - 1] = rows[rows.length - 1] + " " + cont;
+      if (/^[:\-\s—–]+$/.test(cont)) {
+        i++;
+        continue;
+      }
+      rows[rows.length - 1] = rows[rows.length - 1] + ' ' + cont;
     } else {
       // If cells are only separator characters, skip
       const cells = splitRow(raw);
-      const allSep = cells.length > 0 && cells.every(c => /^[:\-\s—–]+$/.test(c));
+      const allSep = cells.length > 0 && cells.every((c) => /^[:\-\s—–]+$/.test(c));
       if (!allSep) rows.push(raw);
     }
     i++;
@@ -873,22 +1017,24 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
 
   // Split headers and drop empty/separator-only header columns to avoid blank columns
   let headers = splitRow(headerLine);
-  const sepOnly = (s: string) => /^[:\-\s—–]*$/.test(s || "");
+  const sepOnly = (s: string) => /^[:\-\s—–]*$/.test(s || '');
   const keepIdx: number[] = [];
-  headers.forEach((h, idx) => { if (h.trim() !== "" && !sepOnly(h)) keepIdx.push(idx); });
+  headers.forEach((h, idx) => {
+    if (h.trim() !== '' && !sepOnly(h)) keepIdx.push(idx);
+  });
   if (keepIdx.length > 0) {
     headers = keepIdx.map((i) => headers[i]);
   } else {
     // If all were empty, fall back to original to avoid losing data
-    headers = headers.map((h) => (h || "").trim());
-    headers = headers.length ? headers : [""];
+    headers = headers.map((h) => (h || '').trim());
+    headers = headers.length ? headers : [''];
   }
 
   // Map body rows to kept columns and normalize lengths
   const bodyRaw = rows.map(splitRow);
   const projectCols = (cols: string[]) => {
     if (keepIdx.length > 0) {
-      const projected = keepIdx.map((i) => (i < cols.length ? cols[i] : ""));
+      const projected = keepIdx.map((i) => (i < cols.length ? cols[i] : ''));
       return projected;
     }
     return cols;
@@ -897,9 +1043,9 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
   const body = bodyRaw.map((cols) => {
     const proj = projectCols(cols);
     if (proj.length === colCount) return proj;
-    if (proj.length < colCount) return proj.concat(Array(colCount - proj.length).fill(""));
+    if (proj.length < colCount) return proj.concat(Array(colCount - proj.length).fill(''));
     // If too many, merge extras into last cell
-    return proj.slice(0, colCount - 1).concat([proj.slice(colCount - 1).join(" | ")]);
+    return proj.slice(0, colCount - 1).concat([proj.slice(colCount - 1).join(' | ')]);
   });
 
   const element = (
@@ -920,7 +1066,10 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
         {body.map((r, ri) => (
           <tr key={ri} className="even:bg-black/20">
             {r.map((c, ci) => (
-              <td key={ci} className="align-top border border-white/15 px-3 py-1.5 whitespace-pre-wrap text-zinc-200">
+              <td
+                key={ci}
+                className="align-top border border-white/15 px-3 py-1.5 whitespace-pre-wrap text-zinc-200"
+              >
                 {renderInline(c)}
               </td>
             ))}
@@ -935,8 +1084,8 @@ function parseTable(lines: string[], idx: number): { element: React.ReactElement
 
 function splitRow(line: string): string[] {
   // Trim outer pipes, then split; keep empty cells; collapse inner spaces
-  const core = line.trim().replace(/^\|/, "").replace(/\|$/, "");
-  const parts = core.split("|").map((s) => s.replace(/\s+/g, ' ').trim());
+  const core = line.trim().replace(/^\|/, '').replace(/\|$/, '');
+  const parts = core.split('|').map((s) => s.replace(/\s+/g, ' ').trim());
   return parts;
 }
 
@@ -944,46 +1093,50 @@ function isListLine(line: string): boolean {
   return /^\s*(?:[-*]\s+|\d+\.\s+)/.test(line);
 }
 
-function parseList(lines: string[], idx: number): { element: React.ReactElement; nextIndex: number } {
-  const items: { marker: "ul" | "ol"; text: string }[] = [];
+function parseList(
+  lines: string[],
+  idx: number,
+): { element: React.ReactElement; nextIndex: number } {
+  const items: { marker: 'ul' | 'ol'; text: string }[] = [];
   let i = idx;
-  let mode: "ul" | "ol" | null = null;
+  let mode: 'ul' | 'ol' | null = null;
   while (i < lines.length) {
     const line = lines[i];
     if (!isListLine(line)) break;
     const ol = /^\s*\d+\.\s+(.*)$/.exec(line);
     const ul = /^\s*(?:[-*])\s+(.*)$/.exec(line);
     if (ol) {
-      if (mode && mode !== "ol") break; // stop when list type changes
-      mode = "ol";
-      items.push({ marker: "ol", text: ol[1] });
+      if (mode && mode !== 'ol') break; // stop when list type changes
+      mode = 'ol';
+      items.push({ marker: 'ol', text: ol[1] });
     } else if (ul) {
-      if (mode && mode !== "ul") break;
-      mode = "ul";
-      items.push({ marker: "ul", text: ul[1] });
+      if (mode && mode !== 'ul') break;
+      mode = 'ul';
+      items.push({ marker: 'ul', text: ul[1] });
     } else {
       break;
     }
     i++;
   }
 
-  const element = mode === "ol" ? (
-    <ol className="list-decimal list-outside pl-5 space-y-1">
-      {items.map((it, idx2) => (
-        <li key={idx2} className="whitespace-pre-wrap">
-          {renderInline(it.text)}
-        </li>
-      ))}
-    </ol>
-  ) : (
-    <ul className="list-disc list-outside pl-5 space-y-1">
-      {items.map((it, idx2) => (
-        <li key={idx2} className="whitespace-pre-wrap">
-          {renderInline(it.text)}
-        </li>
-      ))}
-    </ul>
-  );
+  const element =
+    mode === 'ol' ? (
+      <ol className="list-decimal list-outside pl-5 space-y-1">
+        {items.map((it, idx2) => (
+          <li key={idx2} className="whitespace-pre-wrap">
+            {renderInline(it.text)}
+          </li>
+        ))}
+      </ol>
+    ) : (
+      <ul className="list-disc list-outside pl-5 space-y-1">
+        {items.map((it, idx2) => (
+          <li key={idx2} className="whitespace-pre-wrap">
+            {renderInline(it.text)}
+          </li>
+        ))}
+      </ul>
+    );
 
   return { element, nextIndex: i };
 }
@@ -1012,7 +1165,12 @@ function renderInline(input: string): React.ReactNode[] {
       const filename = `openfiesta-image-${timestamp}.png`;
 
       out.push(
-        <ImageWithSkeleton key={`img-container-${imgIdx}`} src={src} alt={alt} filename={filename} />
+        <ImageWithSkeleton
+          key={`img-container-${imgIdx}`}
+          src={src}
+          alt={alt}
+          filename={filename}
+        />,
       );
       return;
     }
@@ -1020,7 +1178,9 @@ function renderInline(input: string): React.ReactNode[] {
     // If this segment is known noise (provider labels, stray md, bare pollinations URL), keep it in DOM but hide
     if (isHiddenNoise(imgSeg)) {
       out.push(
-        <span key={`hidden-${imgIdx}`} aria-hidden style={{ display: 'none' }}>{imgSeg}</span>
+        <span key={`hidden-${imgIdx}`} aria-hidden style={{ display: 'none' }}>
+          {imgSeg}
+        </span>,
       );
       return;
     }
@@ -1029,64 +1189,90 @@ function renderInline(input: string): React.ReactNode[] {
     const segments = imgSeg.split(/(`[^`]+`)/g);
     segments.forEach((seg, idx) => {
       if (isHiddenNoise(seg)) {
-        out.push(<span key={`hidden-${imgIdx}-${idx}`} aria-hidden style={{ display: 'none' }}>{seg}</span>);
+        out.push(
+          <span key={`hidden-${imgIdx}-${idx}`} aria-hidden style={{ display: 'none' }}>
+            {seg}
+          </span>,
+        );
         return;
       }
       if (/^`[^`]+`$/.test(seg)) {
         const content = seg.slice(1, -1);
         out.push(
-          <code key={`${imgIdx}-${idx}`} className="rounded bg-black/40 px-1 py-0.5 border border-white/10 text-[0.85em]">
+          <code
+            key={`${imgIdx}-${idx}`}
+            className="rounded bg-black/40 px-1 py-0.5 border border-white/10 text-[0.85em]"
+          >
             {content}
-          </code>
+          </code>,
         );
-        } else {
-          // For regular text, first de-escape if it looks over-escaped
-          const cleaned = maybeDeescapeTextish(seg);
-          // Bold then italics on the remaining text. Keep it simple and safe.
-          // Replace **bold**
-          const withBold = splitAndWrap(cleaned, /\*\*([^*]+)\*\*/g, (m, i) => (
-            <strong key={`b-${imgIdx}-${idx}-${i}`} className="font-semibold text-zinc-100">{m}</strong>
+      } else {
+        // For regular text, first de-escape if it looks over-escaped
+        const cleaned = maybeDeescapeTextish(seg);
+        // Bold then italics on the remaining text. Keep it simple and safe.
+        // Replace **bold**
+        const withBold = splitAndWrap(cleaned, /\*\*([^*]+)\*\*/g, (m, i) => (
+          <strong key={`b-${imgIdx}-${idx}-${i}`} className="font-semibold text-zinc-100">
+            {m}
+          </strong>
+        ));
+        // For each piece, also apply _italic_ or *italic*
+        const withItalics: React.ReactNode[] = [];
+        withBold.forEach((piece, i) => {
+          if (typeof piece !== 'string') {
+            withItalics.push(piece);
+            return;
+          }
+          const italics = splitAndWrap(piece, /(?:\*([^*]+)\*|_([^_]+)_)/g, (m2, ii) => (
+            <em key={`i-${imgIdx}-${idx}-${i}-${ii}`} className="italic text-zinc-100/90">
+              {m2}
+            </em>
           ));
-          // For each piece, also apply _italic_ or *italic*
-          const withItalics: React.ReactNode[] = [];
-          withBold.forEach((piece, i) => {
-            if (typeof piece !== "string") { withItalics.push(piece); return; }
-            const italics = splitAndWrap(piece, /(?:\*([^*]+)\*|_([^_]+)_)/g, (m2, ii) => (
-              <em key={`i-${imgIdx}-${idx}-${i}-${ii}`} className="italic text-zinc-100/90">{m2}</em>
-            ));
-            // After italics, highlight standalone word FREE in emerald
-            italics.forEach((part, j) => {
-              if (typeof part !== 'string') { withItalics.push(part); return; }
-              const chunks = part.split(/(\bFREE\b)/gi);
-              chunks.forEach((ch, k) => {
-                if (/^\bFREE\b$/i.test(ch)) {
-                  withItalics.push(<span key={`free-${imgIdx}-${idx}-${i}-${j}-${k}`} className="text-emerald-300 font-semibold">FREE</span>);
-                } else if (ch) {
-                  withItalics.push(<React.Fragment key={`t-${imgIdx}-${idx}-${i}-${j}-${k}`}>{ch}</React.Fragment>);
-                }
-              });
+          // After italics, highlight standalone word FREE in emerald
+          italics.forEach((part, j) => {
+            if (typeof part !== 'string') {
+              withItalics.push(part);
+              return;
+            }
+            const chunks = part.split(/(\bFREE\b)/gi);
+            chunks.forEach((ch, k) => {
+              if (/^\bFREE\b$/i.test(ch)) {
+                withItalics.push(
+                  <span
+                    key={`free-${imgIdx}-${idx}-${i}-${j}-${k}`}
+                    className="text-emerald-300 font-semibold"
+                  >
+                    FREE
+                  </span>,
+                );
+              } else if (ch) {
+                withItalics.push(
+                  <React.Fragment key={`t-${imgIdx}-${idx}-${i}-${j}-${k}`}>{ch}</React.Fragment>,
+                );
+              }
             });
           });
-          out.push(<React.Fragment key={`t-${imgIdx}-${idx}`}>{withItalics}</React.Fragment>);
-        }
-      });
+        });
+        out.push(<React.Fragment key={`t-${imgIdx}-${idx}`}>{withItalics}</React.Fragment>);
+      }
     });
+  });
   return out;
 }
 
 function splitAndWrap(
   input: string,
   regex: RegExp,
-  wrap: (matchText: string, idx: number) => React.ReactNode
+  wrap: (matchText: string, idx: number) => React.ReactNode,
 ): React.ReactNode[] {
   const result: React.ReactNode[] = [];
   let lastIndex = 0;
   let i = 0;
   let m: RegExpExecArray | null;
-  const re = new RegExp(regex.source, regex.flags.includes("g") ? regex.flags : regex.flags + "g");
+  const re = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : regex.flags + 'g');
   while ((m = re.exec(input)) !== null) {
     if (m.index > lastIndex) result.push(input.slice(lastIndex, m.index));
-    const captured = m[1] || m[2] || "";
+    const captured = m[1] || m[2] || '';
     result.push(wrap(captured, i++));
     lastIndex = re.lastIndex;
   }

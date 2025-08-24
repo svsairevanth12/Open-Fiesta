@@ -1,9 +1,9 @@
-"use client";
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { X, ExternalLink, Cog, Eye, EyeOff } from "lucide-react";
-import { useLocalStorage } from "@/lib/useLocalStorage";
-import { ApiKeys } from "@/lib/types";
+'use client';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { X, ExternalLink, Cog, Eye, EyeOff } from 'lucide-react';
+import { useLocalStorage } from '@/lib/useLocalStorage';
+import { ApiKeys } from '@/lib/types';
 
 type SettingsProps = { compact?: boolean };
 
@@ -29,7 +29,7 @@ export default function Settings({ compact }: SettingsProps) {
     setKeys(next);
     setOpen(false);
     // Force a reload so clients pick up the new keys immediately
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.location.reload();
     }
   };
@@ -45,9 +45,8 @@ export default function Settings({ compact }: SettingsProps) {
   // Allow programmatic open from anywhere (e.g., rate-limit CTA)
   useEffect(() => {
     const handler = () => setOpen(true);
-    window.addEventListener("open-settings", handler as EventListener);
-    return () =>
-      window.removeEventListener("open-settings", handler as EventListener);
+    window.addEventListener('open-settings', handler as EventListener);
+    return () => window.removeEventListener('open-settings', handler as EventListener);
   }, []);
 
   return (
@@ -56,7 +55,8 @@ export default function Settings({ compact }: SettingsProps) {
         onClick={() => setOpen(true)}
         className={`inline-flex items-center gap-1.5 text-xs ${
           compact ? "h-9 w-9 justify-center px-0" : "px-3 py-2"
-        } rounded-md border border-white/15 bg-white/5 hover:bg-white/10 shadow accent-focus`}
+        } rounded-md bg-gray-200 border border-gray-300 text-gray-800 hover:bg-gray-300
+            dark:bg-white/5 dark:border-white/15 dark:text-white dark:hover:bg-white/10 shadow accent-focus`}
         title="Settings"
         aria-label="Settings"
       >
@@ -64,7 +64,7 @@ export default function Settings({ compact }: SettingsProps) {
         {!compact && <span>Settings</span>}
       </button>
       {open &&
-        typeof document !== "undefined" &&
+        typeof document !== 'undefined' &&
         createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center">
             <div
@@ -83,16 +83,14 @@ export default function Settings({ compact }: SettingsProps) {
                 </button>
               </div>
               <p className="text-xs md:text-sm text-zinc-300 mb-5">
-                Keys are stored locally in your browser via localStorage and
-                sent only with your requests. Do not hardcode keys in code.
+                Keys are stored locally in your browser via localStorage and sent only with your
+                requests. Do not hardcode keys in code.
               </p>
               <div className="space-y-4">
                 {/* Gemini API Key */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-sm md:text-base font-medium">
-                      Gemini API Key
-                    </label>
+                    <label className="block text-sm md:text-base font-medium">Gemini API Key</label>
                     <a
                       href="https://aistudio.google.com/app/u/5/apikey?pli=1"
                       target="_blank"
@@ -104,7 +102,7 @@ export default function Settings({ compact }: SettingsProps) {
                   </div>
                   <div className="relative">
                     <input
-                      type={showGemini ? "text" : "password"}
+                      type={showGemini ? 'text' : 'password'}
                       value={gemini}
                       onChange={(e) => setGemini(e.target.value)}
                       placeholder="AIza..."
@@ -136,7 +134,7 @@ export default function Settings({ compact }: SettingsProps) {
                   </div>
                   <div className="relative">
                     <input
-                      type={showOpenrouter ? "text" : "password"}
+                      type={showOpenrouter ? 'text' : 'password'}
                       value={openrouter}
                       onChange={(e) => setOpenrouter(e.target.value)}
                       placeholder="sk-or-..."
@@ -147,7 +145,7 @@ export default function Settings({ compact }: SettingsProps) {
                       onClick={() => setShowOpenrouter(!showOpenrouter)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
                     >
-                      {showOpenrouter ? (<EyeOff size={16} />) : (<Eye size={16}/>)}
+                      {showOpenrouter ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
@@ -172,7 +170,8 @@ export default function Settings({ compact }: SettingsProps) {
                     className="w-full bg-black/40 border border-white/15 rounded-md px-3 py-2.5 text-sm font-mono tracking-wide placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/20"
                   />
                   <p className="text-xs text-zinc-400 mt-1">
-                    Access to Mistral Large, Medium, Small, Codestral, Pixtral, and specialized models
+                    Access to Mistral Large, Medium, Small, Codestral, Pixtral, and specialized
+                    models
                   </p>
                 </div>
                 {/* Ollama Configuration */}
@@ -217,7 +216,7 @@ export default function Settings({ compact }: SettingsProps) {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

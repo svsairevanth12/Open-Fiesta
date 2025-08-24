@@ -1,6 +1,6 @@
-"use client";
-import { useState } from "react";
-import { Volume2 } from "lucide-react";
+'use client';
+import { useState } from 'react';
+import { Volume2 } from 'lucide-react';
 
 export type VoiceOption = {
   id: string;
@@ -24,10 +24,10 @@ type Props = {
   className?: string;
 };
 
-export default function VoiceSelector({ selectedVoice, onVoiceChange, className = "" }: Props) {
+export default function VoiceSelector({ selectedVoice, onVoiceChange, className = '' }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedVoiceOption = VOICE_OPTIONS.find(v => v.id === selectedVoice) || VOICE_OPTIONS[0];
+  const selectedVoiceOption = VOICE_OPTIONS.find((v) => v.id === selectedVoice) || VOICE_OPTIONS[0];
 
   return (
     <div className={`relative ${className}`}>
@@ -43,17 +43,14 @@ export default function VoiceSelector({ selectedVoice, onVoiceChange, className 
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)}
-          />
-          
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+
           {/* Dropdown */}
           <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-zinc-900 border border-black/20 dark:border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
             <div className="p-2 border-b border-black/10 dark:border-white/10">
               <h3 className="text-sm font-medium text-black dark:text-white">Select Voice</h3>
             </div>
-            
+
             <div className="max-h-64 overflow-y-auto">
               {VOICE_OPTIONS.map((voice) => (
                 <button
@@ -69,7 +66,9 @@ export default function VoiceSelector({ selectedVoice, onVoiceChange, className 
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium text-black dark:text-white">{voice.name}</div>
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">{voice.description}</div>
+                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                        {voice.description}
+                      </div>
                     </div>
                     <div className="text-xs text-zinc-600 dark:text-zinc-500">{voice.gender}</div>
                   </div>

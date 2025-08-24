@@ -1,6 +1,6 @@
 name: Deploy Code
 
-on: 
+on:
   push:
     branches: [main]
   pull_request:
@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-    
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -22,15 +22,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-    
+
       - name: Build Open Fiesta
         run: npm run build
-  
-  docker: 
+
+  docker:
     runs-on: ubuntu-24.04
     needs: build
 
-    steps: 
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
