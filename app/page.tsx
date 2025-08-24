@@ -230,7 +230,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className={`min-h-screen w-full ${backgroundClass} relative text-white`}>
+    <div className={`min-h-screen w-full ${backgroundClass} relative text-black dark:text-white`}>
       {showSplash && (
         <div className="fixed inset-0 z-[9999]">
           <LaunchScreen backgroundClass={backgroundClass} dismissed={isHydrated} />
@@ -305,7 +305,7 @@ export default function Home() {
             {isHydrated && selectedModels.some((m) => m.category === "audio") && (
               <div className="mb-3 px-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-zinc-400">Voice:</span>
+                  <span className="text-sm text-zinc-500 dark:text-zinc-400">Voice:</span>
                   <VoiceSelector selectedVoice={selectedVoice} onVoiceChange={setSelectedVoice} />
                 </div>
               </div>

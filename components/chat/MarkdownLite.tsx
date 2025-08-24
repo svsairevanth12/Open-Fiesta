@@ -417,7 +417,7 @@ export default function MarkdownLite({ text }: Props) {
             key={i}
             className="my-2 rounded bg-black/40 border border-white/10 p-2 overflow-x-auto text-xs"
           >
-            <code>{b.content}</code>
+            <code>{maybeDeescapeJsonish(b.content)}</code>
           </pre>
         ) : (
           // For non-code text, clean simple math delimiters like \( \) \[ \] and $...$
@@ -444,6 +444,50 @@ function splitFencedCodeBlocks(input: string): Array<{ type: "text" | "code"; co
     parts.push({ type: "text", content: input.slice(lastIndex) });
   }
   return parts;
+}
+
+// Heuristic de-escape for code blocks that arrive double-escaped (e.g. lots of \\n, \", \\\)
+// We only transform when it looks like serialized code rather than legitimate backslashes.
+function maybeDeescapeJsonish(src: string): string {
+  if (!src) return src;
+  const backslashes = (src.match(/\\/g) || []).length;
+  const ratio = backslashes / Math.max(1, src.length);
+  const hasEscapes = /\\n|\\t|\\r\\n|\\"/.test(src);
+  // Bail out for low backslash density and no common escapes
+  if (!hasEscapes && ratio < 0.02) return src;
+
+  let out = src;
+  // Normalize common escaped sequences first
+  out = out.replace(/\\r\\n/g, "\n");
+  out = out.replace(/\\n/g, "\n");
+  out = out.replace(/\\t/g, "\t");
+  out = out.replace(/\\"/g, '"');
+  // Collapse double backslashes that are not forming a usual escape
+  // Keep \\n, \\t, \\" and \\\\ sequences intact where meaningful
+  out = out.replace(/\\\\(?![ntr"\\])/g, "\\");
+  // If we ended up with CRs, normalize
+  out = out.replace(/\r/g, "\n");
+  return out;
+}
+
+// Softer heuristic for regular text lines that appear over-escaped (e.g., stray \n, \t, \" in paragraphs)
+function maybeDeescapeTextish(src: string): string {
+  if (!src) return src;
+  const backslashes = (src.match(/\\/g) || []).length;
+  const ratio = backslashes / Math.max(1, src.length);
+  const hasEscapes = /\\n|\\t|\\"/.test(src);
+  // Slightly higher tolerance for text; avoid touching normal prose
+  if (!hasEscapes && ratio < 0.04) return src;
+
+  let out = src;
+  out = out.replace(/\\r\\n/g, "\n");
+  out = out.replace(/\\n/g, "\n");
+  out = out.replace(/\\t/g, "\t");
+  out = out.replace(/\\"/g, '"');
+  // Conservatively collapse double backslashes only when not a common escape
+  out = out.replace(/\\\\(?![ntr"\\])/g, "\\");
+  out = out.replace(/\r/g, "\n");
+  return out;
 }
 
 // Image component that shows a skeleton placeholder until the image loads
@@ -996,9 +1040,11 @@ function renderInline(input: string): React.ReactNode[] {
           </code>
         );
         } else {
+          // For regular text, first de-escape if it looks over-escaped
+          const cleaned = maybeDeescapeTextish(seg);
           // Bold then italics on the remaining text. Keep it simple and safe.
           // Replace **bold**
-          const withBold = splitAndWrap(seg, /\*\*([^*]+)\*\*/g, (m, i) => (
+          const withBold = splitAndWrap(cleaned, /\*\*([^*]+)\*\*/g, (m, i) => (
             <strong key={`b-${imgIdx}-${idx}-${i}`} className="font-semibold text-zinc-100">{m}</strong>
           ));
           // For each piece, also apply _italic_ or *italic*

@@ -50,8 +50,7 @@ export default function HeaderBar({
           href={authorLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-xs text-gray-700 hover:text-black
-            dark:text-zinc-300 dark:hover:text-white"
+          className="inline-flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white"
           title={`Open ${authorName} on X`}
         >
           <Image
@@ -72,11 +71,7 @@ export default function HeaderBar({
 
       {/* Center: title stays centered in available space (hidden on mobile) */}
       <div className="flex-1 text-center hidden sm:block">
-        <h1
-          className="text-xl md:text-2xl font-extrabold tracking-tight
-            text-gray-900 select-none pointer-events-none
-            dark:bg-gradient-to-r dark:from-white dark:via-white/90 dark:to-white/70 dark:bg-clip-text dark:text-transparent dark:drop-shadow-[0_1px_0_rgba(255,255,255,0.12)]"
-        >
+        <h1 className="text-xl md:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-black via-black/90 to-black/70 dark:from-white dark:via-white/90 dark:to-white/70 bg-clip-text text-transparent drop-shadow-[0_1px_0_rgba(0,0,0,0.12)] dark:drop-shadow-[0_1px_0_rgba(255,255,255,0.12)] select-none pointer-events-none">
           {title}
         </h1>
       </div>
@@ -88,6 +83,7 @@ export default function HeaderBar({
           className="inline-flex items-center gap-1.5 text-xs h-9 w-9 justify-center rounded-md
             bg-gray-200 border border-gray-300 text-gray-800 hover:bg-gray-300
             dark:bg-white/5 dark:border-white/15 dark:text-white dark:hover:bg-white/10"
+          className="inline-flex items-center gap-1.5 text-xs h-9 w-9 justify-center rounded-md border border-black/15 dark:border-white/15 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 shadow accent-focus"
           title="Change models"
           aria-label="Change models"
         >

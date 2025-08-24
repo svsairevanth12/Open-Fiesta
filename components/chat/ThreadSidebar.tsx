@@ -61,18 +61,15 @@ export default function ThreadSidebar({
     <>
       {/* Desktop sidebar */}
       <aside
-        className={`relative hidden lg:flex shrink-0 h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] rounded-lg p-3 flex-col transition-[width] duration-300
-        ${sidebarOpen ? "w-64" : "w-14"}
-        bg-gray-100 border border-gray-300 text-gray-900
-        dark:bg-white/5 dark:border-white/10 dark:text-white`}
+        className={`relative hidden lg:flex shrink-0 h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 p-3 flex-col transition-[width] duration-300 ${
+          sidebarOpen ? "w-64" : "w-14"
+        }`}
       >
         {/* Collapse/Expand toggle */}
         <button
           aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           onClick={onToggleSidebar}
-          className="absolute -right-3 top-5 z-10 h-6 w-6 rounded-full 
-            bg-gray-200 border border-gray-300 hover:bg-gray-300 text-gray-800
-            dark:bg-white/10 dark:border-white/15 dark:hover:bg-white/20 dark:text-white"
+          className="absolute -right-3 top-5 z-10 h-6 w-6 rounded-full bg-black/10 dark:bg-white/10 border border-black/15 dark:border-white/15 flex items-center justify-center hover:bg-black/20 dark:hover:bg-white/20"
         >
           {sidebarOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
         </button>
