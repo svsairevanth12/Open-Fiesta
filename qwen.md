@@ -6,7 +6,7 @@ Open-Fiesta is a web-based AI chat playground built with Next.js and TypeScript.
 
 ### Key Features:
 
-*   **Multi-Provider Support:** Integrates with major AI providers like Google (Gemini) and OpenRouter, which gives access to a wide range of open-source and proprietary models.
+*   **Multi-Provider Support:** Integrates with major AI providers like Google (Gemini), OpenRouter, and Ollama, which provide access to a wide range of open-source and proprietary models.
 *   **Model Comparison View:** The core feature is the ability to send a single prompt to multiple selected models and view their responses in a clean, organized grid layout.
 *   **Persistent Chat Threads:** Chat history is saved locally in the browser, allowing users to resume previous conversations.
 *   **Customizable Experience:** Users can manage their API keys, select their preferred models, and customize the user interface.
