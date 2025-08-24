@@ -36,12 +36,15 @@ export default function HeaderBar({
       <div className="flex items-center gap-2 min-w-0">
         <button
           onClick={onOpenMenu}
-          className="lg:hidden inline-flex items-center justify-center h-7 w-8 rounded-md bg-black/10 dark:bg-white/10 border border-black/15 dark:border-white/15 text-black dark:text-white hover:bg-black/15 dark:hover:bg-white/15"
+          className="lg:hidden inline-flex items-center justify-center h-7 w-8 rounded-md
+            bg-gray-200 border border-gray-300 text-gray-800 hover:bg-gray-300
+            dark:bg-white/10 dark:border-white/15 dark:text-white dark:hover:bg-white/20"
           aria-label="Open menu"
           title="Menu"
         >
           <MenuIcon size={16} />
         </button>
+
         <a
           href={authorLink}
           target="_blank"
@@ -69,7 +72,7 @@ export default function HeaderBar({
         </h1>
       </div>
 
-      {/* Right cluster order (left→right visual): Change models, Custom models (icon), Theme (icon), Settings (icon), GitHub */}
+      {/* Right cluster */}
       <div className="flex items-center gap-2 z-10 ml-auto">
         <button
           onClick={() => onOpenModelsModal && onOpenModelsModal()}
@@ -79,6 +82,7 @@ export default function HeaderBar({
         >
           <Layers size={14} />
         </button>
+
         <CustomModels compact />
         <ThemeToggle compact />
         <Settings compact />

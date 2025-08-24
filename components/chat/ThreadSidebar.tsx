@@ -6,6 +6,8 @@ import type { Project } from '@/lib/projects';
 import ConfirmDialog from '@/components/modals/ConfirmDialog';
 import ProjectsSection from '@/components/app/ProjectsSection';
 import DownloadMenu from './DownloadMenu';
+import { useTheme } from '@/lib/themeContext';
+import { ACCENT_COLORS } from '@/lib/themes';
 
 type Props = {
   sidebarOpen: boolean;
@@ -48,7 +50,9 @@ export default function ThreadSidebar({
 }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
-
+  const { theme } = useTheme();
+  const accent = ACCENT_COLORS[theme.accent];
+   
   useEffect(() => {
     setIsHydrated(true);
   }, []);
@@ -96,20 +100,22 @@ export default function ThreadSidebar({
               />
             </div>
 
+            {/* New Chat */}
             <button
               onClick={onNewChat}
-              className="mb-3 text-sm px-3 py-2 rounded-md text-white shadow transition-colors accent-action-fill accent-focus"
+              className="mb-3 text-sm px-3 py-2 rounded-md shadow text-white dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+              style={{ backgroundColor: accent.primary,}}
             >
               + New Chat
             </button>
             <div className="text-xs uppercase tracking-wide opacity-60 mb-2">Chats</div>
             <div className="flex-1 overflow-y-auto space-y-1 pr-1">
               {!isHydrated ? (
-                // Show consistent state during SSR
                 <div className="text-xs opacity-60">Loading...</div>
               ) : threads.length === 0 ? (
                 <div className="text-xs opacity-60">No chats yet</div>
               ) : null}
+
               {isHydrated &&
                 threads.map((t) => (
                   <div
@@ -160,16 +166,18 @@ export default function ThreadSidebar({
               />
             </div>
 
-            {/* New chat button */}
+            {/* Mini New Chat */}
             <button
               title="New Chat"
               onClick={onNewChat}
-              className="h-8 w-8 rounded-full flex items-center justify-center mb-4 mx-auto shrink-0 text-white transition-colors accent-action-fill accent-focus"
+              className="h-8 w-8 rounded-full flex items-center justify-center mb-4 mx-auto shrink-0
+                dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+              style={{ backgroundColor: accent.primary,}}
             >
               <Plus size={14} />
             </button>
 
-            {/* Mini chat boxes list */}
+            {/* Mini threads */}
             <div className="flex-1 overflow-y-auto w-full flex flex-col items-center gap-2 pt-1 pb-2">
               {threads.map((t) => {
                 const isActive = t.id === activeId;
@@ -179,7 +187,7 @@ export default function ThreadSidebar({
                     key={t.id}
                     title={t.title || 'Untitled'}
                     onClick={() => onSelectThread(t.id)}
-                    className={`h-6 w-6 aspect-square rounded-full flex items-center justify-center transition-colors focus-visible:outline-none mx-auto shrink-0 
+                    className={`h-6 w-6 aspect-square rounded-full flex items-center justify-center transition-colors mx-auto shrink-0
                       ${
                         isActive
                           ? 'bg-white/20 ring-1 ring-white/30 ring-offset-1 ring-offset-black'
@@ -195,7 +203,7 @@ export default function ThreadSidebar({
         )}
       </aside>
 
-      {/* Mobile sidebar drawer */}
+      {/* Mobile Sidebar */}
       {mobileSidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/60" onClick={onCloseMobile} />
@@ -208,21 +216,19 @@ export default function ThreadSidebar({
               <button
                 aria-label="Close"
                 onClick={onCloseMobile}
-                className="h-8 w-8 inline-flex items-center justify-center rounded-md bg-white/10 hover:bg-white/20"
+                className="h-8 w-8 inline-flex items-center justify-center rounded-md
+                  bg-gray-200 hover:bg-gray-300 text-gray-800
+                  dark:bg-white/10 dark:hover:bg-white/20 dark:text-white"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* Projects Section (Mobile) */}
             <div className="mb-4">
               <ProjectsSection
                 projects={projects}
                 activeProjectId={activeProjectId}
-                onSelectProject={(id) => {
-                  onSelectProject(id);
-                  // Don't close mobile sidebar for project selection
-                }}
+                onSelectProject={(id) => onSelectProject(id)}
                 onCreateProject={onCreateProject}
                 onUpdateProject={onUpdateProject}
                 onDeleteProject={onDeleteProject}
@@ -235,7 +241,8 @@ export default function ThreadSidebar({
                 onNewChat();
                 onCloseMobile();
               }}
-              className="mb-3 text-sm px-3 py-2 w-full rounded-md text-white transition-colors accent-action-fill accent-focus"
+               style={{ backgroundColor: accent.primary,}}
+              className="mb-3 text-sm px-3 py-2 w-full rounded-md shadow dark:bg-white/10 dark:hover:bg-white/20"
             >
               + New Chat
             </button>
@@ -247,8 +254,8 @@ export default function ThreadSidebar({
                   key={t.id}
                   className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group ${
                     t.id === activeId
-                      ? 'bg-white/15 border-white/20'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
+                      ? 'bg-gray-200 border-gray-300 dark:bg-white/15 dark:border-white/20'
+                      : 'bg-gray-50 border-gray-300 hover:bg-gray-100 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10'
                   }`}
                 >
                   <button
@@ -270,7 +277,9 @@ export default function ThreadSidebar({
                         e.stopPropagation();
                         setConfirmDeleteId(t.id);
                       }}
-                      className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
+                      className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md
+                      bg-gray-200 border border-gray-300 text-gray-700 hover:bg-rose-500/20 hover:border-rose-300/30
+                      dark:bg-white/5 dark:border-white/10 dark:text-zinc-300 dark:hover:text-rose-100"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -281,6 +290,7 @@ export default function ThreadSidebar({
           </div>
         </div>
       )}
+
       <ConfirmDialog
         open={!!confirmDeleteId}
         title="Delete this chat?"

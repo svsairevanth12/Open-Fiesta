@@ -64,7 +64,7 @@ const AnimatedPlaceholder = ({ showSearch }: { showSearch: boolean }) => (
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -5 }}
       transition={{ duration: 0.1 }}
-      className="pointer-events-none w-[150px] text-sm absolute text-black/30 dark:text-white/30 sm:text-black/70 sm:dark:text-white/70 drop-shadow-sm"
+      className="pointer-events-none w-[150px] text-sm absolute text-white/30 sm:dark:text-white/70 drop-shadow-sm"
     >
       {showSearch ? 'Search the web...' : 'Ask Anything...'}
     </motion.p>

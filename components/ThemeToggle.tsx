@@ -282,8 +282,9 @@ export default function ThemeToggle({ compact }: ThemeToggleProps) {
         title="Theme Settings"
         onClick={handleOpen}
         className={`inline-flex items-center ${
-          compact ? 'justify-center h-9 w-9 gap-0' : 'gap-2 px-3 py-2'
-        } rounded-md bg-white/10 hover:bg-white/15 border border-white/10 transition-colors text-xs`}
+          compact ? "justify-center h-9 w-9 gap-0" : "gap-2 px-3 py-2"
+        } rounded-md bg-gray-200 border border-gray-300 text-gray-800 hover:bg-gray-300
+            dark:bg-white/5 dark:border-white/15 dark:text-white dark:hover:bg-white/10 transition-colors text-xs`}
       >
         <Palette size={14} />
         {!compact && <span>Theme</span>}
