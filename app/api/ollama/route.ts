@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     timeoutId = setTimeout(() => {
       if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama request timeout triggered');
       controller.abort();
-    }, 45000); // 45 second timeout
+    }, 90000); // 45 second timeout
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
