@@ -43,7 +43,7 @@ export default function HeaderBar({
           href="https://x.com/byteHumi"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10"
+          className="inline-flex items-center gap-2 sm:px-2 sm:py-1 px-0 py-0 rounded-md hover:bg-black/5 dark:hover:bg-white/10"
           title="Made by Niladri"
         >
           <Image
@@ -53,7 +53,7 @@ export default function HeaderBar({
             height={24}
             className="rounded-full object-cover"
           />
-          <span className="text-sm text-zinc-700 dark:text-zinc-200">Made by Niladri</span>
+          <span className="hidden sm:inline text-sm text-zinc-700 dark:text-zinc-200">Made by Niladri</span>
         </a>
       </div>
 
