@@ -196,8 +196,8 @@ export async function POST(req: NextRequest) {
 
     try {
       const messageCount =
-        !isAudioModel && (requestBody as any)?.messages
-          ? (requestBody as any).messages.length || 0
+        !isAudioModel && (requestBody as { messages?: unknown[] })?.messages
+          ? (requestBody as { messages: unknown[] }).messages.length || 0
           : 0;
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
@@ -359,7 +359,7 @@ export async function POST(req: NextRequest) {
               const msg = ch0?.message || {};
               const audioNode =
                 msg?.audio ||
-                msg?.content?.find?.((x: any) => x?.type === 'audio' || x?.type === 'output_audio')
+                msg?.content?.find?.((x: { type: string }) => x?.type === 'audio' || x?.type === 'output_audio')
                   ?.audio;
               const b64 = audioNode?.data;
               const fmt = (audioNode?.format || 'mp3').toLowerCase();

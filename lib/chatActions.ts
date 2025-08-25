@@ -324,8 +324,8 @@ export function createChatActions({
               messages: prepareMessages(nextHistory),
               imageDataUrl,
             });
-            if (res && typeof (res as any)?.error === 'string') {
-              const errText = String((res as any).error).trim();
+            if (res && typeof (res as { error?: unknown })?.error === 'string') {
+              const errText = String((res as { error: unknown }).error).trim();
               setThreads((prev) =>
                 prev.map((t) => {
                   if (t.id !== thread.id) return t;
@@ -772,8 +772,8 @@ export function createChatActions({
           }
         } else if (m.provider === 'unstable') {
           const res = await callUnstable({ apiKey: keys['unstable'] || undefined, model: m.model, messages: baseHistory });
-          if (res && typeof (res as any)?.error === 'string') {
-            const errText = String((res as any).error).trim();
+          if (res && typeof (res as { error?: unknown })?.error === 'string') {
+            const errText = String((res as { error: unknown }).error).trim();
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
               const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
