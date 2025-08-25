@@ -116,19 +116,19 @@ function ProgressBar({
       onScrub(getPos(e));
     };
 
-    el.addEventListener('mousedown', onDown as any);
-    el.addEventListener('touchstart', onDown as any, { passive: false });
-    window.addEventListener('mousemove', onMove as any, { passive: false });
-    window.addEventListener('touchmove', onMove as any, { passive: false });
-    window.addEventListener('mouseup', onUp as any);
-    window.addEventListener('touchend', onUp as any);
+    el.addEventListener('mousedown', onDown as unknown as EventListener);
+    el.addEventListener('touchstart', onDown as unknown as EventListener, { passive: false });
+    window.addEventListener('mousemove', onMove as unknown as EventListener, { passive: false });
+    window.addEventListener('touchmove', onMove as unknown as EventListener, { passive: false });
+    window.addEventListener('mouseup', onUp as unknown as EventListener);
+    window.addEventListener('touchend', onUp as unknown as EventListener);
     return () => {
-      el.removeEventListener('mousedown', onDown as any);
-      el.removeEventListener('touchstart', onDown as any);
-      window.removeEventListener('mousemove', onMove as any);
-      window.removeEventListener('touchmove', onMove as any);
-      window.removeEventListener('mouseup', onUp as any);
-      window.removeEventListener('touchend', onUp as any);
+      el.removeEventListener('mousedown', onDown as unknown as EventListener);
+      el.removeEventListener('touchstart', onDown as unknown as EventListener);
+      window.removeEventListener('mousemove', onMove as unknown as EventListener);
+      window.removeEventListener('touchmove', onMove as unknown as EventListener);
+      window.removeEventListener('mouseup', onUp as unknown as EventListener);
+      window.removeEventListener('touchend', onUp as unknown as EventListener);
     };
   }, [max, onScrub]);
 

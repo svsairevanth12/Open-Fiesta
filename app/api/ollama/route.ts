@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     if (process.env.DEBUG_OLLAMA === '1') console.log(`Calling Ollama model: ${model} at ${ollamaUrl}`);
 
     // Convert messages to Ollama format
-    const ollamaMessages = messages.map((msg: any) => ({
+    const ollamaMessages = messages.map((msg: { role: string; content: string }) => ({
       role: msg.role,
       content: msg.content
     }));
