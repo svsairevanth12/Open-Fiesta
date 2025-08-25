@@ -75,18 +75,24 @@ export default function ChatGrid({
                 return (
                   <div
                     key={m.id}
-                    className={`px-2 py-1 sm:px-1 sm:py-2 min-h-[40px] border-b flex items-center ${
+                    className={`px-2.5 py-2 sm:px-2 sm:py-2 min-h-[42px] flex items-center ${
                       isCollapsed ? 'justify-center' : 'justify-between'
-                    } overflow-visible bg-black/70 dark:bg-black/70 sm:bg-transparent rounded-md sm:rounded-none ${
-                      m.good ? 'border-amber-300/40' : 'border-black/10 dark:border-white/10'
+                    } overflow-visible rounded-lg backdrop-blur-sm shadow-[0_1px_8px_rgba(0,0,0,0.25)] ring-1 ${
+                      m.good
+                        ? 'ring-amber-300/35 bg-gradient-to-b from-amber-500/10 to-black/50'
+                        : 'ring-white/10 bg-black/55'
+                    } dark:${
+                      m.good
+                        ? 'ring-amber-300/35 from-amber-400/10 to-black/60'
+                        : 'ring-white/10 bg-black/60'
                     }`}
                   >
                     {!isCollapsed && (
                       <div
-                        className={`text-[13px] leading-normal font-medium pr-2 inline-flex items-center gap-1.5 min-w-0 drop-shadow-[0_1px_0_rgba(0,0,0,0.35)] sm:drop-shadow-none bg-transparent px-0 py-0 sm:bg-transparent sm:px-0 sm:py-0 sm:rounded-none ${
+                        className={`text-[12px] leading-normal font-medium pr-2 inline-flex items-center gap-1.5 min-w-0 drop-shadow-[0_1px_0_rgba(0,0,0,0.35)] sm:drop-shadow-none ${
                           m.good || isFree
-                            ? 'opacity-100 text-black dark:text-white sm:text-inherit'
-                            : 'opacity-100 text-black dark:text-white sm:opacity-90 sm:text-inherit'
+                            ? 'opacity-100 text-black dark:text-white'
+                            : 'opacity-100 text-black dark:text-white sm:opacity-90'
                         }`}
                       >
                         {m.good && (
@@ -101,7 +107,10 @@ export default function ChatGrid({
                             <span className="hidden sm:inline">Free</span>
                           </span>
                         )}
-                        <span className="truncate" title={m.label}>
+                        <span
+                          className="truncate max-w-[18ch] px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[12px]"
+                          title={m.label}
+                        >
                           {m.label}
                         </span>
                       </div>

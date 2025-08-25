@@ -463,17 +463,12 @@ export function AiInput({
               </button>
             </div>
 
-            {/* Primary Action Button Group - Mic, Enhance, Send */}
+            {/* Primary Actions - Mic, Enhance, Send (not clubbed together) */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, x: 20 }}
+              initial={{ opacity: 0, scale: 0.98, x: 20 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 25,
-                delay: 0.1
-              }}
-              className="flex items-center gap-1 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-full p-1 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm hover:shadow-md transition-shadow duration-300"
+              transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.1 }}
+              className="flex items-center gap-2"
             >
               {/* Mic Button */}
               {browserSupportsSpeechRecognition && (
@@ -501,17 +496,17 @@ export function AiInput({
                 </button>
               )}
 
-              {/* Prompt Enhancer Button */}
+              {/* Prompt Enhancer Button - themed */}
               {value.trim() && (
                 <button
                   type="button"
                   onClick={enhancePrompt}
                   disabled={isEnhancing}
                   className={cn(
-                    'rounded-full p-2 transition-all duration-300 flex items-center justify-center relative group',
+                    'rounded-full p-2 h-8 w-8 transition-all duration-300 flex items-center justify-center relative group',
                     isEnhancing
-                      ? 'bg-purple-500/20 text-purple-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 hover:scale-105 shadow-lg shadow-purple-500/25',
+                      ? 'bg-[var(--accent-interactive-primary)]/20 text-[var(--accent-interactive-primary)] cursor-not-allowed'
+                      : 'accent-action-fill hover:shadow-lg hover:scale-105 shadow-[var(--accent-interactive-primary)]/25',
                   )}
                   aria-label={isEnhancing ? 'Enhancing prompt...' : 'Enhance prompt'}
                   title={isEnhancing ? 'Enhancing prompt...' : 'Enhance prompt with AI'}
@@ -530,7 +525,7 @@ export function AiInput({
                 title={loading ? 'Sending...' : 'Send message'}
                 onClick={handleSubmit}
                 className={cn(
-                  'rounded-full p-2 transition-all duration-300 flex items-center justify-center relative group',
+                  'rounded-full p-2 h-8 w-8 transition-all duration-300 flex items-center justify-center relative group',
                   loading
                     ? 'bg-[var(--accent-interactive-primary)]/20 text-[var(--accent-interactive-primary)] cursor-not-allowed'
                     : value

@@ -1,19 +1,5 @@
 import { NextRequest } from 'next/server';
-
-const ENHANCEMENT_SYSTEM_PROMPT = `You are an expert prompt engineer powered by GPT-4.1 Nano. Your task is to enhance user prompts to make them clearer, more specific, and more effective for AI interactions.
-
-Guidelines for enhancement:
-1. Preserve the original intent and meaning
-2. Add clarity and specificity where needed
-3. Structure the prompt logically
-4. Add context that would help generate better responses
-5. Remove ambiguity and vague language
-6. Make the prompt more actionable
-7. Keep it concise but comprehensive
-8. Maintain the user's tone and style preference
-9. Optimize for maximum AI model performance
-
-Return ONLY the enhanced prompt without any explanations, prefixes, or additional text.`;
+import { ENHANCEMENT_SYSTEM_PROMPT } from '@/lib/prompts/enhancers';
 
 export async function POST(req: NextRequest) {
   try {

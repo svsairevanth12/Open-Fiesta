@@ -26,11 +26,11 @@ export default function Home() {
   const backgroundClass = BACKGROUND_STYLES[theme.background].className;
 
   const [selectedIds, setSelectedIds] = useLocalStorage<string[]>('ai-fiesta:selected-models', [
-    'unstable-gpt-5-chat',
-    'unstable-claude-sonnet-4',
-    'gemini-2.5-pro',
-    'unstable-grok-4',
+    'open-gpt-5-nano', // GPT-5 Nano
+    'open-midijourney', // Midjourney
     'open-evil',
+    'open-mistral', // Mistral Small 3.1
+    'open-llamascout', // Llama Scout
   ]);
   const [keys] = useLocalStorage<ApiKeys>('ai-fiesta:keys', {});
   const [threads, setThreads] = useLocalStorage<ChatThread[]>('ai-fiesta:threads', []);

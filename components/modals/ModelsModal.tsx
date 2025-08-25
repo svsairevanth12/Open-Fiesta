@@ -178,7 +178,7 @@ export default function ModelsModal({
           return (
             <div
               key={m.id}
-              className={`model-chip flex items-center justify-between gap-2 w-full h-10 sm:h-9 md:h-9 px-3 sm:px-3 md:px-3 text-xs sm:text-[11px] md:text-sm ${
+              className={`model-chip flex items-center justify-between gap-2 w-full h-10 sm:h-9 md:h-9 px-3 sm:px-3 md:px-3 text-xs sm:text-[11px] md:text-sm rounded-lg ${
                 disabled ? 'opacity-60 cursor-not-allowed text-zinc-500' : ''
               } ${
                 selected
