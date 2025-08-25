@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, Trash2, MoreVertical } from 'lucide-react';
+
 import type { ChatThread, AiModel } from '@/lib/types';
 import type { Project } from '@/lib/projects';
 import ConfirmDialog from '@/components/modals/ConfirmDialog';
@@ -51,12 +52,31 @@ export default function ThreadSidebar({
 }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  // Tracks which thread's action menu is open
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const { theme } = useTheme();
   const accent = ACCENT_COLORS[theme.accent];
    
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  // Close open menu on outside click: only if click happens outside the active row
+  useEffect(() => {
+    const onOutside = (ev: MouseEvent) => {
+      if (!openMenuId) return;
+      const target = ev.target as HTMLElement | null;
+      if (!target) return setOpenMenuId(null);
+      const root = document.querySelector(`[data-menu-root="${openMenuId}"]`);
+      // If the click happened within the row (by DOM contains OR event path), ignore
+      const path = (ev.composedPath ? ev.composedPath() : []) as EventTarget[];
+      if (root && (root.contains(target) || path.includes(root))) return;
+      setOpenMenuId(null);
+    };
+    document.addEventListener('click', onOutside);
+    return () => document.removeEventListener('click', onOutside);
+  }, [openMenuId]);
+  
 
   return (
     <>
@@ -121,7 +141,8 @@ export default function ThreadSidebar({
                 threads.map((t) => (
                   <div
                     key={t.id}
-                    className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group ${
+                    data-menu-root={t.id}
+                    className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group relative ${
                       t.id === activeId
                         ? 'bg-white/15 border-white/20'
                         : 'bg-white/5 border-white/10 hover:bg-white/10'
@@ -135,22 +156,48 @@ export default function ThreadSidebar({
                       {t.title || 'Untitled'}
                     </button>
                     <div className="flex items-center gap-1">
-                      <ShareButton 
-                        thread={t}
-                        projectName={projects.find(p => p.id === t.projectId)?.name}
-                      />
-                      <DownloadMenu thread={t} selectedModels={selectedModels} />
+                      {/* Kebab menu trigger */}
                       <button
-                        aria-label="Delete chat"
-                        title="Delete chat"
+                        aria-label="Thread actions"
+                        title="More"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setConfirmDeleteId(t.id);
+                          // Toggle per-thread menu
+                          setOpenMenuId((prev) => (prev === t.id ? null : t.id));
                         }}
-                        className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
+                        className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300"
                       >
-                        <Trash2 size={14} />
+                        <MoreVertical size={14} />
                       </button>
+
+                      {/* Popover actions */}
+                      {openMenuId === t.id && (
+                        <div
+                          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1 rounded-lg border border-white/10 bg-zinc-900/90 px-1.5 py-1 shadow-xl"
+                        >
+                          <span onClick={(e) => e.stopPropagation()}>
+                            <ShareButton
+                              thread={t}
+                              projectName={projects.find(p => p.id === t.projectId)?.name}
+                            />
+                          </span>
+                          <span onClick={(e) => e.stopPropagation()}>
+                            <DownloadMenu thread={t} selectedModels={selectedModels} />
+                          </span>
+                          <button
+                            aria-label="Delete chat"
+                            title="Delete chat"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(null);
+                              setConfirmDeleteId(t.id);
+                            }}
+                            className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-rose-500/20 hover:border-rose-300/30 text-zinc-300 hover:text-rose-100"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -257,7 +304,8 @@ export default function ThreadSidebar({
               {threads.map((t) => (
                 <div
                   key={t.id}
-                  className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group ${
+                  data-menu-root={t.id}
+                  className={`w-full px-2 py-2 rounded-md text-sm border flex items-center justify-between gap-2 group relative ${
                     t.id === activeId
                       ? 'bg-gray-200 border-gray-300 dark:bg-white/15 dark:border-white/20'
                       : 'bg-gray-50 border-gray-300 hover:bg-gray-100 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10'
@@ -274,24 +322,51 @@ export default function ThreadSidebar({
                     {t.title || 'Untitled'}
                   </button>
                   <div className="flex items-center gap-1">
-                    <ShareButton 
-                      thread={t}
-                      projectName={projects.find(p => p.id === t.projectId)?.name}
-                    />
-                    <DownloadMenu thread={t} selectedModels={selectedModels} />
+                    {/* Kebab menu trigger (mobile) */}
                     <button
-                      aria-label="Delete chat"
-                      title="Delete chat"
+                      aria-label="Thread actions"
+                      title="More"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setConfirmDeleteId(t.id);
+                        setOpenMenuId((prev) => (prev === t.id ? null : t.id));
                       }}
                       className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md
-                      bg-gray-200 border border-gray-300 text-gray-700 hover:bg-rose-500/20 hover:border-rose-300/30
-                      dark:bg-white/5 dark:border-white/10 dark:text-zinc-300 dark:hover:text-rose-100"
+                        bg-gray-200 border border-gray-300 text-gray-700 hover:bg-gray-300
+                        dark:bg-white/5 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10"
                     >
-                      <Trash2 size={14} />
+                      <MoreVertical size={14} />
                     </button>
+
+                    {/* Popover actions (mobile) */}
+                    {openMenuId === t.id && (
+                      <div
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1 rounded-lg border border-white/10 bg-zinc-900/90 px-1.5 py-1 shadow-xl"
+                      >
+                        <span onClick={(e) => e.stopPropagation()}>
+                          <ShareButton
+                            thread={t}
+                            projectName={projects.find(p => p.id === t.projectId)?.name}
+                          />
+                        </span>
+                        <span onClick={(e) => e.stopPropagation()}>
+                          <DownloadMenu thread={t} selectedModels={selectedModels} />
+                        </span>
+                        <button
+                          aria-label="Delete chat"
+                          title="Delete chat"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(null);
+                            setConfirmDeleteId(t.id);
+                          }}
+                          className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md
+                            bg-gray-200 border border-gray-300 text-gray-700 hover:bg-rose-500/20 hover:border-rose-300/30
+                            dark:bg-white/5 dark:border-white/10 dark:text-zinc-300 dark:hover:text-rose-100"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
