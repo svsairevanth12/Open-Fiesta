@@ -1015,8 +1015,3 @@ export function createChatActions({
 
   return { send, onEditUser, onDeleteUser, onDeleteAnswer };
 }
-    setThreads(prev => prev.map(tt => tt.id === t.id ? { ...tt, messages: updated } : tt));
-  }
-
-  return { send, onEditUser, onDeleteUser, onDeleteAnswer };
-}
