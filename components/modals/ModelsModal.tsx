@@ -164,9 +164,6 @@ export default function ModelsModal({
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).style.display = 'none';
             }}
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = 'none';
-            }}
           />
         )}
         <span>{title}</span>
