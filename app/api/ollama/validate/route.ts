@@ -128,18 +128,18 @@ export async function POST(req: NextRequest) {
       // Handle different response formats
       let modelList: Array<{ name: string }> = [];
       if (Array.isArray(data)) {
-        modelList = data;
+        modelList = data as Array<{ name: string }>;
       } else if (data && typeof data === 'object') {
         // Check for models array in different possible locations
-        if (Array.isArray(data.models)) {
-          modelList = data.models;
-        } else if (Array.isArray((data as any).data)) {
-          modelList = (data as any).data;
+        if (Array.isArray((data as { models?: Array<{ name: string }> }).models)) {
+          modelList = (data as { models: Array<{ name: string }> }).models;
+        } else if (Array.isArray((data as { data?: Array<{ name: string }> }).data)) {
+          modelList = (data as { data: Array<{ name: string }> }).data;
         }
       }
 
       if (process.env.DEBUG_OLLAMA === '1') console.log(`Parsed model list:`, modelList);
-      const found = modelList.find((m) => m && typeof m.name === 'string' && m.name === slug);
+      const found = modelList.find((m: { name: string }) => m && typeof m.name === 'string' && m.name === slug);
       if (process.env.DEBUG_OLLAMA === '1') console.log(`Found model:`, found);
 
       // Prepare response with available models for better UX
@@ -148,8 +148,8 @@ export async function POST(req: NextRequest) {
       // If model not found, provide list of available models
       if (!found && modelList.length > 0) {
         response.availableModels = modelList
-          .map(m => m.name)
-          .filter((name): name is string => typeof name === 'string')
+          .map((m: { name: string }) => m.name)
+          .filter((name: string): name is string => typeof name === 'string')
           .slice(0, 10);
       }
       return NextResponse.json(response);

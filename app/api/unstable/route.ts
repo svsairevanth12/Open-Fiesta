@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Handle image attachment if provided
-    let processedMessages = trimmedMessages;
+    const processedMessages = trimmedMessages;
     if (imageDataUrl && trimmedMessages.length > 0) {
       const lastMessage = trimmedMessages[trimmedMessages.length - 1];
       if (lastMessage.role === 'user') {

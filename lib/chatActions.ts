@@ -227,9 +227,9 @@ export function createChatActions({
                       ? ({
                           ...msg,
                           content: 'No response',
-                          provider: (res as any)?.provider,
-                          usedKeyType: (res as any)?.usedKeyType,
-                          tokens: (res as any)?.tokens,
+                          provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider,
+                          usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType,
+                          tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens,
                         } as ChatMessage)
                       : msg,
                   );
@@ -251,9 +251,9 @@ export function createChatActions({
                         ? ({
                             ...msg,
                             content: full,
-                            provider: (res as any)?.provider,
-                            usedKeyType: (res as any)?.usedKeyType,
-                            tokens: (res as any)?.tokens,
+                            provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider,
+                            usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType,
+                            tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens,
                           } as ChatMessage)
                         : msg,
                     );
@@ -288,9 +288,9 @@ export function createChatActions({
                           msg.ts === placeholderTs && msg.modelId === m.id
                             ? ({
                                 ...msg,
-                                provider: (res as any)?.provider,
-                                usedKeyType: (res as any)?.usedKeyType,
-                                tokens: (res as any)?.tokens,
+                                provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider,
+                                usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType,
+                                tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens,
                               } as ChatMessage)
                             : msg,
                         );
@@ -334,9 +334,9 @@ export function createChatActions({
                       ? ({
                           ...msg,
                           content: errText,
-                          provider: (res as any)?.provider,
-                          usedKeyType: (res as any)?.usedKeyType,
-                          code: (res as any)?.code,
+                          provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider,
+                          usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType,
+                          code: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.code,
                         } as ChatMessage)
                       : msg,
                   );
@@ -355,9 +355,9 @@ export function createChatActions({
                       ? ({
                           ...msg,
                           content: 'No response',
-                          provider: (res as any)?.provider,
-                          usedKeyType: (res as any)?.usedKeyType,
-                          tokens: (res as any)?.tokens,
+                          provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider,
+                          usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType,
+                          tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens,
                         } as ChatMessage)
                       : msg,
                   );
@@ -392,9 +392,9 @@ export function createChatActions({
                         msg.ts === placeholderTs && msg.modelId === m.id
                           ? ({
                               ...msg,
-                              provider: (res as any)?.provider,
-                              usedKeyType: (res as any)?.usedKeyType,
-                              tokens: (res as any)?.tokens,
+                              provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider,
+                              usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType,
+                              tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens,
                             } as ChatMessage)
                           : msg,
                       );
@@ -427,7 +427,7 @@ export function createChatActions({
             setThreads(prev => prev.map(t => {
               if (t.id !== thread.id) return t;
               const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                ? { ...msg, content: 'No response', provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                 : msg);
               return { ...t, messages: msgs };
             }));
@@ -449,7 +449,7 @@ export function createChatActions({
                 setThreads(prev => prev.map(t => {
                   if (t.id !== thread.id) return t;
                   const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    ? { ...msg, provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                     : msg);
                   return { ...t, messages: msgs };
                 }));
@@ -469,7 +469,7 @@ export function createChatActions({
             setThreads(prev => prev.map(t => {
               if (t.id !== thread.id) return t;
               const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                ? { ...msg, content: 'No response', provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                 : msg);
               return { ...t, messages: msgs };
             }));
@@ -491,17 +491,12 @@ export function createChatActions({
                 setThreads(prev => prev.map(t => {
                   if (t.id !== thread.id) return t;
                   const msgs = (t.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    ? { ...msg, provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                     : msg);
                   return { ...t, messages: msgs };
                 }));
               }
             }, 24);
-            
-            // Clear interval on abort to avoid leaks
-            controller.signal.addEventListener('abort', () => {
-              window.clearInterval(timer);
-            });
           }
         } else {
           const placeholderTs = Date.now();
@@ -746,7 +741,7 @@ export function createChatActions({
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
               const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                ? { ...msg, content: 'No response', provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                 : msg);
               return { ...tt, messages: msgs };
             }));
@@ -768,7 +763,7 @@ export function createChatActions({
                 setThreads(prev => prev.map(tt => {
                   if (tt.id !== t.id) return tt;
                   const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    ? { ...msg, provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                     : msg);
                   return { ...tt, messages: msgs };
                 }));
@@ -782,7 +777,7 @@ export function createChatActions({
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
               const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                ? { ...msg, content: errText, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, code: (res as any)?.code } as ChatMessage
+                ? { ...msg, content: errText, provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, code: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.code } as ChatMessage
                 : msg);
               return { ...tt, messages: msgs };
             }));
@@ -793,7 +788,7 @@ export function createChatActions({
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
               const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                ? { ...msg, content: 'No response', provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                 : msg);
               return { ...tt, messages: msgs };
             }));
@@ -815,7 +810,7 @@ export function createChatActions({
                 setThreads(prev => prev.map(tt => {
                   if (tt.id !== t.id) return tt;
                   const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    ? { ...msg, provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                     : msg);
                   return { ...tt, messages: msgs };
                 }));
@@ -829,7 +824,7 @@ export function createChatActions({
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
               const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                ? { ...msg, content: 'No response', provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                 : msg);
               return { ...tt, messages: msgs };
             }));
@@ -851,7 +846,7 @@ export function createChatActions({
                 setThreads(prev => prev.map(tt => {
                   if (tt.id !== t.id) return tt;
                   const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    ? { ...msg, provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                     : msg);
                   return { ...tt, messages: msgs };
                 }));
@@ -866,7 +861,7 @@ export function createChatActions({
             setThreads(prev => prev.map(tt => {
               if (tt.id !== t.id) return tt;
               const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                ? { ...msg, content: 'No response', provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                ? { ...msg, content: 'No response', provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                 : msg);
               return { ...tt, messages: msgs };
             }));
@@ -888,7 +883,7 @@ export function createChatActions({
                 setThreads(prev => prev.map(tt => {
                   if (tt.id !== t.id) return tt;
                   const msgs = (tt.messages ?? []).map(msg => (msg.ts === placeholderTs && msg.modelId === m.id)
-                    ? { ...msg, provider: (res as any)?.provider, usedKeyType: (res as any)?.usedKeyType, tokens: (res as any)?.tokens } as ChatMessage
+                    ? { ...msg, provider: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.provider, usedKeyType: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.usedKeyType, tokens: (res as { provider?: string; usedKeyType?: 'user' | 'shared' | 'none'; tokens?: object; code?: number; error?: string })?.tokens } as ChatMessage
                     : msg);
                   return { ...tt, messages: msgs };
                 }));
@@ -1015,6 +1010,11 @@ export function createChatActions({
       }
     }
 
+    setThreads(prev => prev.map(tt => tt.id === t.id ? { ...tt, messages: updated } : tt));
+  }
+
+  return { send, onEditUser, onDeleteUser, onDeleteAnswer };
+}
     setThreads(prev => prev.map(tt => tt.id === t.id ? { ...tt, messages: updated } : tt));
   }
 
