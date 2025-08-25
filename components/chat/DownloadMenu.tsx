@@ -16,12 +16,21 @@ export default function DownloadMenu({ thread, selectedModels }: Props) {
     return null;
   }
 
-  const handleDownloadMarkdown = () => {
+  // helper to stop native propagation (prevents document click listeners)
+  const stopNative = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // stop other native listeners (like the document listener) from running
+    e.nativeEvent.stopImmediatePropagation();
+  };
+
+  const handleDownloadMarkdown = (e?: React.MouseEvent) => {
+    if (e) stopNative(e);
     downloadAsMarkdown(thread, selectedModels);
     setIsOpen(false);
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = (e?: React.MouseEvent) => {
+    if (e) stopNative(e);
     downloadAsPdf(thread, selectedModels);
     setIsOpen(false);
   };
@@ -29,7 +38,10 @@ export default function DownloadMenu({ thread, selectedModels }: Props) {
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          stopNative(e);
+          setIsOpen(!isOpen);
+        }}
         title="Download chat"
         className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 hover:bg-white/20 text-zinc-300 hover:text-white transition-colors"
       >
@@ -38,16 +50,22 @@ export default function DownloadMenu({ thread, selectedModels }: Props) {
 
       {isOpen && (
         <>
-          {/* Backdrop */}
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-
           {/* Menu */}
-          <div className="absolute right-0 top-8 z-50 w-48 rounded-lg border border-white/10 bg-zinc-900/95 backdrop-blur-sm shadow-xl">
+          <div
+            className="absolute -right-4 top-8 z-50 w-48 rounded-lg border border-white/10 bg-zinc-900/95 backdrop-blur-sm shadow-xl"
+            onClick={(e) => {
+              // ensure clicks inside the menu don't bubble up to document
+              stopNative(e);
+            }}
+          >
             <div className="p-2">
               <div className="flex items-center justify-between px-2 py-1 mb-1">
                 <span className="text-xs font-medium text-zinc-300">Export Chat</span>
                 <button
-                  onClick={() => setIsOpen(false)}
+                  onClick={(e) => {
+                    stopNative(e);
+                    setIsOpen(false);
+                  }}
                   className="h-5 w-5 inline-flex items-center justify-center rounded hover:bg-white/10 text-zinc-400 hover:text-zinc-200"
                 >
                   <X size={12} />
