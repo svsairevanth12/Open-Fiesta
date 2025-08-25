@@ -65,19 +65,23 @@ export default function CustomModels({ compact }: CustomModelsProps) {
 
     // Check if it's an Ollama model (no slash in the name)
     if (!s.includes('/')) {
-      // For Ollama models, validate against the Ollama instance
       try {
         setValidating(true);
         // Pass baseUrl from keys (user settings) if available
         const res = await fetch("/api/ollama/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug: s, apiKey: keys?.ollama, baseUrl: keys?.ollamaUrl }),
+          body: JSON.stringify({ slug: s, baseUrl: keys?.ollamaUrl }),
         });
         const data = await res.json();
         if (!data?.ok) {
           // Show backend error and details if present
-          const errorMsg = `Validation error${data?.status ? ` (status ${data.status})` : ""}${data?.details ? `: ${data.details}` : ""}${data?.error ? `: ${data.error}` : ""}`;
+          const errorMsg = [
+            "Validation error",
+            data?.status ? ` (status ${data.status})` : "",
+            data?.error ? `: ${data.error}` : "",
+            data?.details ? `: ${data.details}` : ""
+          ].join("");
           setValidMsg(errorMsg);
           setValidState("error");
           return;

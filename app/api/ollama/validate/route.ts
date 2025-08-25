@@ -78,7 +78,6 @@ export async function POST(req: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
         },
-        // Avoid caching so users get the freshest availability
         cache: 'no-store',
         signal: controller.signal,
       });
@@ -86,7 +85,6 @@ export async function POST(req: NextRequest) {
       if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama API response status: ${res.status}`);
 
       if (!res.ok) {
-        // Try to get error details
         let errorDetails = '';
         try {
           const errorText = await res.text();
@@ -142,9 +140,8 @@ export async function POST(req: NextRequest) {
         response.availableModels = modelList
           .map(m => m.name)
           .filter((name): name is string => typeof name === 'string')
-          .slice(0, 10); // Limit to first 10 models
+          .slice(0, 10);
       }
-
       return NextResponse.json(response);
     } catch (fetchError: unknown) {
       const err = fetchError as Error;
