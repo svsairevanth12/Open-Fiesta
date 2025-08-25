@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Globe, Paperclip, Send, Loader2, X, FileText } from 'lucide-react';
+import { Globe, Paperclip, Send, Loader2, X, FileText, Mic, MicOff, Sparkles } from 'lucide-react';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -83,6 +84,84 @@ export function AiInput({
     minHeight: MIN_HEIGHT,
     maxHeight: MAX_HEIGHT,
   });
+
+  // Speech recognition setup
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    isMicrophoneAvailable
+  } = useSpeechRecognition();
+
+  // Update value when transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setValue(transcript);
+      adjustHeight();
+    }
+  }, [transcript, adjustHeight]);
+
+  const startListening = () => {
+    if (!browserSupportsSpeechRecognition) {
+      alert('Your browser does not support speech recognition.');
+      return;
+    }
+    if (!isMicrophoneAvailable) {
+      alert('Microphone access is required for speech recognition.');
+      return;
+    }
+    resetTranscript();
+    SpeechRecognition.startListening({
+      continuous: true,
+      language: 'en-US'
+    });
+  };
+
+  const stopListening = () => {
+    SpeechRecognition.stopListening();
+  };
+
+  // Prompt enhancement state
+  const [isEnhancing, setIsEnhancing] = useState(false);
+
+  const enhancePrompt = async () => {
+    if (!value.trim() || isEnhancing) return;
+
+    // Stop listening if mic is active
+    if (listening) {
+      // Small delay to ensure transcript is captured
+      setTimeout(() => stopListening(), 100);
+    }
+
+    setIsEnhancing(true);
+    try {
+      const response = await fetch('/api/enhance-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: value.trim() })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to enhance prompt`);
+      }
+
+      const data = await response.json();
+      if (data.enhancedPrompt) {
+        setValue(data.enhancedPrompt);
+        adjustHeight();
+      } else {
+        throw new Error('No enhanced prompt received from server');
+      }
+    } catch (error) {
+      console.error('Error enhancing prompt:', error);
+      // Show a user-friendly error message
+      alert(`Failed to enhance prompt: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
   const [showSearch, setShowSearch] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
@@ -130,6 +209,12 @@ export function AiInput({
   };
 
   const handleSubmit = async () => {
+    // Stop listening if mic is active
+    if (listening) {
+      // Small delay to ensure transcript is captured
+      setTimeout(() => stopListening(), 100);
+    }
+
     let dataUrl: string | undefined;
     if (attachedFile) {
       dataUrl = await new Promise<string>((resolve) => {
@@ -377,29 +462,91 @@ export function AiInput({
                 </AnimatePresence>
               </button>
             </div>
-            <div>
+
+            {/* Primary Action Button Group - Mic, Enhance, Send */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, x: 20 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 25,
+                delay: 0.1
+              }}
+              className="flex items-center gap-1 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-full p-1 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm hover:shadow-md transition-shadow duration-300"
+            >
+              {/* Mic Button */}
+              {browserSupportsSpeechRecognition && (
+                <button
+                  type="button"
+                  onClick={listening ? stopListening : startListening}
+                  className={cn(
+                    'rounded-full p-2 transition-all duration-300 flex items-center justify-center relative group',
+                    listening
+                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/25 animate-pulse scale-105'
+                      : 'bg-white dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-600 hover:text-zinc-800 dark:hover:text-zinc-100 hover:scale-105 shadow-sm',
+                  )}
+                  aria-label={listening ? 'Stop recording' : 'Start voice input'}
+                  title={listening ? 'Stop recording' : 'Start voice input'}
+                >
+                  {listening ? (
+                    <MicOff className="w-4 h-4" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                  {/* Pulse animation for recording */}
+                  {listening && (
+                    <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-20" />
+                  )}
+                </button>
+              )}
+
+              {/* Prompt Enhancer Button */}
+              {value.trim() && (
+                <button
+                  type="button"
+                  onClick={enhancePrompt}
+                  disabled={isEnhancing}
+                  className={cn(
+                    'rounded-full p-2 transition-all duration-300 flex items-center justify-center relative group',
+                    isEnhancing
+                      ? 'bg-purple-500/20 text-purple-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 hover:scale-105 shadow-lg shadow-purple-500/25',
+                  )}
+                  aria-label={isEnhancing ? 'Enhancing prompt...' : 'Enhance prompt'}
+                  title={isEnhancing ? 'Enhancing prompt...' : 'Enhance prompt with AI'}
+                >
+                  {isEnhancing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+
+              {/* Send Button */}
               <button
                 type="button"
                 title={loading ? 'Sending...' : 'Send message'}
                 onClick={handleSubmit}
                 className={cn(
-                  'rounded-full p-1.5 transition-colors',
+                  'rounded-full p-2 transition-all duration-300 flex items-center justify-center relative group',
                   loading
                     ? 'bg-[var(--accent-interactive-primary)]/20 text-[var(--accent-interactive-primary)] cursor-not-allowed'
                     : value
-                      ? 'bg-[var(--accent-interactive-primary)]/15 text-[var(--accent-interactive-primary)]'
-                      : 'bg-black/30 dark:bg-white/10 text-black/85 dark:text-white/85 hover:text-black dark:hover:text-white',
+                      ? 'bg-[var(--accent-interactive-primary)] text-white hover:bg-[var(--accent-interactive-hover)] shadow-lg hover:shadow-xl hover:scale-105 shadow-[var(--accent-interactive-primary)]/25'
+                      : 'bg-white dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500 cursor-not-allowed',
                 )}
-                disabled={loading}
+                disabled={loading || !value.trim()}
                 aria-busy={loading ? 'true' : 'false'}
               >
                 {loading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Send className="w-3.5 h-3.5" />
+                  <Send className="w-4 h-4" />
                 )}
               </button>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

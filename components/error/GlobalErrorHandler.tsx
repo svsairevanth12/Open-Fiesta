@@ -41,7 +41,7 @@ export default function GlobalErrorHandler({ children }: GlobalErrorHandlerProps
           const src = target.currentSrc || target.src;
           if (src && src.trim() !== '') {
             // Don't log errors for external CDN images or images with explicit error handling
-            if (src.includes('cdn.') || src.includes('external') || target.hasAttribute('data-ignore-errors') || target.onError) {
+            if (src.includes('cdn.') || src.includes('external') || target.hasAttribute('data-ignore-errors') || target.onerror) {
               return;
             }
             console.error('Resource loading error: IMG', {

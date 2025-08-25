@@ -69,6 +69,15 @@ export const updateCSSVariables = (config: ThemeConfig): void => {
   root.setProperty(CSS_VARIABLES.ACCENT_BG_PRIMARY, accent.background.primary);
   root.setProperty(CSS_VARIABLES.ACCENT_BG_SECONDARY, accent.background.secondary);
 
+  // Update interactive accent variables for buttons and interactive elements
+  root.setProperty(CSS_VARIABLES.ACCENT_INTERACTIVE_PRIMARY, accent.primary);
+  root.setProperty(CSS_VARIABLES.ACCENT_INTERACTIVE_HOVER, accent.secondary);
+  root.setProperty(CSS_VARIABLES.ACCENT_INTERACTIVE_ACTIVE, accent.tertiary);
+
+  // Update highlight accent variables
+  root.setProperty(CSS_VARIABLES.ACCENT_HIGHLIGHT_PRIMARY, accent.primary);
+  root.setProperty(CSS_VARIABLES.ACCENT_HIGHLIGHT_SECONDARY, accent.secondary);
+
   // Update font variables
   root.setProperty(CSS_VARIABLES.FONT_PRIMARY, font.primary);
   root.setProperty(CSS_VARIABLES.FONT_SECONDARY, font.secondary || font.primary);
