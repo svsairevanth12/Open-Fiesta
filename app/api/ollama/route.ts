@@ -4,16 +4,16 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   let timeoutId: NodeJS.Timeout | null = null;
-  
+
   try {
     const { messages, model, baseUrl } = await req.json();
     // For Ollama, we get the base URL from the request body (user settings) or environment or default to localhost
     const ollamaUrl = baseUrl || process.env.OLLAMA_URL || 'http://localhost:11434';
-    
+
     if (process.env.DEBUG_OLLAMA === '1') console.log(`Calling Ollama model: ${model} at ${ollamaUrl}`);
-    
+
     // Convert messages to Ollama format
-    const ollamaMessages = messages.map((msg: any) => ({
+    const ollamaMessages = messages.map((msg: { role: string; content: string }) => ({
       role: msg.role,
       content: msg.content
     }));
@@ -25,12 +25,12 @@ export async function POST(req: NextRequest) {
     };
 
     if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama request body:`, JSON.stringify(requestBody, null, 2));
-    
+
     const controller = new AbortController();
     timeoutId = setTimeout(() => {
       if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama request timeout triggered');
       controller.abort();
-    }, 45000); // 45 second timeout
+    }, 180000); // 180 second timeout (3 minutes)
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -40,14 +40,14 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(requestBody),
       signal: controller.signal,
     });
-    
+
     if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
       if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama error response:`, errorText);
-      return new Response(JSON.stringify({ 
-        error: `Ollama API error: ${response.status} ${response.statusText}`, 
+      return new Response(JSON.stringify({
+        error: `Ollama API error: ${response.status} ${response.statusText}`,
         details: errorText,
         provider: 'ollama',
         code: response.status
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json();
     if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama response data:`, JSON.stringify(data, null, 2));
-    
+
     // Extract the response text
     let text = '';
     if (data.message && data.message.content) {
@@ -65,6 +65,31 @@ export async function POST(req: NextRequest) {
       text = data.response;
     } else {
       text = 'No response from Ollama';
+    }
+
+    // Model list handling
+    let modelList: Array<{ name: string }> = [];
+    if (Array.isArray(data)) {
+      modelList = data as Array<{ name: string }>;
+    } else if (data && typeof data === 'object') {
+      // Check for models array in different possible locations
+      if (Array.isArray((data as { models?: Array<{ name: string }> }).models)) {
+        modelList = (data as { models: Array<{ name: string }> }).models;
+      } else if (Array.isArray((data as { data?: Array<{ name: string }> }).data)) {
+        modelList = (data as { data: Array<{ name: string }> }).data;
+      }
+    }
+
+    // Find the model
+    const slug = model.toLowerCase();
+    const found = modelList.find((m: { name: string }) => m && typeof m.name === 'string' && m.name === slug);
+
+    // If model not found, provide a list of available models (up to 10)
+    if (!found && modelList.length > 0) {
+      (response as { availableModels?: string[] }).availableModels = modelList
+        .map((m: { name: string }) => m.name)
+        .filter((name: string): name is string => typeof name === 'string')
+        .slice(0, 10);
     }
 
     return Response.json({ text, raw: data });

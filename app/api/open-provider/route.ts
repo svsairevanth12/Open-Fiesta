@@ -196,8 +196,8 @@ export async function POST(req: NextRequest) {
 
     try {
       const messageCount =
-        !isAudioModel && (requestBody as any)?.messages
-          ? (requestBody as any).messages.length || 0
+        !isAudioModel && (requestBody as { messages?: unknown[] })?.messages
+          ? (requestBody as { messages: unknown[] }).messages.length || 0
           : 0;
       console.log(`Making request to Pollinations API for model: ${model}`, {
         url: textUrl,
@@ -328,8 +328,8 @@ export async function POST(req: NextRequest) {
               console.log('Found audio URL in JSON:', audioUrl);
             }
             // 2) OpenAI Responses API style: { output: [ { content: [ { type: 'output_audio', audio: { data, format } } ] } ] }
-            if (!audioUrl && Array.isArray((data as any).output)) {
-              const items = (data as any).output as any[];
+            if (!audioUrl && Array.isArray((data as { output: unknown[] }).output)) {
+              const items = (data as { output: unknown[] }).output as unknown[];
               for (const item of items) {
                 const contents = item?.content;
                 if (Array.isArray(contents)) {
@@ -354,12 +354,12 @@ export async function POST(req: NextRequest) {
               }
             }
             // 3) Choices-style: choices[0].message.audio or .content with audio
-            if (!audioUrl && Array.isArray((data as any).choices)) {
-              const ch0 = (data as any).choices[0];
+            if (!audioUrl && Array.isArray((data as { choices: unknown[] }).choices)) {
+              const ch0 = (data as { choices: unknown[] }).choices[0];
               const msg = ch0?.message || {};
               const audioNode =
                 msg?.audio ||
-                msg?.content?.find?.((x: any) => x?.type === 'audio' || x?.type === 'output_audio')
+                msg?.content?.find?.((x: { type: string }) => x?.type === 'audio' || x?.type === 'output_audio')
                   ?.audio;
               const b64 = audioNode?.data;
               const fmt = (audioNode?.format || 'mp3').toLowerCase();
@@ -372,6 +372,7 @@ export async function POST(req: NextRequest) {
             }
           } catch {
             // If response looks like a URL, use it as audio URL
+            const responseText = await resp.text();
             if (
               responseText.startsWith('http') &&
               (responseText.includes('.mp3') ||
@@ -420,12 +421,12 @@ export async function POST(req: NextRequest) {
         // For text models, extract text and aggregate all choices if present
         if (typeof data === 'string') {
           text = data;
-        } else if (data && typeof (data as any).text === 'string') {
-          text = (data as any).text;
-        } else if (data && typeof (data as any).content === 'string') {
-          text = (data as any).content;
-        } else if (data && Array.isArray((data as any).choices)) {
-          const choices = (data as any).choices as Array<{
+        } else if (data && typeof (data as { text: unknown }).text === 'string') {
+          text = (data as { text: unknown }).text;
+        } else if (data && typeof (data as { content: unknown }).content === 'string') {
+          text = (data as { content: unknown }).content;
+        } else if (data && Array.isArray((data as { choices: unknown[] }).choices)) {
+          const choices = (data as { choices: unknown[] }).choices as Array<{
             message?: { content?: string } | { role?: string; content?: string };
           }>;
           const all = choices
