@@ -20,16 +20,26 @@ export async function POST(req: NextRequest) {
 
     try {
       if (process.env.DEBUG_OLLAMA === '1') console.log(`Testing connectivity to Ollama at: ${ollamaUrl}`);
-
       pingTimeoutId = setTimeout(() => {
         if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama ping timeout triggered');
         pingController.abort();
       }, 15000); // 15 seconds for debugging
 
-      const pingResponse = await fetch(`${ollamaUrl}/`, {
-        method: 'GET',
-        signal: pingController.signal,
-      });
+      let pingResponse;
+      try {
+        pingResponse = await fetch(`${ollamaUrl}/`, {
+          method: 'GET',
+          signal: pingController.signal,
+        });
+      } catch (err) {
+        // Network error, DNS, CORS, etc.
+        return NextResponse.json({
+          ok: false,
+          error: 'Cannot connect to Ollama instance',
+          details: 'fetch failed',
+          status: 502
+        }, { status: 502 });
+      }
 
       if (process.env.DEBUG_OLLAMA === '1') console.log(`Ollama ping response status: ${pingResponse.status}`);
 

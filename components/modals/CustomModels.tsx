@@ -19,6 +19,8 @@ export default function CustomModels({ compact }: CustomModelsProps) {
   const [validating, setValidating] = useState(false);
   const [validState, setValidState] = useState<null | 'ok' | 'fail' | 'error'>(null);
   const [keys] = useLocalStorage<ApiKeys>('ai-fiesta:keys', {});
+  // Always use keys.ollama for Ollama base URL (never keys.ollamaUrl or other variants)
+  // This ensures consistency with Settings and avoids stale values.
 
   const addCustom = () => {
     setErr(null);
@@ -65,17 +67,22 @@ export default function CustomModels({ compact }: CustomModelsProps) {
 
     // Check if it's an Ollama model (no slash in the name)
     if (!s.includes('/')) {
+      // If no Ollama URL is set, show a clear error
+      if (!keys?.ollama || !/^https?:\/\/.+:\d+/.test(keys.ollama)) {
+        setValidMsg('Please set a valid Ollama Base URL in Settings (e.g. http://localhost:11434 or http://host.docker.internal:11434)');
+        setValidState('error');
+        return;
+      }
       try {
         setValidating(true);
-        // Pass baseUrl from keys (user settings) if available
+        // Always use keys.ollama for baseUrl
         const res = await fetch("/api/ollama/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug: s, baseUrl: keys?.ollamaUrl }),
+          body: JSON.stringify({ slug: s, baseUrl: keys.ollama }),
         });
         const data = await res.json();
         if (!data?.ok) {
-          // Show backend error and details if present
           const errorMsg = [
             "Validation error",
             data?.status ? ` (status ${data.status})` : "",
