@@ -261,9 +261,6 @@ export default function Home() {
             <HeaderBar
               onOpenMenu={() => setMobileSidebarOpen(true)}
               title="Open Fiesta"
-              authorName="Niladri"
-              authorImageSrc="/image.png"
-              authorLink="https://x.com/byteHumi"
               githubOwner="NiladriHazra"
               githubRepo="Open-Fiesta"
               onOpenModelsModal={() => setModelsModalOpen(true)}
