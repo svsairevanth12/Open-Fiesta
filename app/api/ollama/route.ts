@@ -1,16 +1,28 @@
 import { NextRequest } from 'next/server';
+import { incrementActiveRequests, decrementActiveRequests } from '@/lib/ollamaRequestCounter';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   let timeoutId: NodeJS.Timeout | null = null;
+  let requestCount = 0;
 
   try {
     const { messages, model, baseUrl } = await req.json();
     // For Ollama, we get the base URL from the request body (user settings) or environment or default to localhost
     const ollamaUrl = baseUrl || process.env.OLLAMA_URL || 'http://localhost:11434';
 
-    if (process.env.DEBUG_OLLAMA === '1') console.log(`Calling Ollama model: ${model} at ${ollamaUrl}`);
+    // Track active requests
+    requestCount = incrementActiveRequests();
+    
+    // Adjust timeout based on number of active requests
+    // Base timeout is 90 seconds, but increase by 30 seconds for each active request
+    // This helps ensure that later requests in a batch don't timeout unnecessarily
+    const baseTimeout = 90000; // 90 seconds
+    const additionalTimeoutPerRequest = 30000; // 30 seconds
+    const adjustedTimeout = baseTimeout + (requestCount - 1) * additionalTimeoutPerRequest;
+
+    if (process.env.DEBUG_OLLAMA === '1') console.log(`Calling Ollama model: ${model} at ${ollamaUrl} with timeout: ${adjustedTimeout}ms (active requests: ${requestCount})`);
 
     // Convert messages to Ollama format
     const ollamaMessages = messages.map((msg: { role: string; content: string }) => ({
@@ -30,7 +42,7 @@ export async function POST(req: NextRequest) {
     timeoutId = setTimeout(() => {
       if (process.env.DEBUG_OLLAMA === '1') console.log('Ollama request timeout triggered');
       controller.abort();
-    }, 90000); // 45 second timeout
+    }, adjustedTimeout);
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -86,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     // If model not found, provide a list of available models (up to 10)
     if (!found && modelList.length > 0) {
-      response.availableModels = modelList
+      (response as { availableModels?: string[] }).availableModels = modelList
         .map((m: { name: string }) => m.name)
         .filter((name: string): name is string => typeof name === 'string')
         .slice(0, 10);
@@ -106,6 +118,11 @@ export async function POST(req: NextRequest) {
     // Always clear the timeout
     if (timeoutId) {
       clearTimeout(timeoutId);
+    }
+    
+    // Decrement active requests counter
+    if (requestCount > 0) {
+      decrementActiveRequests();
     }
   }
 }
