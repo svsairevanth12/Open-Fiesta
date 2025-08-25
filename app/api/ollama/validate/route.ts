@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
           method: 'GET',
           signal: pingController.signal,
         });
-      } catch (err) {
+      } catch (_err) {
         // Network error, DNS, CORS, etc.
         return NextResponse.json({
           ok: false,
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
         try {
           const errorText = await res.text();
           errorDetails = errorText;
-        } catch (e) {
+        } catch (_e) {
           errorDetails = `HTTP ${res.status}`;
         }
         return NextResponse.json({
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       let data;
       try {
         data = JSON.parse(textData);
-      } catch (parseError) {
+      } catch (_parseError) {
         return NextResponse.json({
           ok: false,
           error: 'Invalid JSON response from Ollama API',
@@ -175,8 +175,8 @@ export async function POST(req: NextRequest) {
         clearTimeout(timeoutId);
       }
     }
-  } catch (e: unknown) {
-    const message = typeof e === 'object' && e && 'message' in e ? String((e as { message?: unknown }).message) : 'Unknown error';
+  } catch (_e: unknown) {
+    const message = typeof _e === 'object' && _e && 'message' in _e ? String((_e as { message?: unknown }).message) : 'Unknown error';
     return NextResponse.json({ ok: false, error: message, status: 500 }, { status: 500 });
   }
 }

@@ -203,7 +203,7 @@ const AudioPlayer = ({ audioUrl, filename }: { audioUrl: string; filename: strin
         URL.revokeObjectURL(blobUrl);
       }
     };
-  }, [audioUrl]);
+  }, [audioUrl, blobUrl]);
 
   const downloadAudio = async () => {
     try {
