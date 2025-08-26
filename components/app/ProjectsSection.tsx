@@ -67,14 +67,7 @@ export default function ProjectsSection({
       <>
         {/* Collapsed view */}
         <div className="flex flex-col items-center gap-2 pt-2">
-          {/* Add project button */}
-          <button
-            title="New Project"
-            onClick={handleCreateNew}
-            className="h-8 w-8 rounded-full flex items-center justify-center text-white transition-colors accent-action-fill accent-focus"
-          >
-            <Plus size={14} />
-          </button>
+          {/* New project button hidden in collapsed view to avoid duplicate plus with New Chat */}
 
           {/* Project indicators */}
           {projects.map((project) => {
@@ -128,7 +121,7 @@ export default function ProjectsSection({
           <button
             title="New Project"
             onClick={handleCreateNew}
-            className="h-6 w-6 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            className="h-7 w-7 rounded-full flex items-center justify-center accent-action-fill accent-focus shadow-sm"
           >
             <Plus size={12} />
           </button>

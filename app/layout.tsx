@@ -52,7 +52,9 @@ export default function RootLayout({
           closeOnClick
           pauseOnHover
           draggable
-          theme="colored"
+          theme="dark"
+          toastClassName="glass-toast"
+          progressClassName="glass-toast-progress"
         />
 
         {process.env.NEXT_PUBLIC_VERCEL_ANALYTICS === '1' && (

@@ -39,20 +39,13 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
 
         if (copySuccess) {
           toast.success("Share link copied to clipboard!", {
-            style: {
-              background: "#10b981",
-              color: "#fff",
-            },
+            icon: <Check size={18} color="currentColor" aria-hidden="true" />,
           });
         } else {
           // Show manual copy fallback
           setShowManualCopy(true);
           toast.info("Clipboard access failed. Please copy the link manually.", {
             autoClose: false,
-            style: {
-              background: "#f59e0b",
-              color: "#fff",
-            },
           });
         }
       } else {
@@ -66,21 +59,11 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
           userFriendlyMessage = "Cannot share an empty conversation. Please add some messages first.";
         }
 
-        toast.error(userFriendlyMessage, {
-          style: {
-            background: "#ef4444",
-            color: "#fff",
-          },
-        });
+        toast.error(userFriendlyMessage);
       }
     } catch (error) {
       const errorMessage = "An unexpected error occurred while sharing";
-      toast.error(errorMessage, {
-        style: {
-          background: "#ef4444",
-          color: "#fff",
-        },
-      });
+      toast.error(errorMessage);
     } finally {
       setIsSharing(false);
     }
@@ -99,10 +82,7 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
         await navigator.clipboard.writeText(shareUrl);
         setManualCopySuccess(true);
         toast.success("Link copied to clipboard!", {
-          style: {
-            background: "#10b981",
-            color: "#fff",
-          },
+          icon: <Check size={18} color="currentColor" aria-hidden="true" />,
         });
       } else {
         // Fallback to execCommand (deprecated but still supported)
@@ -111,35 +91,17 @@ export default function ShareButton({ thread, projectName, className = "" }: Sha
           if (successful) {
             setManualCopySuccess(true);
             toast.success("Link copied to clipboard!", {
-              style: {
-                background: "#10b981",
-                color: "#fff",
-              },
+              icon: <Check size={18} color="currentColor" aria-hidden="true" />,
             });
           } else {
-            toast.info("Please manually copy the selected text", {
-              style: {
-                background: "#3b82f6",
-                color: "#fff",
-              },
-            });
+            toast.info("Please manually copy the selected text");
           }
         } catch {
-          toast.info("Please manually copy the selected text", {
-            style: {
-              background: "#3b82f6",
-              color: "#fff",
-            },
-          });
+          toast.info("Please manually copy the selected text");
         }
       }
     } catch {
-      toast.info("Please manually copy the selected text", {
-        style: {
-          background: "#3b82f6",
-          color: "#fff",
-        },
-      });
+      toast.info("Please manually copy the selected text");
     }
 
     // Reset success state after 2 seconds

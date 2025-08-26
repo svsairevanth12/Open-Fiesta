@@ -1108,6 +1108,55 @@ body.light * {
 .img-breathe {
   animation: img-breathe 3.2s ease-in-out infinite;
 }
+.img-ripple {
+  animation: img-ripple 2.6s ease-in-out infinite;
+}
+
+/* Glassy Toast theme (neutral, blurred, accent progress) */
+.glass-toast {
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(20, 20, 20, 0.55) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset !important;
+  color: #f8fafc !important;
+}
+.light .glass-toast {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #0b0b0c !important;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04) inset !important;
+}
+
+.glass-toast .Toastify__toast-body {
+  margin: 0 !important;
+  padding: 10px 12px !important;
+}
+
+.glass-toast .Toastify__toast-icon svg {
+  color: currentColor !important;
+}
+.glass-toast .Toastify__close-button {
+  color: currentColor !important;
+  opacity: 0.7 !important;
+}
+.glass-toast .Toastify__close-button:hover {
+  opacity: 1 !important;
+}
+
+/* Progress bar: subtle, accent gradient */
+.glass-toast-progress {
+  height: 3px !important;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)) !important;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  opacity: 0.9;
+}
 
 /* Stronger inner glow breathing (animates box-shadow intensity) */
 @keyframes img-breathe-strong {

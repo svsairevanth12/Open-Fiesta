@@ -78,6 +78,14 @@ export const updateCSSVariables = (config: ThemeConfig): void => {
   root.setProperty(CSS_VARIABLES.ACCENT_HIGHLIGHT_PRIMARY, accent.primary);
   root.setProperty(CSS_VARIABLES.ACCENT_HIGHLIGHT_SECONDARY, accent.secondary);
 
+  // Update status variables (theme-aware but consistent across accents)
+  // These align with the app's established palette for semantic states
+  // success: emerald, warning: amber, error: red, info: blue
+  root.setProperty(CSS_VARIABLES.ACCENT_SUCCESS, '#10b981');
+  root.setProperty(CSS_VARIABLES.ACCENT_WARNING, '#f59e0b');
+  root.setProperty(CSS_VARIABLES.ACCENT_ERROR, '#ef4444');
+  root.setProperty(CSS_VARIABLES.ACCENT_INFO, '#3b82f6');
+
   // Update font variables
   root.setProperty(CSS_VARIABLES.FONT_PRIMARY, font.primary);
   root.setProperty(CSS_VARIABLES.FONT_SECONDARY, font.secondary || font.primary);
